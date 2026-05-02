@@ -8,189 +8,284 @@ import { QRCodeCanvas } from "qrcode.react";
 
 const BASE_URL = window.location.origin;
 
-/* LOGIN */
-function Login() {
+function money(n){
+  return "RD$" + Number(n || 0).toLocaleString();
+}
+
+function today(){
+  return new Date().toISOString().slice(0,10);
+}
+
+function receiptId(count){
+  const ym = new Date().toISOString().slice(0,7).replace("-","");
+  return `${ym}-${String(count + 1).padStart(2,"0")}`;
+}
+
+function cleanPhone(phone){
+  return String(phone || "").replace(/\D/g,"");
+}
+
+function whatsapp(phone,text){
+  return `https://wa.me/1${cleanPhone(phone)}?text=${encodeURIComponent(text)}`;
+}
+
+function Login(){
   const [email,setEmail]=useState("");
   const [pass,setPass]=useState("");
+  const [error,setError]=useState("");
+
+  async function login(){
+    try{
+      setError("");
+      await signInWithEmailAndPassword(auth,email,pass);
+    }catch(e){
+      setError(e.message);
+    }
+  }
 
   return (
     <div style={{padding:40}}>
       <h1>Pronto Moto Control</h1>
-      <input placeholder="Correo" onChange={e=>setEmail(e.target.value)} />
-      <input type="password" placeholder="Contraseña" onChange={e=>setPass(e.target.value)} />
-      <button onClick={()=>signInWithEmailAndPassword(auth,email,pass)}>Entrar</button>
+      {error && <p style={{color:"red"}}>{error}</p>}
+      <input placeholder="Correo" value={email} onChange={e=>setEmail(e.target.value)} />
+      <input type="password" placeholder="Contraseña" value={pass} onChange={e=>setPass(e.target.value)} />
+      <button onClick={login}>Entrar</button>
     </div>
   );
 }
 
-/* VALIDAR QR */
-function ValidarComprobante() {
+function ValidarComprobante(){
   const [data,setData]=useState(null);
+  const [loading,setLoading]=useState(true);
 
   useEffect(()=>{
     async function load(){
       const id = window.location.pathname.split("/validar/")[1];
       const snap = await getDocs(collection(db,"pagos"));
       const pagos = snap.docs.map(d=>d.data());
-      setData(pagos.find(p=>p.id===id));
+      setData(pagos.find(p=>p.id===id) || null);
+      setLoading(false);
     }
     load();
   },[]);
 
-  if(!data) return <h2 style={{padding:40}}>No encontrado</h2>;
+  if(loading) return <div style={{padding:40}}><h1>Validando comprobante...</h1></div>;
+  if(!data) return <div style={{padding:40}}><h1>Comprobante no encontrado</h1></div>;
 
   return (
     <div style={{padding:40}}>
       <h1>Comprobante válido</h1>
-      <p>{data.id}</p>
-      <p>{data.cliente}</p>
-      <p>{data.moto}</p>
-      <p>RD${data.monto}</p>
+      <p><b>ID:</b> {data.id}</p>
+      <p><b>Fecha:</b> {data.fecha}</p>
+      <p><b>Cliente:</b> {data.cliente}</p>
+      <p><b>Moto:</b> {data.moto}</p>
+      <p><b>Monto:</b> {money(data.monto)}</p>
+      <p><b>Método:</b> {data.metodo}</p>
+      <p style={{color:"green",fontWeight:"bold"}}>Validado en la nube</p>
     </div>
   );
 }
 
-/* IMPRESIÓN SEGURA */
-function printDoc(html){
-  const iframe = document.createElement("iframe");
-  iframe.style.display="none";
-  document.body.appendChild(iframe);
-  const doc = iframe.contentWindow.document;
+function abrirImpresion(titulo,html){
+  const anterior=document.getElementById("print-frame");
+  if(anterior) anterior.remove();
 
-  doc.open();
-  doc.write(`<html><body>${html}</body></html>`);
-  doc.close();
+  const iframe=document.createElement("iframe");
+  iframe.id="print-frame";
+  iframe.style.position="fixed";
+  iframe.style.right="0";
+  iframe.style.bottom="0";
+  iframe.style.width="0";
+  iframe.style.height="0";
+  iframe.style.border="0";
+  document.body.appendChild(iframe);
+
+  const documento=iframe.contentWindow.document;
+  documento.open();
+  documento.write(`
+    <html>
+      <head>
+        <title>${titulo}</title>
+        <style>
+          body{font-family:Arial,sans-serif;padding:30px;color:#333;background:white;}
+          h1,h2{text-align:center;}
+          table{width:100%;border-collapse:collapse;margin-top:20px;}
+          td,th{border:1px solid #ddd;padding:8px;text-align:left;}
+          .firmas td{height:80px;}
+          .centro{text-align:center;}
+          img{max-width:180px;}
+        </style>
+      </head>
+      <body>${html}</body>
+    </html>
+  `);
+  documento.close();
 
   setTimeout(()=>{
+    iframe.contentWindow.focus();
     iframe.contentWindow.print();
-  },500);
+  },700);
 }
 
-/* DASHBOARD */
 function Dashboard(){
-
   const [tab,setTab]=useState("inicio");
-
   const [clientes,setClientes]=useState([]);
   const [motos,setMotos]=useState([]);
   const [pagos,setPagos]=useState([]);
   const [gastos,setGastos]=useState([]);
   const [adjuntos,setAdjuntos]=useState([]);
+  const [ultimo,setUltimo]=useState(null);
+  const [clienteVista,setClienteVista]=useState(null);
 
-  const [archivo,setArchivo]=useState(null);
+  const [empresa,setEmpresa]=useState({
+    nombre:"Pronto Moto",
+    telefono:"",
+    direccion:"",
+    rnc:"",
+    notas:""
+  });
+
+  const [cliente,setCliente]=useState({
+    nombre:"",
+    cedula:"",
+    telefono:"",
+    direccion:"",
+    referencia:"",
+    riesgo:"Nuevo cliente"
+  });
+
+  const [moto,setMoto]=useState({
+    placa:"",
+    marca:"",
+    modelo:"",
+    anio:"",
+    tracker:"",
+    clienteId:"",
+    pagoDiario:"400",
+    deposito:"5000"
+  });
+
+  const [pago,setPago]=useState({
+    motoId:"",
+    monto:"400",
+    metodo:"Efectivo"
+  });
+
+  const [gasto,setGasto]=useState({
+    motoId:"",
+    fecha:today(),
+    categoria:"Reparación",
+    monto:"",
+    proveedor:"",
+    nota:""
+  });
+
   const [clienteAdjunto,setClienteAdjunto]=useState("");
+  const [archivo,setArchivo]=useState(null);
 
-  const [pago,setPago]=useState({motoId:"",monto:"400"});
+  const [editCliente,setEditCliente]=useState(null);
+  const [editMoto,setEditMoto]=useState(null);
+  const [editGasto,setEditGasto]=useState(null);
 
   async function cargar(){
-    setClientes((await getDocs(collection(db,"clientes"))).docs.map(d=>({id:d.id,...d.data()})));
-    setMotos((await getDocs(collection(db,"motos"))).docs.map(d=>({id:d.id,...d.data()})));
-    setPagos((await getDocs(collection(db,"pagos"))).docs.map(d=>({id:d.id,...d.data()})));
-    setGastos((await getDocs(collection(db,"gastos"))).docs.map(d=>({id:d.id,...d.data()})));
-    setAdjuntos((await getDocs(collection(db,"adjuntos"))).docs.map(d=>({id:d.id,...d.data()})));
+    const c=await getDocs(collection(db,"clientes"));
+    const m=await getDocs(collection(db,"motos"));
+    const p=await getDocs(collection(db,"pagos"));
+    const g=await getDocs(collection(db,"gastos"));
+    const a=await getDocs(collection(db,"adjuntos"));
+
+    setClientes(c.docs.map(d=>({id:d.id,...d.data()})));
+    setMotos(m.docs.map(d=>({id:d.id,...d.data()})));
+    setPagos(p.docs.map(d=>({docId:d.id,...d.data()})));
+    setGastos(g.docs.map(d=>({id:d.id,...d.data()})));
+    setAdjuntos(a.docs.map(d=>({id:d.id,...d.data()})));
   }
 
-  useEffect(()=>{cargar();},[]);
+  useEffect(()=>{ cargar(); },[]);
 
-  /* PAGO */
-  async function crearPago(){
-    const moto = motos.find(m=>m.id===pago.motoId);
-    const cliente = clientes.find(c=>c.id===moto?.clienteId);
+  const totalIngresos=pagos.reduce((s,p)=>s+Number(p.monto||0),0);
+  const totalGastos=gastos.reduce((s,g)=>s+Number(g.monto||0),0);
+  const neto=totalIngresos-totalGastos;
 
-    const id = Date.now().toString();
+  function ingresosPorMoto(motoId){
+    return pagos.filter(p=>p.motoId===motoId).reduce((s,p)=>s+Number(p.monto||0),0);
+  }
 
-    const data={
-      id,
-      cliente:cliente?.nombre,
-      moto:moto?.placa,
-      monto:pago.monto,
-      fecha:new Date().toISOString().slice(0,10),
-      url:`${BASE_URL}/validar/${id}`
-    };
+  function gastosPorMoto(motoId){
+    return gastos.filter(g=>g.motoId===motoId).reduce((s,g)=>s+Number(g.monto||0),0);
+  }
 
-    await addDoc(collection(db,"pagos"),data);
+  async function guardarCliente(){
+    if(!cliente.nombre) return alert("El nombre del cliente es obligatorio");
+
+    if(editCliente){
+      await updateDoc(doc(db,"clientes",editCliente),cliente);
+      setEditCliente(null);
+    }else{
+      await addDoc(collection(db,"clientes"),cliente);
+    }
+
+    setCliente({nombre:"",cedula:"",telefono:"",direccion:"",referencia:"",riesgo:"Nuevo cliente"});
     cargar();
   }
 
-  /* ADJUNTOS */
-  async function subirAdjunto(){
-    if(!archivo || !clienteAdjunto) return alert("Faltan datos");
-
-    const ruta=`clientes/${clienteAdjunto}/${Date.now()}-${archivo.name}`;
-    const fileRef=ref(storage,ruta);
-
-    await uploadBytes(fileRef,archivo);
-    const url=await getDownloadURL(fileRef);
-
-    await addDoc(collection(db,"adjuntos"),{
-      clienteId:clienteAdjunto,
-      nombre:archivo.name,
-      url,
-      ruta
+  function editarCliente(c){
+    setCliente({
+      nombre:c.nombre||"",
+      cedula:c.cedula||"",
+      telefono:c.telefono||"",
+      direccion:c.direccion||"",
+      referencia:c.referencia||"",
+      riesgo:c.riesgo||"Nuevo cliente"
     });
+    setEditCliente(c.id);
+    setTab("clientes");
+  }
 
-    setArchivo(null);
+  async function eliminarCliente(id){
+    if(confirm("¿Eliminar este cliente? Las motos asignadas quedarán sin cliente.")){
+      await deleteDoc(doc(db,"clientes",id));
+      for(const m of motos.filter(x=>x.clienteId===id)){
+        await updateDoc(doc(db,"motos",m.id),{...m,clienteId:"",estado:"Disponible"});
+      }
+      cargar();
+    }
+  }
+
+  async function guardarMoto(){
+    if(!moto.placa) return alert("La placa es obligatoria");
+
+    const datos={...moto,estado:moto.clienteId?"Alquilada":"Disponible"};
+
+    if(editMoto){
+      await updateDoc(doc(db,"motos",editMoto),datos);
+      setEditMoto(null);
+    }else{
+      await addDoc(collection(db,"motos"),datos);
+    }
+
+    setMoto({placa:"",marca:"",modelo:"",anio:"",tracker:"",clienteId:"",pagoDiario:"400",deposito:"5000"});
     cargar();
   }
 
-  async function eliminarAdjunto(a){
-    await deleteObject(ref(storage,a.ruta));
-    await deleteDoc(doc(db,"adjuntos",a.id));
-    cargar();
+  function editarMoto(m){
+    setMoto({
+      placa:m.placa||"",
+      marca:m.marca||"",
+      modelo:m.modelo||"",
+      anio:m.anio||"",
+      tracker:m.tracker||"",
+      clienteId:m.clienteId||"",
+      pagoDiario:m.pagoDiario||"400",
+      deposito:m.deposito||"5000"
+    });
+    setEditMoto(m.id);
+    setTab("motos");
   }
 
-  return (
-    <div style={{padding:20}}>
-      <h1>Dashboard</h1>
-
-      <button onClick={()=>setTab("pagos")}>Pagos</button>
-      <button onClick={()=>setTab("adjuntos")}>Adjuntos</button>
-
-      {tab==="pagos" && (
-        <div>
-          <select onChange={e=>setPago({...pago,motoId:e.target.value})}>
-            <option>Seleccionar moto</option>
-            {motos.map(m=><option key={m.id} value={m.id}>{m.placa}</option>)}
-          </select>
-
-          <input value={pago.monto} onChange={e=>setPago({...pago,monto:e.target.value})}/>
-          <button onClick={crearPago}>Crear pago</button>
-        </div>
-      )}
-
-      {tab==="adjuntos" && (
-        <div>
-          <select onChange={e=>setClienteAdjunto(e.target.value)}>
-            <option>Seleccionar cliente</option>
-            {clientes.map(c=><option key={c.id} value={c.id}>{c.nombre}</option>)}
-          </select>
-
-          <input type="file" onChange={e=>setArchivo(e.target.files[0])}/>
-          <button onClick={subirAdjunto}>Subir</button>
-
-          {adjuntos.map(a=>(
-            <div key={a.id}>
-              <a href={a.url} target="_blank">{a.nombre}</a>
-              <button onClick={()=>eliminarAdjunto(a)}>Eliminar</button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* APP */
-function App(){
-  const [user,setUser]=useState(null);
-  const path=window.location.pathname;
-
-  useEffect(()=>onAuthStateChanged(auth,setUser),[]);
-
-  if(path.includes("/validar/")) return <ValidarComprobante/>;
-  if(!user) return <Login/>;
-
-  return <Dashboard/>;
-}
-
-createRoot(document.getElementById("root")).render(<App />);
+  async function eliminarMoto(id){
+    if(confirm("¿Eliminar esta moto?")){
+      await deleteDoc(doc(db,"motos",id));
+      cargar();
+    }
+  }
