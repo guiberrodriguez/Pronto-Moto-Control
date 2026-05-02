@@ -53,6 +53,35 @@ function ValidarComprobante() {
   );
 }
 
+function abrirImpresion(titulo, html) {
+  const w = window.open("", "_blank");
+  w.document.write(`
+    <html>
+      <head>
+        <title>${titulo}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 30px; color: #333; }
+          h1, h2 { text-align: center; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          td, th { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          .acciones { margin-bottom: 20px; }
+          .acciones button { padding: 10px 14px; margin-right: 8px; background: #ff6600; color: white; border: none; border-radius: 8px; font-weight: bold; }
+          .firmas td { height: 80px; }
+          .centro { text-align: center; }
+          @media print { .acciones { display: none; } }
+        </style>
+      </head>
+      <body>
+        <div class="acciones">
+          <button onclick="window.print()">Imprimir / Guardar PDF</button>
+        </div>
+        ${html}
+      </body>
+    </html>
+  `);
+  w.document.close();
+}
+
 function Dashboard() {
   const [tab,setTab]=useState("inicio");
   const [clientes,setClientes]=useState([]);
@@ -60,6 +89,14 @@ function Dashboard() {
   const [pagos,setPagos]=useState([]);
   const [gastos,setGastos]=useState([]);
   const [ultimo,setUltimo]=useState(null);
+
+  const [empresa,setEmpresa]=useState({
+    nombre:"Pronto Moto",
+    telefono:"",
+    direccion:"",
+    rnc:"",
+    notas:""
+  });
 
   const [cliente,setCliente]=useState({
     nombre:"",
@@ -321,6 +358,99 @@ function Dashboard() {
       .reduce((s,p)=>s+Number(p.monto || 0),0);
   }
 
+  function imprimirContrato(m){
+    const c = clientes.find(x=>x.id===m.clienteId);
+
+    if(!c){
+      alert("Esta moto no tiene cliente asignado");
+      return;
+    }
+
+    const html = `
+      <h1>${empresa.nombre}</h1>
+      <p class="centro">${empresa.telefono} · ${empresa.direccion}</p>
+      <h2>CONTRATO DE ALQUILER DE MOTOCICLETA</h2>
+
+      <p><b>Fecha:</b> ${new Date().toISOString().slice(0,10)}</p>
+      <p><b>Arrendador:</b> ${empresa.nombre} · RNC/Cédula: ${empresa.rnc || "N/A"}</p>
+      <p><b>Arrendatario:</b> ${c.nombre} · Cédula: ${c.cedula} · Teléfono: ${c.telefono}</p>
+      <p><b>Dirección del cliente:</b> ${c.direccion}</p>
+
+      <table>
+        <tr>
+          <th>Placa</th>
+          <th>Marca</th>
+          <th>Modelo</th>
+          <th>Año</th>
+          <th>GPS / Tracker</th>
+          <th>Pago diario</th>
+          <th>Depósito</th>
+        </tr>
+        <tr>
+          <td>${m.placa}</td>
+          <td>${m.marca}</td>
+          <td>${m.modelo}</td>
+          <td>${m.anio}</td>
+          <td>${m.tracker || "N/A"}</td>
+          <td>RD$${m.pagoDiario}</td>
+          <td>RD$${m.deposito}</td>
+        </tr>
+      </table>
+
+      <h3>Condiciones principales</h3>
+      <ol>
+        <li>El pago es diario, exceptuando los domingos.</li>
+        <li>Al acumular tres cuotas vencidas, el contrato podrá ser cancelado.</li>
+        <li>El arrendador podrá recuperar la motocicleta por las vías legales correspondientes.</li>
+        <li>El arrendatario asume multas, accidentes, daños, uso indebido y cualquier responsabilidad derivada del uso de la motocicleta.</li>
+        <li>Queda prohibido prestar, ceder, subarrendar o usar la motocicleta en actividades ilícitas.</li>
+      </ol>
+
+      <p>${empresa.notas || ""}</p>
+
+      <br/><br/>
+
+      <table class="firmas">
+        <tr>
+          <td>Firma Arrendador</td>
+          <td>Firma Arrendatario</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td></td>
+        </tr>
+      </table>
+    `;
+
+    abrirImpresion("Contrato " + m.placa, html);
+  }
+
+  function imprimirComprobante(p){
+    const html = `
+      <h1>${empresa.nombre}</h1>
+      <p class="centro">${empresa.telefono} · ${empresa.direccion}</p>
+      <h2>COMPROBANTE DE PAGO</h2>
+
+      <table>
+        <tr><th>ID Comprobante</th><td>${p.id}</td></tr>
+        <tr><th>Fecha</th><td>${p.fecha}</td></tr>
+        <tr><th>ID Cliente</th><td>${p.clienteId}</td></tr>
+        <tr><th>Cliente</th><td>${p.cliente}</td></tr>
+        <tr><th>Moto</th><td>${p.moto}</td></tr>
+        <tr><th>Monto Pagado</th><td>RD$${p.monto}</td></tr>
+        <tr><th>Método</th><td>${p.metodo}</td></tr>
+        <tr><th>Validación</th><td>${p.url}</td></tr>
+      </table>
+
+      <div class="centro" style="margin-top:20px">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=170x170&data=${encodeURIComponent(p.url)}" />
+        <p>Código QR de validación</p>
+      </div>
+    `;
+
+    abrirImpresion("Comprobante " + p.id, html);
+  }
+
   return (
     <div style={{padding:40}}>
       <h1>Pronto Moto Control</h1>
@@ -334,6 +464,7 @@ function Dashboard() {
         <button onClick={()=>setTab("motos")}>Motos</button>
         <button onClick={()=>setTab("pagos")}>Pagos</button>
         <button onClick={()=>setTab("gastos")}>Gastos</button>
+        <button onClick={()=>setTab("empresa")}>Empresa</button>
       </div>
 
       {tab==="inicio" && (
@@ -346,6 +477,17 @@ function Dashboard() {
           <h3>Ingresos: RD${totalIngresos.toLocaleString()}</h3>
           <h3>Gastos: RD${totalGastos.toLocaleString()}</h3>
           <h2>Neto: RD${neto.toLocaleString()}</h2>
+        </div>
+      )}
+
+      {tab==="empresa" && (
+        <div>
+          <h2>Datos de empresa</h2>
+          <input placeholder="Nombre de empresa" value={empresa.nombre} onChange={e=>setEmpresa({...empresa,nombre:e.target.value})}/>
+          <input placeholder="Teléfono" value={empresa.telefono} onChange={e=>setEmpresa({...empresa,telefono:e.target.value})}/>
+          <input placeholder="Dirección" value={empresa.direccion} onChange={e=>setEmpresa({...empresa,direccion:e.target.value})}/>
+          <input placeholder="RNC / Cédula" value={empresa.rnc} onChange={e=>setEmpresa({...empresa,rnc:e.target.value})}/>
+          <input placeholder="Notas adicionales para contrato" value={empresa.notas} onChange={e=>setEmpresa({...empresa,notas:e.target.value})}/>
         </div>
       )}
 
@@ -407,6 +549,7 @@ function Dashboard() {
               <p>Neto moto: RD${(ingresosPorMoto(m.id)-gastosPorMoto(m.id)).toLocaleString()}</p>
               <button onClick={()=>editarMoto(m)}>Editar</button>
               <button onClick={()=>eliminarMoto(m.id)}>Eliminar</button>
+              <button onClick={()=>imprimirContrato(m)}>Contrato</button>
             </div>
           ))}
         </div>
@@ -439,6 +582,7 @@ function Dashboard() {
               <p><b>Monto:</b> RD${ultimo.monto}</p>
               <QRCodeCanvas value={ultimo.url} />
               <p>{ultimo.url}</p>
+              <button onClick={()=>imprimirComprobante(ultimo)}>Imprimir comprobante</button>
             </div>
           )}
 
@@ -448,6 +592,7 @@ function Dashboard() {
               <b>{p.id}</b>
               <p>{p.fecha} · {p.cliente}</p>
               <p>{p.moto} · RD${p.monto}</p>
+              <button onClick={()=>imprimirComprobante(p)}>Comprobante</button>
             </div>
           ))}
         </div>
