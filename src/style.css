@@ -189,3 +189,13 @@ a{
     align-items:flex-start;
   }
 }
+
+.deleteBtn{
+  background:#dc2626 !important;
+  color:white !important;
+}
+
+.whatsappBtn{
+  background:#25D366 !important;
+  color:white !important;
+}
