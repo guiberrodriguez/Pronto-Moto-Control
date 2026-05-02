@@ -126,9 +126,14 @@ function Dashboard() {
 
 function App(){
   const [user,setUser]=useState(null);
+  const path = window.location.pathname;
+
   useEffect(()=>onAuthStateChanged(auth,setUser),[]);
+
+  if(path.startsWith("/validar/")){
+    return <Dashboard />;
+  }
+
   if(!user) return <Login />;
   return <Dashboard />;
 }
-
-createRoot(document.getElementById("root")).render(<App />);
