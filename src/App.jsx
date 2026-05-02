@@ -289,3 +289,454 @@ function Dashboard(){
       cargar();
     }
   }
+  
+    async function registrarPago(){
+    const motoSeleccionada=motos.find(m=>m.id===pago.motoId);
+    if(!motoSeleccionada) return alert("Selecciona una moto");
+
+    const clienteSeleccionado=clientes.find(c=>c.id===motoSeleccionada.clienteId);
+    const id=receiptId(pagos.length);
+
+    const comprobante={
+      id,
+      fecha:today(),
+      clienteId:clienteSeleccionado?.id||"",
+      cliente:clienteSeleccionado?.nombre||"",
+      motoId:motoSeleccionada.id,
+      moto:`${motoSeleccionada.placa} ${motoSeleccionada.marca||""} ${motoSeleccionada.modelo||""}`,
+      monto:pago.monto,
+      metodo:pago.metodo,
+      url:`${BASE_URL}/validar/${id}`
+    };
+
+    await addDoc(collection(db,"pagos"),comprobante);
+    setUltimo(comprobante);
+    setPago({motoId:"",monto:"400",metodo:"Efectivo"});
+    cargar();
+  }
+
+  async function guardarGasto(){
+    if(!gasto.motoId) return alert("Selecciona una moto");
+    if(!gasto.monto) return alert("El monto es obligatorio");
+
+    if(editGasto){
+      await updateDoc(doc(db,"gastos",editGasto),gasto);
+      setEditGasto(null);
+    }else{
+      await addDoc(collection(db,"gastos"),gasto);
+    }
+
+    setGasto({
+      motoId:"",
+      fecha:today(),
+      categoria:"Reparación",
+      monto:"",
+      proveedor:"",
+      nota:""
+    });
+
+    cargar();
+  }
+
+  function editarGasto(g){
+    setGasto({
+      motoId:g.motoId||"",
+      fecha:g.fecha||today(),
+      categoria:g.categoria||"Reparación",
+      monto:g.monto||"",
+      proveedor:g.proveedor||"",
+      nota:g.nota||""
+    });
+    setEditGasto(g.id);
+    setTab("gastos");
+  }
+
+  async function eliminarGasto(id){
+    if(confirm("¿Eliminar este gasto?")){
+      await deleteDoc(doc(db,"gastos",id));
+      cargar();
+    }
+  }
+
+  async function subirAdjunto(){
+    if(!clienteAdjunto) return alert("Selecciona un cliente");
+    if(!archivo) return alert("Selecciona un archivo");
+
+    const ruta=`clientes/${clienteAdjunto}/${Date.now()}-${archivo.name}`;
+    const archivoRef=ref(storage,ruta);
+
+    await uploadBytes(archivoRef,archivo);
+    const url=await getDownloadURL(archivoRef);
+
+    await addDoc(collection(db,"adjuntos"),{
+      clienteId:clienteAdjunto,
+      nombre:archivo.name,
+      tipo:archivo.type,
+      ruta,
+      url,
+      fecha:today()
+    });
+
+    setArchivo(null);
+    setClienteAdjunto("");
+    cargar();
+  }
+
+  async function eliminarAdjunto(a){
+    if(confirm("¿Eliminar este adjunto?")){
+      await deleteObject(ref(storage,a.ruta));
+      await deleteDoc(doc(db,"adjuntos",a.id));
+      cargar();
+    }
+  }
+
+  function imprimirContrato(m){
+    const c=clientes.find(x=>x.id===m.clienteId);
+    if(!c) return alert("Esta moto no tiene cliente asignado");
+
+    const html=`
+      <h1>${empresa.nombre}</h1>
+      <p class="centro">${empresa.telefono} · ${empresa.direccion}</p>
+      <h2>CONTRATO DE ALQUILER DE MOTOCICLETA</h2>
+      <p><b>Fecha:</b> ${today()}</p>
+      <p><b>Arrendador:</b> ${empresa.nombre} · RNC/Cédula: ${empresa.rnc||"N/A"}</p>
+      <p><b>Arrendatario:</b> ${c.nombre} · Cédula: ${c.cedula} · Teléfono: ${c.telefono}</p>
+      <p><b>Dirección:</b> ${c.direccion}</p>
+
+      <table>
+        <tr>
+          <th>Placa</th>
+          <th>Marca</th>
+          <th>Modelo</th>
+          <th>Año</th>
+          <th>GPS / Tracker</th>
+          <th>Pago diario</th>
+          <th>Depósito</th>
+        </tr>
+        <tr>
+          <td>${m.placa}</td>
+          <td>${m.marca}</td>
+          <td>${m.modelo}</td>
+          <td>${m.anio}</td>
+          <td>${m.tracker||"N/A"}</td>
+          <td>${money(m.pagoDiario)}</td>
+          <td>${money(m.deposito)}</td>
+        </tr>
+      </table>
+
+      <h3>Condiciones principales</h3>
+      <ol>
+        <li>El pago es diario, exceptuando los domingos.</li>
+        <li>Al acumular tres cuotas vencidas, el contrato podrá ser cancelado.</li>
+        <li>El arrendador podrá recuperar la motocicleta por las vías legales correspondientes.</li>
+        <li>El arrendatario asume multas, accidentes, daños, uso indebido y cualquier responsabilidad derivada del uso de la motocicleta.</li>
+        <li>Queda prohibido prestar, ceder, subarrendar o usar la motocicleta en actividades ilícitas.</li>
+      </ol>
+
+      <p>${empresa.notas||""}</p>
+
+      <br/><br/>
+      <table class="firmas">
+        <tr>
+          <td>Firma Arrendador</td>
+          <td>Firma Arrendatario</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td></td>
+        </tr>
+      </table>
+    `;
+
+    abrirImpresion("Contrato "+m.placa,html);
+  }
+
+  function imprimirComprobante(p){
+    const html=`
+      <h1>${empresa.nombre}</h1>
+      <p class="centro">${empresa.telefono} · ${empresa.direccion}</p>
+      <h2>COMPROBANTE DE PAGO</h2>
+
+      <table>
+        <tr><th>ID Comprobante</th><td>${p.id}</td></tr>
+        <tr><th>Fecha</th><td>${p.fecha}</td></tr>
+        <tr><th>ID Cliente</th><td>${p.clienteId}</td></tr>
+        <tr><th>Cliente</th><td>${p.cliente}</td></tr>
+        <tr><th>Moto</th><td>${p.moto}</td></tr>
+        <tr><th>Monto Pagado</th><td>${money(p.monto)}</td></tr>
+        <tr><th>Método</th><td>${p.metodo}</td></tr>
+        <tr><th>Validación</th><td>${p.url}</td></tr>
+      </table>
+
+      <div class="centro" style="margin-top:20px">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=170x170&data=${encodeURIComponent(p.url)}" />
+        <p>Código QR de validación</p>
+      </div>
+    `;
+
+    abrirImpresion("Comprobante "+p.id,html);
+  }
+
+  return (
+    <div style={{padding:40}}>
+      <h1>Pronto Moto Control</h1>
+
+      <button onClick={cargar}>Actualizar</button>
+      <button onClick={()=>signOut(auth)}>Salir</button>
+
+      <div style={{marginTop:20}}>
+        <button onClick={()=>setTab("inicio")}>Inicio</button>
+        <button onClick={()=>setTab("clientes")}>Clientes</button>
+        <button onClick={()=>setTab("motos")}>Motos</button>
+        <button onClick={()=>setTab("pagos")}>Pagos</button>
+        <button onClick={()=>setTab("gastos")}>Gastos</button>
+        <button onClick={()=>setTab("adjuntos")}>Adjuntos</button>
+        <button onClick={()=>setTab("empresa")}>Empresa</button>
+      </div>
+
+      {tab==="inicio" && (
+        <div>
+          <h2>Dashboard financiero</h2>
+          <p>Clientes: {clientes.length}</p>
+          <p>Motos: {motos.length}</p>
+          <p>Pagos: {pagos.length}</p>
+          <p>Gastos: {gastos.length}</p>
+          <p>Adjuntos: {adjuntos.length}</p>
+          <h3>Ingresos: {money(totalIngresos)}</h3>
+          <h3>Gastos: {money(totalGastos)}</h3>
+          <h2>Neto: {money(neto)}</h2>
+
+          <h3>Rentabilidad por moto</h3>
+          {motos.map(m=>(
+            <div key={m.id} style={{border:"1px solid #ddd",padding:10,marginTop:10}}>
+              <b>{m.placa}</b>
+              <p>Ingresos: {money(ingresosPorMoto(m.id))}</p>
+              <p>Gastos: {money(gastosPorMoto(m.id))}</p>
+              <p>Neto: {money(ingresosPorMoto(m.id)-gastosPorMoto(m.id))}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab==="empresa" && (
+        <div>
+          <h2>Datos de empresa</h2>
+          <input placeholder="Nombre de empresa" value={empresa.nombre} onChange={e=>setEmpresa({...empresa,nombre:e.target.value})}/>
+          <input placeholder="Teléfono" value={empresa.telefono} onChange={e=>setEmpresa({...empresa,telefono:e.target.value})}/>
+          <input placeholder="Dirección" value={empresa.direccion} onChange={e=>setEmpresa({...empresa,direccion:e.target.value})}/>
+          <input placeholder="RNC / Cédula" value={empresa.rnc} onChange={e=>setEmpresa({...empresa,rnc:e.target.value})}/>
+          <input placeholder="Notas adicionales para contrato" value={empresa.notas} onChange={e=>setEmpresa({...empresa,notas:e.target.value})}/>
+        </div>
+      )}
+
+      {tab==="clientes" && (
+        <div>
+          <h2>{editCliente ? "Editar cliente" : "Crear cliente"}</h2>
+
+          <input placeholder="Nombre" value={cliente.nombre} onChange={e=>setCliente({...cliente,nombre:e.target.value})}/>
+          <input placeholder="Cédula" value={cliente.cedula} onChange={e=>setCliente({...cliente,cedula:e.target.value})}/>
+          <input placeholder="Teléfono" value={cliente.telefono} onChange={e=>setCliente({...cliente,telefono:e.target.value})}/>
+          <input placeholder="Dirección" value={cliente.direccion} onChange={e=>setCliente({...cliente,direccion:e.target.value})}/>
+          <input placeholder="Referencia" value={cliente.referencia} onChange={e=>setCliente({...cliente,referencia:e.target.value})}/>
+          <input placeholder="Riesgo" value={cliente.riesgo} onChange={e=>setCliente({...cliente,riesgo:e.target.value})}/>
+
+          <button onClick={guardarCliente}>{editCliente ? "Guardar cambios" : "Crear cliente"}</button>
+
+          {clientes.map(c=>(
+            <div key={c.id} style={{border:"1px solid #ddd",padding:10,marginTop:10}}>
+              <b>{c.nombre}</b>
+              <p>{c.telefono} · {c.cedula}</p>
+              <p>{c.direccion}</p>
+              <small>ID: {c.id}</small><br/>
+              <button onClick={()=>editarCliente(c)}>Editar</button>
+              <button onClick={()=>setClienteVista(c)}>Perfil</button>
+              <button onClick={()=>eliminarCliente(c.id)}>Eliminar</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {clienteVista && (
+        <div style={{marginTop:20,border:"2px solid #000",padding:20}}>
+          <h2>Perfil del cliente</h2>
+          <p><b>Nombre:</b> {clienteVista.nombre}</p>
+          <p><b>Cédula:</b> {clienteVista.cedula}</p>
+          <p><b>Teléfono:</b> {clienteVista.telefono}</p>
+          <p><b>Dirección:</b> {clienteVista.direccion}</p>
+
+          <h3>Motos asignadas</h3>
+          {motos.filter(m=>m.clienteId===clienteVista.id).map(m=>(
+            <div key={m.id}>{m.placa} - {m.marca} {m.modelo}</div>
+          ))}
+
+          <h3>Pagos</h3>
+          {pagos.filter(p=>p.clienteId===clienteVista.id).map(p=>(
+            <div key={p.docId}>{p.id} - {money(p.monto)}</div>
+          ))}
+
+          <h3>Adjuntos</h3>
+          {adjuntos.filter(a=>a.clienteId===clienteVista.id).map(a=>(
+            <div key={a.id}>
+              <a href={a.url} target="_blank" rel="noreferrer">{a.nombre}</a>
+            </div>
+          ))}
+
+          <button onClick={()=>setClienteVista(null)}>Cerrar perfil</button>
+        </div>
+      )}
+
+      {tab==="motos" && (
+        <div>
+          <h2>{editMoto ? "Editar moto" : "Crear moto"}</h2>
+
+          <input placeholder="Placa" value={moto.placa} onChange={e=>setMoto({...moto,placa:e.target.value})}/>
+          <input placeholder="Marca" value={moto.marca} onChange={e=>setMoto({...moto,marca:e.target.value})}/>
+          <input placeholder="Modelo" value={moto.modelo} onChange={e=>setMoto({...moto,modelo:e.target.value})}/>
+          <input placeholder="Año" value={moto.anio} onChange={e=>setMoto({...moto,anio:e.target.value})}/>
+          <input placeholder="Tracker / GPS" value={moto.tracker} onChange={e=>setMoto({...moto,tracker:e.target.value})}/>
+
+          <select value={moto.clienteId} onChange={e=>setMoto({...moto,clienteId:e.target.value})}>
+            <option value="">Sin cliente asignado</option>
+            {clientes.map(c=><option key={c.id} value={c.id}>{c.nombre}</option>)}
+          </select>
+
+          <input placeholder="Pago diario" value={moto.pagoDiario} onChange={e=>setMoto({...moto,pagoDiario:e.target.value})}/>
+          <input placeholder="Depósito" value={moto.deposito} onChange={e=>setMoto({...moto,deposito:e.target.value})}/>
+
+          <button onClick={guardarMoto}>{editMoto ? "Guardar cambios" : "Crear moto"}</button>
+
+          {motos.map(m=>(
+            <div key={m.id} style={{border:"1px solid #ddd",padding:10,marginTop:10}}>
+              <b>{m.placa}</b>
+              <p>{m.marca} {m.modelo} · {m.anio}</p>
+              <p>Pago diario: {money(m.pagoDiario)}</p>
+              <p>Estado: {m.estado || "Disponible"}</p>
+              <p>Cliente: {clientes.find(c=>c.id===m.clienteId)?.nombre || "Sin asignar"}</p>
+              <p>Ingresos: {money(ingresosPorMoto(m.id))}</p>
+              <p>Gastos: {money(gastosPorMoto(m.id))}</p>
+              <p>Neto moto: {money(ingresosPorMoto(m.id)-gastosPorMoto(m.id))}</p>
+              <button onClick={()=>editarMoto(m)}>Editar</button>
+              <button onClick={()=>eliminarMoto(m.id)}>Eliminar</button>
+              <button onClick={()=>imprimirContrato(m)}>Contrato</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab==="pagos" && (
+        <div>
+          <h2>Registrar pago</h2>
+
+          <select value={pago.motoId} onChange={e=>setPago({...pago,motoId:e.target.value})}>
+            <option value="">Seleccionar moto</option>
+            {motos.map(m=><option key={m.id} value={m.id}>{m.placa}</option>)}
+          </select>
+
+          <input placeholder="Monto" value={pago.monto} onChange={e=>setPago({...pago,monto:e.target.value})}/>
+
+          <select value={pago.metodo} onChange={e=>setPago({...pago,metodo:e.target.value})}>
+            <option>Efectivo</option>
+            <option>Transferencia bancaria</option>
+          </select>
+
+          <button onClick={registrarPago}>Generar comprobante</button>
+
+          {ultimo && (
+            <div style={{marginTop:20,border:"1px solid #ddd",padding:15}}>
+              <h2>Comprobante</h2>
+              <p><b>ID:</b> {ultimo.id}</p>
+              <p><b>Cliente:</b> {ultimo.cliente}</p>
+              <p><b>Moto:</b> {ultimo.moto}</p>
+              <p><b>Monto:</b> {money(ultimo.monto)}</p>
+              <QRCodeCanvas value={ultimo.url} />
+              <p>{ultimo.url}</p>
+              <button onClick={()=>imprimirComprobante(ultimo)}>Imprimir comprobante</button>
+            </div>
+          )}
+
+          <h2>Historial de pagos</h2>
+          {pagos.map(p=>(
+            <div key={p.docId} style={{border:"1px solid #ddd",padding:10,marginTop:10}}>
+              <b>{p.id}</b>
+              <p>{p.fecha} · {p.cliente}</p>
+              <p>{p.moto} · {money(p.monto)}</p>
+              <button onClick={()=>imprimirComprobante(p)}>Comprobante</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab==="gastos" && (
+        <div>
+          <h2>{editGasto ? "Editar gasto" : "Registrar gasto"}</h2>
+
+          <select value={gasto.motoId} onChange={e=>setGasto({...gasto,motoId:e.target.value})}>
+            <option value="">Seleccionar moto</option>
+            {motos.map(m=><option key={m.id} value={m.id}>{m.placa}</option>)}
+          </select>
+
+          <input type="date" value={gasto.fecha} onChange={e=>setGasto({...gasto,fecha:e.target.value})}/>
+          <input placeholder="Categoría" value={gasto.categoria} onChange={e=>setGasto({...gasto,categoria:e.target.value})}/>
+          <input placeholder="Monto" value={gasto.monto} onChange={e=>setGasto({...gasto,monto:e.target.value})}/>
+          <input placeholder="Proveedor / Taller" value={gasto.proveedor} onChange={e=>setGasto({...gasto,proveedor:e.target.value})}/>
+          <input placeholder="Nota" value={gasto.nota} onChange={e=>setGasto({...gasto,nota:e.target.value})}/>
+
+          <button onClick={guardarGasto}>{editGasto ? "Guardar cambios" : "Guardar gasto"}</button>
+
+          <h2>Historial de gastos</h2>
+          {gastos.map(g=>(
+            <div key={g.id} style={{border:"1px solid #ddd",padding:10,marginTop:10}}>
+              <b>{g.categoria}</b>
+              <p>Fecha: {g.fecha}</p>
+              <p>Moto: {motos.find(m=>m.id===g.motoId)?.placa || "N/A"}</p>
+              <p>Monto: {money(g.monto)}</p>
+              <p>Proveedor: {g.proveedor}</p>
+              <p>Nota: {g.nota}</p>
+              <button onClick={()=>editarGasto(g)}>Editar</button>
+              <button onClick={()=>eliminarGasto(g.id)}>Eliminar</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab==="adjuntos" && (
+        <div>
+          <h2>Adjuntos por cliente</h2>
+
+          <select value={clienteAdjunto} onChange={e=>setClienteAdjunto(e.target.value)}>
+            <option value="">Seleccionar cliente</option>
+            {clientes.map(c=><option key={c.id} value={c.id}>{c.nombre}</option>)}
+          </select>
+
+          <input type="file" onChange={e=>setArchivo(e.target.files[0])}/>
+          <button onClick={subirAdjunto}>Subir adjunto</button>
+
+          <h2>Documentos guardados</h2>
+          {adjuntos.map(a=>(
+            <div key={a.id} style={{border:"1px solid #ddd",padding:10,marginTop:10}}>
+              <b>{a.nombre}</b>
+              <p>Cliente: {clientes.find(c=>c.id===a.clienteId)?.nombre || "N/A"}</p>
+              <p>Fecha: {a.fecha}</p>
+              <a href={a.url} target="_blank" rel="noreferrer">Ver documento</a><br/>
+              <button onClick={()=>eliminarAdjunto(a)}>Eliminar</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function App(){
+  const [user,setUser]=useState(null);
+  const path=window.location.pathname;
+
+  useEffect(()=>onAuthStateChanged(auth,setUser),[]);
+
+  if(path.startsWith("/validar/")) return <ValidarComprobante/>;
+  if(!user) return <Login/>;
+
+  return <Dashboard/>;
+}
+
+createRoot(document.getElementById("root")).render(<App/>);
