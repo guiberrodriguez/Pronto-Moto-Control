@@ -54,32 +54,75 @@ function ValidarComprobante() {
 }
 
 function abrirImpresion(titulo, html) {
-  const w = window.open("", "_blank");
-  w.document.write(`
+  const anterior = document.getElementById("print-frame");
+  if (anterior) anterior.remove();
+
+  const iframe = document.createElement("iframe");
+  iframe.id = "print-frame";
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "0";
+
+  document.body.appendChild(iframe);
+
+  const documento = iframe.contentWindow.document;
+
+  documento.open();
+  documento.write(`
     <html>
       <head>
         <title>${titulo}</title>
         <style>
-          body { font-family: Arial, sans-serif; padding: 30px; color: #333; }
-          h1, h2 { text-align: center; }
-          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-          td, th { border: 1px solid #ddd; padding: 8px; text-align: left; }
-          .acciones { margin-bottom: 20px; }
-          .acciones button { padding: 10px 14px; margin-right: 8px; background: #ff6600; color: white; border: none; border-radius: 8px; font-weight: bold; }
-          .firmas td { height: 80px; }
-          .centro { text-align: center; }
-          @media print { .acciones { display: none; } }
+          body {
+            font-family: Arial, sans-serif;
+            padding: 30px;
+            color: #333;
+            background: white;
+          }
+
+          h1, h2 {
+            text-align: center;
+          }
+
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+          }
+
+          td, th {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+          }
+
+          .firmas td {
+            height: 80px;
+          }
+
+          .centro {
+            text-align: center;
+          }
+
+          img {
+            max-width: 180px;
+          }
         </style>
       </head>
       <body>
-        <div class="acciones">
-          <button onclick="window.print()">Imprimir / Guardar PDF</button>
-        </div>
         ${html}
       </body>
     </html>
   `);
-  w.document.close();
+  documento.close();
+
+  setTimeout(() => {
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+  }, 800);
 }
 
 function Dashboard() {
