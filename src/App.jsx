@@ -1,26 +1,12 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { QRCodeCanvas } from "qrcode.react";
-import {
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-} from "firebase/auth";
-import {
-  addDoc,
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  orderBy,
-  query,
-  serverTimestamp,
-  setDoc,
-} from "firebase/firestore";
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
+import { addDoc, collection, doc, getDoc, getDocs, serverTimestamp, setDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
 import "./style.css";
 
-const BASE_URL = import.meta.env.VITE_PUBLIC_BASE_URL || window.location.origin;
+const BASE_URL = window.location.origin;
 
 function money(n) {
   return "RD$" + Number(n || 0).toLocaleString();
@@ -30,38 +16,59 @@ function yyyymm(date) {
   return String(date || new Date().toISOString().slice(0, 10)).slice(0, 7).replace("-", "");
 }
 
-function ValidationPage({ receiptId }) {
-  const [receipt, setReceipt] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function load() {
-      const snap = await getDoc(doc(db, "receipts", receiptId));
-      setReceipt(snap.exists() ? snap.data() : null);
-      setLoading(false);
-    }
-    load();
-  }, [receiptId]);
-
-  if (loading) return <div className="page"><h2>Validando comprobante...</h2></div>;
-  if (!receipt) return <div className="page"><h2>Comprobante no encontrado</h2><p>Este comprobante no existe o fue eliminado.</p></div>;
-
+function ErrorBox({ message }) {
   return (
-    <div className="page receipt-public">
-      <h1>Comprobante válido</h1>
-      <p><b>ID:</b> {receipt.id}</p>
-      <p><b>Fecha:</b> {receipt.date}</p>
-      <p><b>Cliente:</b> {receipt.clientName} (ID {receipt.clientId})</p>
-      <p><b>Moto:</b> {receipt.bikeData}</p>
-      <p><b>Monto pagado:</b> {money(receipt.amountPaid)}</p>
-      <p><b>Monto pendiente:</b> {money(receipt.amountPending)}</p>
-      <p><b>Método:</b> {receipt.method}</p>
-      <p className="valid">Verificado en la nube</p>
+    <div className="page">
+      <div className="card error">
+        <h1>La app cargó, pero hay un error</h1>
+        <p>{message}</p>
+        <p>Verifica que Email/Password esté activo y que Firestore esté creado en Firebase.</p>
+      </div>
     </div>
   );
 }
 
-function Dashboard({ user }) {
+function ValidationPage({ receiptId }) {
+  const [receipt, setReceipt] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState("");
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const snap = await getDoc(doc(db, "receipts", receiptId));
+        setReceipt(snap.exists() ? snap.data() : null);
+      } catch (e) {
+        setErr(e.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [receiptId]);
+
+  if (loading) return <div className="page"><div className="card"><h2>Validando comprobante...</h2></div></div>;
+  if (err) return <ErrorBox message={err} />;
+  if (!receipt) return <div className="page"><div className="card"><h2>Comprobante no encontrado</h2><p>Este comprobante no existe o fue eliminado.</p></div></div>;
+
+  return (
+    <div className="page receipt-public">
+      <div className="card">
+        <h1>Comprobante válido</h1>
+        <p><b>ID:</b> {receipt.id}</p>
+        <p><b>Fecha:</b> {receipt.date}</p>
+        <p><b>Cliente:</b> {receipt.clientName} (ID {receipt.clientId})</p>
+        <p><b>Moto:</b> {receipt.bikeData}</p>
+        <p><b>Monto pagado:</b> {money(receipt.amountPaid)}</p>
+        <p><b>Monto pendiente:</b> {money(receipt.amountPending)}</p>
+        <p><b>Método:</b> {receipt.method}</p>
+        <p className="valid">Verificado en la nube</p>
+      </div>
+    </div>
+  );
+}
+
+function Dashboard() {
   const [clients, setClients] = useState([]);
   const [bikes, setBikes] = useState([]);
   const [payments, setPayments] = useState([]);
@@ -76,57 +83,72 @@ function Dashboard({ user }) {
     method: "Efectivo",
   });
   const [lastReceipt, setLastReceipt] = useState(null);
+  const [err, setErr] = useState("");
 
   async function refresh() {
-    const cs = await getDocs(query(collection(db, "clients"), orderBy("createdAt", "desc")));
-    const bs = await getDocs(query(collection(db, "bikes"), orderBy("createdAt", "desc")));
-    const ps = await getDocs(query(collection(db, "payments"), orderBy("createdAt", "desc")));
-    setClients(cs.docs.map(d => ({ id: d.id, ...d.data() })));
-    setBikes(bs.docs.map(d => ({ id: d.id, ...d.data() })));
-    setPayments(ps.docs.map(d => ({ id: d.id, ...d.data() })));
+    try {
+      const cs = await getDocs(collection(db, "clients"));
+      const bs = await getDocs(collection(db, "bikes"));
+      const ps = await getDocs(collection(db, "payments"));
+      setClients(cs.docs.map(d => ({ id: d.id, ...d.data() })));
+      setBikes(bs.docs.map(d => ({ id: d.id, ...d.data() })));
+      setPayments(ps.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (e) {
+      setErr(e.message);
+    }
   }
 
   useEffect(() => { refresh(); }, []);
 
   async function quickCreateReceipt() {
-    const clientRef = await addDoc(collection(db, "clients"), {
-      name: form.clientName,
-      phone: form.clientPhone,
-      cedula: form.clientCedula,
-      createdAt: serverTimestamp(),
-    });
+    setErr("");
+    try {
+      if (!form.clientName || !form.bikePlate || !form.amount) {
+        setErr("Completa al menos nombre del cliente, placa y monto.");
+        return;
+      }
 
-    const bikeRef = await addDoc(collection(db, "bikes"), {
-      plate: form.bikePlate,
-      brand: form.bikeBrand,
-      model: form.bikeModel,
-      clientId: clientRef.id,
-      createdAt: serverTimestamp(),
-    });
+      const clientRef = await addDoc(collection(db, "clients"), {
+        name: form.clientName,
+        phone: form.clientPhone,
+        cedula: form.clientCedula,
+        createdAt: serverTimestamp(),
+      });
 
-    const countSnap = await getDocs(collection(db, "receipts"));
-    const sequence = String(countSnap.size + 1).padStart(2, "0");
-    const receiptId = `${yyyymm(new Date().toISOString().slice(0, 10))}-${sequence}`;
+      const bikeRef = await addDoc(collection(db, "bikes"), {
+        plate: form.bikePlate,
+        brand: form.bikeBrand,
+        model: form.bikeModel,
+        clientId: clientRef.id,
+        createdAt: serverTimestamp(),
+      });
 
-    const receipt = {
-      id: receiptId,
-      date: new Date().toISOString().slice(0, 10),
-      clientId: clientRef.id,
-      clientName: form.clientName,
-      bikeId: bikeRef.id,
-      bikeData: `${form.bikePlate} · ${form.bikeBrand} ${form.bikeModel}`,
-      amountPaid: Number(form.amount || 0),
-      amountPending: 0,
-      method: form.method,
-      validationUrl: `${BASE_URL}/validar/${receiptId}`,
-      createdAt: serverTimestamp(),
-    };
+      const countSnap = await getDocs(collection(db, "receipts"));
+      const sequence = String(countSnap.size + 1).padStart(2, "0");
+      const receiptId = `${yyyymm(new Date().toISOString().slice(0, 10))}-${sequence}`;
 
-    await setDoc(doc(db, "receipts", receiptId), receipt);
-    await addDoc(collection(db, "payments"), receipt);
+      const receipt = {
+        id: receiptId,
+        date: new Date().toISOString().slice(0, 10),
+        clientId: clientRef.id,
+        clientName: form.clientName,
+        bikeId: bikeRef.id,
+        bikeData: `${form.bikePlate} · ${form.bikeBrand} ${form.bikeModel}`,
+        amountPaid: Number(form.amount || 0),
+        amountPending: 0,
+        method: form.method,
+        validationUrl: `${BASE_URL}/validar/${receiptId}`,
+        createdAt: serverTimestamp(),
+      };
 
-    setLastReceipt(receipt);
-    await refresh();
+      await setDoc(doc(db, "receipts", receiptId), receipt);
+      await addDoc(collection(db, "payments"), receipt);
+
+      setLastReceipt(receipt);
+      await refresh();
+    } catch (e) {
+      setErr(e.message);
+    }
   }
 
   return (
@@ -138,6 +160,8 @@ function Dashboard({ user }) {
         </div>
         <button onClick={() => signOut(auth)}>Salir</button>
       </header>
+
+      {err && <div className="card error"><b>Error:</b> {err}</div>}
 
       <section className="card">
         <h2>Crear comprobante rápido</h2>
@@ -184,30 +208,51 @@ function Dashboard({ user }) {
 function Login() {
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
+  const [err, setErr] = useState("");
+
+  async function doLogin() {
+    setErr("");
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch (e) {
+      setErr(e.message);
+    }
+  }
 
   return (
     <div className="login">
       <div className="card">
         <h1>Pronto Moto Control</h1>
         <p>Acceso privado</p>
+        {err && <div className="error">{err}</div>}
         <input placeholder="Correo" value={email} onChange={e=>setEmail(e.target.value)} />
         <input placeholder="Contraseña" type="password" value={pass} onChange={e=>setPass(e.target.value)} />
-        <button onClick={() => signInWithEmailAndPassword(auth, email, pass)}>Entrar</button>
+        <button onClick={doLogin}>Entrar</button>
       </div>
     </div>
   );
 }
 
 function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(undefined);
+  const [fatal, setFatal] = useState("");
+
+  useEffect(() => {
+    try {
+      return onAuthStateChanged(auth, setUser, err => setFatal(err.message));
+    } catch (e) {
+      setFatal(e.message);
+    }
+  }, []);
+
   const path = window.location.pathname;
   const match = path.match(/^\/validar\/([^/]+)/);
 
-  useEffect(() => onAuthStateChanged(auth, setUser), []);
-
+  if (fatal) return <ErrorBox message={fatal} />;
   if (match) return <ValidationPage receiptId={decodeURIComponent(match[1])} />;
+  if (user === undefined) return <div className="page"><div className="card"><h2>Cargando...</h2></div></div>;
   if (!user) return <Login />;
-  return <Dashboard user={user} />;
+  return <Dashboard />;
 }
 
 createRoot(document.getElementById("root")).render(<App />);
