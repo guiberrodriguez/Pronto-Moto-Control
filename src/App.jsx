@@ -563,3 +563,251 @@ function Dashboard(){
       cargar();
     }
   }
+  
+    async function registrarPago(){
+    const motoSeleccionada=motos.find(m=>m.id===pago.motoId);
+    if(!clientePago) return alert("Selecciona un cliente");
+    if(!motoSeleccionada) return alert("Selecciona una moto del cliente");
+
+    const deuda=deudaMoto(motoSeleccionada);
+    const montoPagado=Number(pago.monto || 0);
+    const pendienteDespues=Math.max(0, deuda.montoPendiente - montoPagado);
+    const id=receiptId(pagos.length);
+
+    const comprobante={
+      id,
+      fecha:today(),
+      clienteId:clientePago.id,
+      idCliente:clientePago.idCliente || "",
+      cliente:clientePago.nombre || "",
+      cedula:clientePago.cedula || "",
+      telefono:clientePago.telefono || "",
+      motoId:motoSeleccionada.id,
+      moto:`${motoSeleccionada.placa} ${motoSeleccionada.marca||""} ${motoSeleccionada.modelo||""}`,
+      cuotaDiaria:Number(motoSeleccionada.pagoDiario || 0),
+      cuotasPendientes:deuda.cuotasPendientes,
+      montoPendienteAntes:deuda.montoPendiente,
+      monto:Number(pago.monto || 0),
+      montoPendienteDespues:pendienteDespues,
+      metodo:pago.metodo,
+      estatus:pendienteDespues <= 0 ? "Al día" : deuda.estatus,
+      url:`${BASE_URL}/validar/${id}`
+    };
+
+    await addDoc(collection(db,"pagos"),comprobante);
+    setUltimo(comprobante);
+    setPago({motoId:"",monto:"400",metodo:"Efectivo"});
+    cargar();
+  }
+
+  async function guardarGasto(){
+    if(!gasto.motoId) return alert("Selecciona una moto");
+    if(!gasto.monto) return alert("El monto es obligatorio");
+
+    if(editGasto){
+      await updateDoc(doc(db,"gastos",editGasto),gasto);
+      setEditGasto(null);
+    }else{
+      await addDoc(collection(db,"gastos"),gasto);
+    }
+
+    setGasto({
+      motoId:"",
+      fecha:today(),
+      categoria:"Reparación",
+      monto:"",
+      proveedor:"",
+      nota:""
+    });
+
+    cargar();
+  }
+
+  function editarGasto(g){
+    setGasto({
+      motoId:g.motoId||"",
+      fecha:g.fecha||today(),
+      categoria:g.categoria||"Reparación",
+      monto:g.monto||"",
+      proveedor:g.proveedor||"",
+      nota:g.nota||""
+    });
+
+    setEditGasto(g.id);
+    setTab("gastos");
+  }
+
+  async function eliminarGasto(id){
+    if(confirm("¿Eliminar este gasto?")){
+      await deleteDoc(doc(db,"gastos",id));
+      cargar();
+    }
+  }
+
+  async function subirAdjunto(){
+    if(!clienteAdjunto) return alert("Selecciona un cliente");
+    if(!archivo) return alert("Selecciona un archivo");
+
+    const ruta=`clientes/${clienteAdjunto}/${Date.now()}-${archivo.name}`;
+    const archivoRef=ref(storage,ruta);
+
+    await uploadBytes(archivoRef,archivo);
+    const url=await getDownloadURL(archivoRef);
+
+    await addDoc(collection(db,"adjuntos"),{
+      clienteId:clienteAdjunto,
+      nombre:archivo.name,
+      tipo:archivo.type,
+      ruta,
+      url,
+      fecha:today()
+    });
+
+    setArchivo(null);
+    setClienteAdjunto("");
+    cargar();
+  }
+
+  async function eliminarAdjunto(a){
+    if(confirm("¿Eliminar este adjunto?")){
+      await deleteObject(ref(storage,a.ruta));
+      await deleteDoc(doc(db,"adjuntos",a.id));
+      cargar();
+    }
+  }
+
+  function mensajeWhatsAppPago(p){
+    return `Hola ${p.cliente || ""}, su pago ha sido registrado correctamente.\n\nID: ${p.id}\nMoto: ${p.moto}\nMonto pagado: ${money(p.monto)}\nPendiente: ${money(p.montoPendienteDespues || 0)}\nComprobante: ${p.url}`;
+  }
+
+  function mensajeWhatsAppMora(m){
+    const c=clientes.find(x=>x.id===m.clienteId);
+    const d=deudaMoto(m);
+
+    return `Hola ${c?.nombre || ""}, tienes ${d.cuotasPendientes} cuota(s) pendiente(s) de pago de la motocicleta ${m.placa}. Deuda estimada: ${money(d.montoPendiente)}. Favor regularizar.`;
+  }
+
+  function imprimirContrato(m){
+    const c=clientes.find(x=>x.id===m.clienteId);
+    if(!c) return alert("Esta moto no tiene cliente asignado");
+
+    const html=`
+      <h1>${empresa.nombre}</h1>
+      <p class="centro">${empresa.telefono} · ${empresa.direccion}</p>
+      <h2>CONTRATO DE ALQUILER DE MOTOCICLETA</h2>
+      <p><b>Fecha:</b> ${today()}</p>
+      <p><b>Arrendador:</b> ${empresa.nombre} · RNC/Cédula: ${empresa.rnc||"N/A"}</p>
+      <p><b>Arrendatario:</b> ${c.nombre} · ID Cliente: ${c.idCliente || c.id} · Cédula: ${c.cedula} · Teléfono: ${c.telefono}</p>
+      <p><b>Sexo:</b> ${c.sexo || ""} · <b>Correo:</b> ${c.correo || ""}</p>
+      <p><b>País:</b> ${c.pais || ""} · <b>Nacionalidad:</b> ${c.nacionalidad || ""}</p>
+      <p><b>Dirección:</b> ${c.direccion}</p>
+
+      <table>
+        <tr>
+          <th>Placa</th>
+          <th>Marca</th>
+          <th>Modelo</th>
+          <th>Año</th>
+          <th>GPS / Tracker</th>
+          <th>Pago diario</th>
+          <th>Depósito</th>
+        </tr>
+        <tr>
+          <td>${m.placa}</td>
+          <td>${m.marca}</td>
+          <td>${m.modelo}</td>
+          <td>${m.anio}</td>
+          <td>${m.tracker||"N/A"}</td>
+          <td>${money(m.pagoDiario)}</td>
+          <td>${money(m.deposito)}</td>
+        </tr>
+      </table>
+
+      <h3>Condiciones principales</h3>
+      <ol>
+        <li>El pago es diario, exceptuando los domingos.</li>
+        <li>Al acumular tres cuotas vencidas, el contrato podrá ser cancelado.</li>
+        <li>El arrendador podrá recuperar la motocicleta por las vías legales correspondientes.</li>
+        <li>El arrendatario asume multas, accidentes, daños, uso indebido y cualquier responsabilidad derivada del uso de la motocicleta.</li>
+        <li>Queda prohibido prestar, ceder, subarrendar o usar la motocicleta en actividades ilícitas.</li>
+      </ol>
+
+      <p>${empresa.notas||""}</p>
+
+      <br/><br/>
+      <table class="firmas">
+        <tr>
+          <td>Firma Arrendador</td>
+          <td>Firma Arrendatario</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td></td>
+        </tr>
+      </table>
+    `;
+
+    abrirImpresion("Contrato "+m.placa,html,"normal");
+  }
+
+  function comprobanteHtml(p,tipo="normal"){
+    if(tipo==="termico"){
+      return `
+        <h1>${empresa.nombre}</h1>
+        <p class="centro">${empresa.telefono}</p>
+        <p class="centro">${empresa.direccion}</p>
+        <h2>COMPROBANTE</h2>
+
+        <p><b>ID:</b> ${p.id}</p>
+        <p><b>Fecha:</b> ${p.fecha}</p>
+        <p><b>ID Cliente:</b> ${p.idCliente || p.clienteId}</p>
+        <p><b>Cliente:</b> ${p.cliente}</p>
+        <p><b>Moto:</b> ${p.moto}</p>
+        <p><b>Cuota diaria:</b> ${money(p.cuotaDiaria)}</p>
+        <p><b>Cuotas pend.:</b> ${p.cuotasPendientes || 0}</p>
+        <p><b>Pendiente antes:</b> ${money(p.montoPendienteAntes || 0)}</p>
+        <p><b>Pagado:</b> ${money(p.monto)}</p>
+        <p><b>Pendiente después:</b> ${money(p.montoPendienteDespues || 0)}</p>
+        <p><b>Método:</b> ${p.metodo}</p>
+        <p><b>Estatus:</b> ${p.estatus || "N/A"}</p>
+
+        <div class="centro" style="margin-top:10px">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(p.url)}" />
+          <p>Validar QR</p>
+        </div>
+      `;
+    }
+
+    return `
+      <h1>${empresa.nombre}</h1>
+      <p class="centro">${empresa.telefono} · ${empresa.direccion}</p>
+      <h2>COMPROBANTE DE PAGO</h2>
+
+      <table>
+        <tr><th>ID Comprobante</th><td>${p.id}</td></tr>
+        <tr><th>Fecha</th><td>${p.fecha}</td></tr>
+        <tr><th>ID Cliente</th><td>${p.idCliente || p.clienteId}</td></tr>
+        <tr><th>Cliente</th><td>${p.cliente}</td></tr>
+        <tr><th>Cédula</th><td>${p.cedula || ""}</td></tr>
+        <tr><th>Teléfono</th><td>${p.telefono || ""}</td></tr>
+        <tr><th>Moto</th><td>${p.moto}</td></tr>
+        <tr><th>Cuota diaria</th><td>${money(p.cuotaDiaria)}</td></tr>
+        <tr><th>Cuotas pendientes</th><td>${p.cuotasPendientes || 0}</td></tr>
+        <tr><th>Monto pendiente antes del pago</th><td>${money(p.montoPendienteAntes || 0)}</td></tr>
+        <tr><th>Monto pagado</th><td>${money(p.monto)}</td></tr>
+        <tr><th>Monto pendiente después del pago</th><td>${money(p.montoPendienteDespues || 0)}</td></tr>
+        <tr><th>Método</th><td>${p.metodo}</td></tr>
+        <tr><th>Estatus</th><td>${p.estatus || "N/A"}</td></tr>
+        <tr><th>Validación</th><td>${p.url}</td></tr>
+      </table>
+
+      <div class="centro" style="margin-top:20px">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=170x170&data=${encodeURIComponent(p.url)}" />
+        <p>Código QR de validación</p>
+      </div>
+    `;
+  }
+
+  function imprimirComprobante(p,tipo="normal"){
+    abrirImpresion("Comprobante "+p.id,comprobanteHtml(p,tipo),tipo);
+  }
