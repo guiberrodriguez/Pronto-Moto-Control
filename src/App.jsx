@@ -1,9 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { createRoot } from "react-dom/client";
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
 import { addDoc, collection, deleteDoc, doc, getDocs, updateDoc } from "firebase/firestore";
-import { auth, db } from "./firebase";
-import { QRCodeCanvas } from "qrcode.react";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { auth, db, storage } from "./firebase";
 
 const BASE_URL = window.location.origin;
 
@@ -179,13 +176,18 @@ function Dashboard() {
   const [editCliente,setEditCliente]=useState(null);
   const [editMoto,setEditMoto]=useState(null);
   const [editGasto,setEditGasto]=useState(null);
+  const [adjuntos,setAdjuntos]=useState([]);
+  const [clienteAdjunto,setClienteAdjunto]=useState("");
+  const [archivo,setArchivo]=useState(null);
 
   async function cargar(){
     const c = await getDocs(collection(db,"clientes"));
     const m = await getDocs(collection(db,"motos"));
     const p = await getDocs(collection(db,"pagos"));
     const g = await getDocs(collection(db,"gastos"));
-
+    const a = await getDocs(collection(db,"adjuntos"));
+    
+    setAdjuntos(a.docs.map(d=>({id:d.id,...d.data()})));
     setClientes(c.docs.map(d=>({id:d.id,...d.data()})));
     setMotos(m.docs.map(d=>({id:d.id,...d.data()})));
     setPagos(p.docs.map(d=>({id:d.id,...d.data()})));
@@ -222,6 +224,45 @@ function Dashboard() {
 
     cargar();
   }
+  
+  async function subirAdjunto(){
+  if(!clienteAdjunto){
+    alert("Selecciona un cliente");
+    return;
+  }
+
+  if(!archivo){
+    alert("Selecciona un archivo");
+    return;
+  }
+
+  const ruta = `clientes/${clienteAdjunto}/${Date.now()}-${archivo.name}`;
+  const archivoRef = ref(storage,ruta);
+
+  await uploadBytes(archivoRef,archivo);
+  const url = await getDownloadURL(archivoRef);
+
+  await addDoc(collection(db,"adjuntos"),{
+    clienteId:clienteAdjunto,
+    nombre:archivo.name,
+    tipo:archivo.type,
+    ruta,
+    url,
+    fecha:new Date().toISOString().slice(0,10)
+  });
+
+  setArchivo(null);
+  setClienteAdjunto("");
+  cargar();
+}
+
+async function eliminarAdjunto(adjunto){
+  if(confirm("¿Eliminar este adjunto?")){
+    await deleteObject(ref(storage,adjunto.ruta));
+    await deleteDoc(doc(db,"adjuntos",adjunto.id));
+    cargar();
+  }
+}
 
   function editarCliente(c){
     setCliente({
@@ -546,7 +587,7 @@ function Dashboard() {
           <input placeholder="Riesgo" value={cliente.riesgo} onChange={e=>setCliente({...cliente,riesgo:e.target.value})}/>
 
           <button onClick={guardarCliente}>{editCliente ? "Guardar cambios" : "Crear cliente"}</button>
-
+          <button onClick={()=>setTab("adjuntos")}>Adjuntos</button>
           {clientes.map(c=>(
             <div key={c.id} style={{border:"1px solid #ddd",padding:10,marginTop:10}}>
               <b>{c.nombre}</b>
@@ -673,9 +714,33 @@ function Dashboard() {
           ))}
         </div>
       )}
-    </div>
-  );
-}
+
+      {tab==="adjuntos" && (
+  <div>
+    <h2>Adjuntos por cliente</h2>
+
+    <select value={clienteAdjunto} onChange={e=>setClienteAdjunto(e.target.value)}>
+      <option value="">Seleccionar cliente</option>
+      {clientes.map(c=><option key={c.id} value={c.id}>{c.nombre}</option>)}
+    </select>
+
+    <input type="file" onChange={e=>setArchivo(e.target.files[0])}/>
+
+    <button onClick={subirAdjunto}>Subir adjunto</button>
+
+    <h2>Documentos guardados</h2>
+
+    {adjuntos.map(a=>(
+      <div key={a.id} style={{border:"1px solid #ddd",padding:10,marginTop:10}}>
+        <b>{a.nombre}</b>
+        <p>Cliente: {clientes.find(c=>c.id===a.clienteId)?.nombre || "N/A"}</p>
+        <p>Fecha: {a.fecha}</p>
+        <a href={a.url} target="_blank">Ver documento</a><br/>
+        <button onClick={()=>eliminarAdjunto(a)}>Eliminar</button>
+      </div>
+    ))}
+  </div>
+)}
 
 function App(){
   const [user,setUser]=useState(null);
