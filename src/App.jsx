@@ -44,15 +44,19 @@ function Login(){
   }
 
   return (
-    <div style={{padding:40}}>
+    <div className="app">
+      <div className="header">
+  <div className="brand">
+    <div className="logoBox">
+  <img src="/logo.png" alt="Pronto Moto" />
+</div>
+    <div>
+      <p style={{margin:0,color:"#888"}}>Sistema comercial de renta diaria</p>
       <h1>Pronto Moto Control</h1>
-      {error && <p style={{color:"red"}}>{error}</p>}
-      <input placeholder="Correo" value={email} onChange={e=>setEmail(e.target.value)} />
-      <input type="password" placeholder="Contraseña" value={pass} onChange={e=>setPass(e.target.value)} />
-      <button onClick={login}>Entrar</button>
+      <p style={{margin:0,color:"#888"}}>Clientes, motos, pagos, gastos, contratos y QR real</p>
     </div>
-  );
-}
+  </div>
+</div>
 
 function ValidarComprobante(){
   const [data,setData]=useState(null);
