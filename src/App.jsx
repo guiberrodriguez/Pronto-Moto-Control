@@ -327,3 +327,239 @@ function Dashboard(){
   const totalIngresos=pagos.reduce((s,p)=>s+Number(p.monto||0),0);
   const totalGastos=gastos.reduce((s,g)=>s+Number(g.monto||0),0);
   const neto=totalIngresos-totalGastos;
+  
+    function ingresosPorMoto(motoId){
+    return pagos.filter(p=>p.motoId===motoId).reduce((s,p)=>s+Number(p.monto||0),0);
+  }
+
+  function gastosPorMoto(motoId){
+    return gastos.filter(g=>g.motoId===motoId).reduce((s,g)=>s+Number(g.monto||0),0);
+  }
+
+  function pagosPorMoto(motoId){
+    return pagos
+      .filter(p=>p.motoId===motoId)
+      .sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
+  }
+
+  function ultimoPagoMoto(motoId){
+    return pagosPorMoto(motoId)[0] || null;
+  }
+
+  function atrasoMoto(m){
+    if(!m.clienteId) return 0;
+
+    const ultimo=ultimoPagoMoto(m.id);
+    const fechaBase=ultimo?.fecha || m.fechaAsignacion || today();
+
+    return businessDaysBetween(fechaBase,today());
+  }
+
+  function deudaMoto(m){
+    const cuotasPendientes = atrasoMoto(m);
+    const montoPendiente = cuotasPendientes * Number(m.pagoDiario || 0);
+
+    let estatus = "Al día";
+    if(cuotasPendientes >= 3) estatus = "Recuperación";
+    else if(cuotasPendientes >= 2) estatus = "Riesgo alto";
+    else if(cuotasPendientes >= 1) estatus = "Pendiente";
+
+    return {
+      cuotasPendientes,
+      montoPendiente,
+      estatus
+    };
+  }
+
+  const rankingMotos=[...motos].sort((a,b)=>{
+    const netoA=ingresosPorMoto(a.id)-gastosPorMoto(a.id);
+    const netoB=ingresosPorMoto(b.id)-gastosPorMoto(b.id);
+    return netoB-netoA;
+  });
+
+  const motosMorosas=motos.filter(m=>m.clienteId && atrasoMoto(m)>=1);
+
+  const clientesFiltrados = useMemo(()=>{
+    const q = busquedaCliente.toLowerCase().trim();
+
+    if(!q) return clientes;
+
+    return clientes.filter(c=>{
+      const texto = [
+        c.idCliente,
+        c.nombre,
+        c.cedula,
+        c.telefono,
+        c.telefonoResidencial,
+        c.telefonoReferencia,
+        c.correo,
+        c.pais,
+        c.nacionalidad,
+        c.sexo
+      ].join(" ").toLowerCase();
+
+      return texto.includes(q);
+    });
+  },[clientes,busquedaCliente]);
+
+  const clientesPagoFiltrados = useMemo(()=>{
+    const q = busquedaClientePago.toLowerCase().trim();
+
+    if(!q) return clientes;
+
+    return clientes.filter(c=>{
+      const texto = [
+        c.idCliente,
+        c.nombre,
+        c.cedula,
+        c.telefono,
+        c.telefonoResidencial,
+        c.telefonoReferencia,
+        c.correo,
+        c.pais,
+        c.nacionalidad,
+        c.sexo
+      ].join(" ").toLowerCase();
+
+      return texto.includes(q);
+    });
+  },[clientes,busquedaClientePago]);
+
+  const clientePago = clientes.find(c=>c.id===clientePagoId) || null;
+  const motosClientePago = motos.filter(m=>m.clienteId===clientePagoId);
+  const motoPagoSeleccionada = motos.find(m=>m.id===pago.motoId) || null;
+  const deudaPagoSeleccionada = motoPagoSeleccionada ? deudaMoto(motoPagoSeleccionada) : null;
+
+  async function generarIdCliente(pais){
+    const code=countryCode(pais);
+    const year=currentYear();
+    const prefijo=`${code}${year}`;
+    const existentes=clientes.filter(c=>String(c.idCliente||"").startsWith(prefijo));
+    const secuencia=String(existentes.length + 1).padStart(2,"0");
+    return `${prefijo}-${secuencia}`;
+  }
+
+  async function guardarCliente(){
+    if(!cliente.nombre) return alert("El nombre del cliente es obligatorio");
+
+    if(editCliente){
+      await updateDoc(doc(db,"clientes",editCliente),cliente);
+      setEditCliente(null);
+    }else{
+      const nuevoId=await generarIdCliente(cliente.pais);
+      await addDoc(collection(db,"clientes"),{
+        ...cliente,
+        idCliente:nuevoId
+      });
+    }
+
+    setCliente({
+      idCliente:"",
+      pais:"República Dominicana",
+      nacionalidad:"Dominicana",
+      sexo:"Masculino",
+      nombre:"",
+      cedula:"",
+      correo:"",
+      telefono:"",
+      telefonoResidencial:"",
+      telefonoReferencia:"",
+      direccion:"",
+      referencia:"",
+      riesgo:"Nuevo cliente"
+    });
+
+    cargar();
+  }
+
+  function editarCliente(c){
+    setCliente({
+      idCliente:c.idCliente||"",
+      pais:c.pais||"República Dominicana",
+      nacionalidad:c.nacionalidad||"Dominicana",
+      sexo:c.sexo||"Masculino",
+      nombre:c.nombre||"",
+      cedula:c.cedula||"",
+      correo:c.correo||"",
+      telefono:c.telefono||"",
+      telefonoResidencial:c.telefonoResidencial||"",
+      telefonoReferencia:c.telefonoReferencia||"",
+      direccion:c.direccion||"",
+      referencia:c.referencia||"",
+      riesgo:c.riesgo||"Nuevo cliente"
+    });
+
+    setEditCliente(c.id);
+    setTab("clientes");
+  }
+
+  async function eliminarCliente(id){
+    if(confirm("¿Eliminar este cliente? Las motos asignadas quedarán sin cliente.")){
+      await deleteDoc(doc(db,"clientes",id));
+
+      for(const m of motos.filter(x=>x.clienteId===id)){
+        await updateDoc(doc(db,"motos",m.id),{
+          ...m,
+          clienteId:"",
+          estado:"Disponible"
+        });
+      }
+
+      cargar();
+    }
+  }
+
+  async function guardarMoto(){
+    if(!moto.placa) return alert("La placa es obligatoria");
+
+    const datos={
+      ...moto,
+      estado:moto.clienteId?"Alquilada":"Disponible",
+      fechaAsignacion:moto.clienteId ? (moto.fechaAsignacion || today()) : ""
+    };
+
+    if(editMoto){
+      await updateDoc(doc(db,"motos",editMoto),datos);
+      setEditMoto(null);
+    }else{
+      await addDoc(collection(db,"motos"),datos);
+    }
+
+    setMoto({
+      placa:"",
+      marca:"",
+      modelo:"",
+      anio:"",
+      tracker:"",
+      clienteId:"",
+      fechaAsignacion:today(),
+      pagoDiario:"400",
+      deposito:"5000"
+    });
+
+    cargar();
+  }
+
+  function editarMoto(m){
+    setMoto({
+      placa:m.placa||"",
+      marca:m.marca||"",
+      modelo:m.modelo||"",
+      anio:m.anio||"",
+      tracker:m.tracker||"",
+      clienteId:m.clienteId||"",
+      fechaAsignacion:m.fechaAsignacion||today(),
+      pagoDiario:m.pagoDiario||"400",
+      deposito:m.deposito||"5000"
+    });
+
+    setEditMoto(m.id);
+    setTab("motos");
+  }
+
+  async function eliminarMoto(id){
+    if(confirm("¿Eliminar esta moto?")){
+      await deleteDoc(doc(db,"motos",id));
+      cargar();
+    }
+  }
