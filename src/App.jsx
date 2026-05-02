@@ -124,16 +124,48 @@ function Dashboard() {
   );
 }
 
-function App(){
-  const [user,setUser]=useState(null);
-  const path = window.location.pathname;
+function ValidarComprobante(){
+  const [comprobante,setComprobante]=useState(null);
+  const [cargando,setCargando]=useState(true);
 
-  useEffect(()=>onAuthStateChanged(auth,setUser),[]);
+  useEffect(()=>{
+    async function cargar(){
+      const id = window.location.pathname.split("/validar/")[1];
+      const snap = await getDocs(collection(db,"pagos"));
+      const pagos = snap.docs.map(d=>({idDoc:d.id,...d.data()}));
+      const encontrado = pagos.find(p=>p.id===id);
+      setComprobante(encontrado || null);
+      setCargando(false);
+    }
+    cargar();
+  },[]);
 
-  if(path.startsWith("/validar/")){
-    return <Dashboard />;
+  if(cargando) return <div style={{padding:40}}><h1>Validando comprobante...</h1></div>;
+
+  if(!comprobante){
+    return (
+      <div style={{padding:40}}>
+        <h1>Comprobante no encontrado</h1>
+      </div>
+    );
   }
 
-  if(!user) return <Login />;
-  return <Dashboard />;
+  return (
+    <div style={{padding:40}}>
+      <h1>Comprobante válido</h1>
+      <p><b>ID:</b> {comprobante.id}</p>
+      <p><b>Fecha:</b> {comprobante.fecha}</p>
+      <p><b>Cliente:</b> {comprobante.cliente}</p>
+      <p><b>Moto:</b> {comprobante.moto}</p>
+      <p><b>Monto:</b> RD${comprobante.monto}</p>
+      <p><b>Método:</b> {comprobante.metodo}</p>
+    </div>
+  );
 }
+
+
+
+
+
+    
+
