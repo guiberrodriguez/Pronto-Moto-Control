@@ -58,6 +58,7 @@ function Dashboard() {
   const [clientes,setClientes]=useState([]);
   const [motos,setMotos]=useState([]);
   const [pagos,setPagos]=useState([]);
+  const [gastos,setGastos]=useState([]);
   const [ultimo,setUltimo]=useState(null);
 
   const [cliente,setCliente]=useState({
@@ -86,20 +87,36 @@ function Dashboard() {
     metodo:"Efectivo"
   });
 
+  const [gasto,setGasto]=useState({
+    motoId:"",
+    fecha:new Date().toISOString().slice(0,10),
+    categoria:"Reparación",
+    monto:"",
+    proveedor:"",
+    nota:""
+  });
+
   const [editCliente,setEditCliente]=useState(null);
   const [editMoto,setEditMoto]=useState(null);
+  const [editGasto,setEditGasto]=useState(null);
 
   async function cargar(){
     const c = await getDocs(collection(db,"clientes"));
     const m = await getDocs(collection(db,"motos"));
     const p = await getDocs(collection(db,"pagos"));
+    const g = await getDocs(collection(db,"gastos"));
 
     setClientes(c.docs.map(d=>({id:d.id,...d.data()})));
     setMotos(m.docs.map(d=>({id:d.id,...d.data()})));
     setPagos(p.docs.map(d=>({id:d.id,...d.data()})));
+    setGastos(g.docs.map(d=>({id:d.id,...d.data()})));
   }
 
   useEffect(()=>{ cargar(); },[]);
+
+  const totalIngresos = pagos.reduce((s,p)=>s+Number(p.monto || 0),0);
+  const totalGastos = gastos.reduce((s,g)=>s+Number(g.monto || 0),0);
+  const neto = totalIngresos - totalGastos;
 
   async function guardarCliente(){
     if(!cliente.nombre){
@@ -242,6 +259,68 @@ function Dashboard() {
     cargar();
   }
 
+  async function guardarGasto(){
+    if(!gasto.motoId){
+      alert("Selecciona una moto");
+      return;
+    }
+
+    if(!gasto.monto){
+      alert("El monto es obligatorio");
+      return;
+    }
+
+    if(editGasto){
+      await updateDoc(doc(db,"gastos",editGasto),gasto);
+      setEditGasto(null);
+    } else {
+      await addDoc(collection(db,"gastos"),gasto);
+    }
+
+    setGasto({
+      motoId:"",
+      fecha:new Date().toISOString().slice(0,10),
+      categoria:"Reparación",
+      monto:"",
+      proveedor:"",
+      nota:""
+    });
+
+    cargar();
+  }
+
+  function editarGasto(g){
+    setGasto({
+      motoId:g.motoId || "",
+      fecha:g.fecha || new Date().toISOString().slice(0,10),
+      categoria:g.categoria || "Reparación",
+      monto:g.monto || "",
+      proveedor:g.proveedor || "",
+      nota:g.nota || ""
+    });
+    setEditGasto(g.id);
+    setTab("gastos");
+  }
+
+  async function eliminarGasto(id){
+    if(confirm("¿Eliminar este gasto?")){
+      await deleteDoc(doc(db,"gastos",id));
+      cargar();
+    }
+  }
+
+  function gastosPorMoto(motoId){
+    return gastos
+      .filter(g=>g.motoId===motoId)
+      .reduce((s,g)=>s+Number(g.monto || 0),0);
+  }
+
+  function ingresosPorMoto(motoId){
+    return pagos
+      .filter(p=>p.motoId===motoId)
+      .reduce((s,p)=>s+Number(p.monto || 0),0);
+  }
+
   return (
     <div style={{padding:40}}>
       <h1>Pronto Moto Control</h1>
@@ -254,14 +333,19 @@ function Dashboard() {
         <button onClick={()=>setTab("clientes")}>Clientes</button>
         <button onClick={()=>setTab("motos")}>Motos</button>
         <button onClick={()=>setTab("pagos")}>Pagos</button>
+        <button onClick={()=>setTab("gastos")}>Gastos</button>
       </div>
 
       {tab==="inicio" && (
         <div>
-          <h2>Resumen</h2>
+          <h2>Resumen financiero</h2>
           <p>Clientes: {clientes.length}</p>
           <p>Motos: {motos.length}</p>
           <p>Pagos: {pagos.length}</p>
+          <p>Gastos: {gastos.length}</p>
+          <h3>Ingresos: RD${totalIngresos.toLocaleString()}</h3>
+          <h3>Gastos: RD${totalGastos.toLocaleString()}</h3>
+          <h2>Neto: RD${neto.toLocaleString()}</h2>
         </div>
       )}
 
@@ -318,6 +402,9 @@ function Dashboard() {
               <p>Pago diario: RD${m.pagoDiario}</p>
               <p>Estado: {m.estado || "Disponible"}</p>
               <p>Cliente: {clientes.find(c=>c.id===m.clienteId)?.nombre || "Sin asignar"}</p>
+              <p>Ingresos: RD${ingresosPorMoto(m.id).toLocaleString()}</p>
+              <p>Gastos: RD${gastosPorMoto(m.id).toLocaleString()}</p>
+              <p>Neto moto: RD${(ingresosPorMoto(m.id)-gastosPorMoto(m.id)).toLocaleString()}</p>
               <button onClick={()=>editarMoto(m)}>Editar</button>
               <button onClick={()=>eliminarMoto(m.id)}>Eliminar</button>
             </div>
@@ -361,6 +448,39 @@ function Dashboard() {
               <b>{p.id}</b>
               <p>{p.fecha} · {p.cliente}</p>
               <p>{p.moto} · RD${p.monto}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab==="gastos" && (
+        <div>
+          <h2>{editGasto ? "Editar gasto" : "Registrar gasto"}</h2>
+
+          <select value={gasto.motoId} onChange={e=>setGasto({...gasto,motoId:e.target.value})}>
+            <option value="">Seleccionar moto</option>
+            {motos.map(m=><option key={m.id} value={m.id}>{m.placa}</option>)}
+          </select>
+
+          <input type="date" value={gasto.fecha} onChange={e=>setGasto({...gasto,fecha:e.target.value})}/>
+          <input placeholder="Categoría" value={gasto.categoria} onChange={e=>setGasto({...gasto,categoria:e.target.value})}/>
+          <input placeholder="Monto" value={gasto.monto} onChange={e=>setGasto({...gasto,monto:e.target.value})}/>
+          <input placeholder="Proveedor / Taller" value={gasto.proveedor} onChange={e=>setGasto({...gasto,proveedor:e.target.value})}/>
+          <input placeholder="Nota" value={gasto.nota} onChange={e=>setGasto({...gasto,nota:e.target.value})}/>
+
+          <button onClick={guardarGasto}>{editGasto ? "Guardar cambios" : "Guardar gasto"}</button>
+
+          <h2>Historial de gastos</h2>
+          {gastos.map(g=>(
+            <div key={g.id} style={{border:"1px solid #ddd",padding:10,marginTop:10}}>
+              <b>{g.categoria}</b>
+              <p>Fecha: {g.fecha}</p>
+              <p>Moto: {motos.find(m=>m.id===g.motoId)?.placa || "N/A"}</p>
+              <p>Monto: RD${g.monto}</p>
+              <p>Proveedor: {g.proveedor}</p>
+              <p>Nota: {g.nota}</p>
+              <button onClick={()=>editarGasto(g)}>Editar</button>
+              <button onClick={()=>eliminarGasto(g.id)}>Eliminar</button>
             </div>
           ))}
         </div>
