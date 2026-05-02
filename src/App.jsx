@@ -495,3 +495,221 @@ function Dashboard(){
       cargar();
     }
   }
+  
+    async function registrarPago(){
+    const motoSeleccionada=motos.find(m=>m.id===pago.motoId);
+    if(!motoSeleccionada) return alert("Selecciona una moto");
+
+    const clienteSeleccionado=clientes.find(c=>c.id===motoSeleccionada.clienteId);
+    const id=receiptId(pagos.length);
+
+    const comprobante={
+      id,
+      fecha:today(),
+      clienteId:clienteSeleccionado?.id||"",
+      idCliente:clienteSeleccionado?.idCliente||"",
+      cliente:clienteSeleccionado?.nombre||"",
+      motoId:motoSeleccionada.id,
+      moto:`${motoSeleccionada.placa}`,
+      monto:pago.monto,
+      metodo:pago.metodo,
+      url:`${BASE_URL}/validar/${id}`
+    };
+
+    await addDoc(collection(db,"pagos"),comprobante);
+    setUltimo(comprobante);
+    setPago({motoId:"",monto:"400",metodo:"Efectivo"});
+    cargar();
+  }
+
+  function mensajeWhatsAppPago(p){
+    return `Hola ${p.cliente}, pago registrado.%0A${money(p.monto)}%0A${p.url}`;
+  }
+
+  function mensajeWhatsAppMora(m){
+    const c=clientes.find(x=>x.id===m.clienteId);
+    const dias=atrasoMoto(m);
+    return `Hola ${c?.nombre}, tienes ${dias} días pendientes de pago de la moto ${m.placa}.`;
+  }
+
+  useEffect(()=>{
+    if(motosMorosas.length > 0){
+      if(Notification.permission === "granted"){
+        new Notification("⚠️ Clientes con atraso");
+      }else{
+        Notification.requestPermission();
+      }
+    }
+  },[motosMorosas]);
+
+  return (
+    <div className="app">
+
+      <div className="header">
+        <div className="brand">
+          <div className="logoBox">
+            <img src="/logo.png" />
+          </div>
+          <h1>Pronto Moto Control PRO</h1>
+        </div>
+
+        <button onClick={()=>signOut(auth)}>Salir</button>
+      </div>
+
+      <div className="tabs">
+        <button onClick={()=>setTab("inicio")}>Inicio</button>
+        <button onClick={()=>setTab("clientes")}>Clientes</button>
+        <button onClick={()=>setTab("motos")}>Motos</button>
+        <button onClick={()=>setTab("pagos")}>Pagos</button>
+        <button onClick={()=>setTab("morosidad")}>Morosidad</button>
+      </div>
+
+      {tab==="inicio" && (
+        <div className="card">
+          <h2>Dashboard</h2>
+          <p>Ingresos: {money(totalIngresos)}</p>
+          <p>Gastos: {money(totalGastos)}</p>
+          <p>Neto: {money(neto)}</p>
+
+          <h3>Ranking</h3>
+          {rankingMotos.map((m,i)=>(
+            <div key={m.id}>
+              #{i+1} {m.placa} - {money(ingresosPorMoto(m.id)-gastosPorMoto(m.id))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab==="clientes" && (
+        <div className="card">
+
+          <h2>Clientes</h2>
+
+          <input 
+            placeholder="Buscar cliente..."
+            value={busquedaCliente}
+            onChange={e=>setBusquedaCliente(e.target.value)}
+          />
+
+          <select value={cliente.pais} onChange={e=>setCliente({...cliente,pais:e.target.value})}>
+            {paises.map(p=><option key={p}>{p}</option>)}
+          </select>
+
+          <select value={cliente.nacionalidad} onChange={e=>setCliente({...cliente,nacionalidad:e.target.value})}>
+            {nacionalidades.map(n=><option key={n}>{n}</option>)}
+          </select>
+
+          <select value={cliente.sexo} onChange={e=>setCliente({...cliente,sexo:e.target.value})}>
+            <option>Masculino</option>
+            <option>Femenino</option>
+          </select>
+
+          <input placeholder="Nombre" value={cliente.nombre} onChange={e=>setCliente({...cliente,nombre:e.target.value})}/>
+          <input placeholder="Correo" value={cliente.correo} onChange={e=>setCliente({...cliente,correo:e.target.value})}/>
+          <input placeholder="Teléfono" value={cliente.telefono} onChange={e=>setCliente({...cliente,telefono:e.target.value})}/>
+          <input placeholder="Teléfono residencial" value={cliente.telefonoResidencial} onChange={e=>setCliente({...cliente,telefonoResidencial:e.target.value})}/>
+          <input placeholder="Teléfono referencia" value={cliente.telefonoReferencia} onChange={e=>setCliente({...cliente,telefonoReferencia:e.target.value})}/>
+
+          <button onClick={guardarCliente}>Guardar</button>
+
+          {clientesFiltrados.map(c=>(
+            <div key={c.id} className="item">
+              <b>{c.idCliente} - {c.nombre}</b>
+              <p>{c.pais} · {c.nacionalidad}</p>
+
+              <a href={whatsappUrl(c.telefono,`Hola ${c.nombre}`)} target="_blank">
+                <button className="whatsappBtn">WhatsApp</button>
+              </a>
+
+              <button className="deleteBtn" onClick={()=>eliminarCliente(c.id)}>Eliminar</button>
+            </div>
+          ))}
+
+        </div>
+      )}
+
+      {tab==="motos" && (
+        <div className="card">
+
+          <h2>Motos</h2>
+
+          <input placeholder="Placa" value={moto.placa} onChange={e=>setMoto({...moto,placa:e.target.value})}/>
+
+          <select value={moto.clienteId} onChange={e=>setMoto({...moto,clienteId:e.target.value})}>
+            <option>Asignar cliente</option>
+            {clientes.map(c=><option key={c.id} value={c.id}>{c.nombre}</option>)}
+          </select>
+
+          <button onClick={guardarMoto}>Guardar moto</button>
+
+          {motos.map(m=>(
+            <div key={m.id} className="item">
+              {m.placa} - atraso: {atrasoMoto(m)} días
+
+              <button className="deleteBtn" onClick={()=>eliminarMoto(m.id)}>Eliminar</button>
+            </div>
+          ))}
+
+        </div>
+      )}
+
+      {tab==="pagos" && (
+        <div className="card">
+
+          <select onChange={e=>setPago({...pago,motoId:e.target.value})}>
+            {motos.map(m=><option key={m.id} value={m.id}>{m.placa}</option>)}
+          </select>
+
+          <input value={pago.monto} onChange={e=>setPago({...pago,monto:e.target.value})}/>
+          <button onClick={registrarPago}>Generar pago</button>
+
+          {ultimo && (
+            <div className="item">
+              {ultimo.id}
+              <QRCodeCanvas value={ultimo.url}/>
+
+              <a href={whatsappUrl(clientes.find(c=>c.id===ultimo.clienteId)?.telefono,mensajeWhatsAppPago(ultimo))} target="_blank">
+                <button className="whatsappBtn">Enviar WhatsApp</button>
+              </a>
+            </div>
+          )}
+
+        </div>
+      )}
+
+      {tab==="morosidad" && (
+        <div className="card">
+
+          <h2>Morosos</h2>
+
+          {motosMorosas.map(m=>{
+            const c=clientes.find(x=>x.id===m.clienteId);
+
+            return (
+              <div key={m.id} className="item">
+                {m.placa} - {c?.nombre}
+
+                <a href={whatsappUrl(c?.telefono,mensajeWhatsAppMora(m))} target="_blank">
+                  <button className="whatsappBtn">Cobrar</button>
+                </a>
+              </div>
+            );
+          })}
+
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+function App(){
+  const [user,setUser]=useState(null);
+
+  useEffect(()=>onAuthStateChanged(auth,setUser),[]);
+
+  if(!user) return <Login/>;
+  return <Dashboard/>;
+}
+
+createRoot(document.getElementById("root")).render(<App/>);
