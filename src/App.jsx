@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
-import { addDoc, collection, deleteDoc, doc, getDocs, updateDoc } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDocs } from "firebase/firestore";
 import { auth, db } from "./firebase";
+import { QRCodeCanvas } from "qrcode.react";
+
+const BASE_URL = window.location.origin;
 
 function Login() {
   const [email,setEmail]=useState("");
@@ -19,135 +22,109 @@ function Login() {
 }
 
 function Dashboard() {
-  const [tab,setTab]=useState("inicio");
   const [clientes,setClientes]=useState([]);
   const [motos,setMotos]=useState([]);
-  const [cliente,setCliente]=useState({nombre:"", cedula:"", telefono:"", direccion:""});
-  const [moto,setMoto]=useState({placa:"", marca:"", modelo:"", anio:"", clienteId:"", pagoDiario:"400"});
-  const [editCliente,setEditCliente]=useState(null);
-  const [editMoto,setEditMoto]=useState(null);
+  const [pagos,setPagos]=useState([]);
+  const [pago,setPago]=useState({motoId:"", monto:"400", metodo:"Efectivo"});
+  const [ultimo,setUltimo]=useState(null);
 
-  async function cargarDatos(){
+  async function cargar(){
     const c = await getDocs(collection(db,"clientes"));
     const m = await getDocs(collection(db,"motos"));
+    const p = await getDocs(collection(db,"pagos"));
+
     setClientes(c.docs.map(d=>({id:d.id,...d.data()})));
     setMotos(m.docs.map(d=>({id:d.id,...d.data()})));
+    setPagos(p.docs.map(d=>({id:d.id,...d.data()})));
   }
 
-  useEffect(()=>{ cargarDatos(); },[]);
+  useEffect(()=>{cargar();},[]);
 
-  async function guardarCliente(){
-    if(editCliente){
-      await updateDoc(doc(db,"clientes",editCliente),cliente);
-      setEditCliente(null);
-    } else {
-      await addDoc(collection(db,"clientes"),cliente);
+  function generarID(){
+    const fecha = new Date();
+    const ym = fecha.toISOString().slice(0,7).replace("-","");
+    const seq = String(pagos.length+1).padStart(2,"0");
+    return `${ym}-${seq}`;
+  }
+
+  async function registrarPago(){
+    const moto = motos.find(m=>m.id===pago.motoId);
+    const cliente = clientes.find(c=>c.id===moto?.clienteId);
+
+    const id = generarID();
+
+    const comprobante = {
+      id,
+      fecha: new Date().toISOString().slice(0,10),
+      cliente: cliente?.nombre || "",
+      moto: moto?.placa || "",
+      monto: pago.monto,
+      metodo: pago.metodo,
+      url: `${BASE_URL}/validar/${id}`
+    };
+
+    await addDoc(collection(db,"pagos"), comprobante);
+    setUltimo(comprobante);
+    cargar();
+  }
+
+  function validarURL(){
+    const path = window.location.pathname;
+    if(path.startsWith("/validar/")){
+      const id = path.split("/validar/")[1];
+      const data = pagos.find(p=>p.id===id);
+
+      if(!data){
+        return <h1>Comprobante no encontrado</h1>;
+      }
+
+      return (
+        <div style={{padding:40}}>
+          <h1>Comprobante válido</h1>
+          <p>ID: {data.id}</p>
+          <p>Cliente: {data.cliente}</p>
+          <p>Moto: {data.moto}</p>
+          <p>Monto: RD${data.monto}</p>
+        </div>
+      );
     }
-    setCliente({nombre:"", cedula:"", telefono:"", direccion:""});
-    cargarDatos();
   }
 
-  async function guardarMoto(){
-    if(editMoto){
-      await updateDoc(doc(db,"motos",editMoto),moto);
-      setEditMoto(null);
-    } else {
-      await addDoc(collection(db,"motos"),moto);
-    }
-    setMoto({placa:"", marca:"", modelo:"", anio:"", clienteId:"", pagoDiario:"400"});
-    cargarDatos();
-  }
-
-  async function eliminarCliente(id){
-    if(confirm("¿Eliminar este cliente?")){
-      await deleteDoc(doc(db,"clientes",id));
-      cargarDatos();
-    }
-  }
-
-  async function eliminarMoto(id){
-    if(confirm("¿Eliminar esta moto?")){
-      await deleteDoc(doc(db,"motos",id));
-      cargarDatos();
-    }
-  }
-
-  function editarCliente(c){
-    setCliente(c);
-    setEditCliente(c.id);
-  }
-
-  function editarMoto(m){
-    setMoto(m);
-    setEditMoto(m.id);
+  if(window.location.pathname.includes("/validar/")){
+    return validarURL();
   }
 
   return (
     <div style={{padding:40}}>
-      <h1>Pronto Moto Control</h1>
+      <h1>Pagos</h1>
       <button onClick={()=>signOut(auth)}>Salir</button>
 
-      <div style={{marginTop:20}}>
-        <button onClick={()=>setTab("inicio")}>Inicio</button>
-        <button onClick={()=>setTab("clientes")}>Clientes</button>
-        <button onClick={()=>setTab("motos")}>Motos</button>
-      </div>
+      <select onChange={e=>setPago({...pago,motoId:e.target.value})}>
+        <option>Seleccionar moto</option>
+        {motos.map(m=><option value={m.id}>{m.placa}</option>)}
+      </select>
 
-      {tab==="inicio" && (
-        <div>
-          <h2>Resumen</h2>
-          <p>Clientes: {clientes.length}</p>
-          <p>Motos: {motos.length}</p>
-        </div>
-      )}
+      <input placeholder="Monto" onChange={e=>setPago({...pago,monto:e.target.value})} />
+      <select onChange={e=>setPago({...pago,metodo:e.target.value})}>
+        <option>Efectivo</option>
+        <option>Transferencia</option>
+      </select>
 
-      {tab==="clientes" && (
-        <div>
-          <h2>Clientes</h2>
-          <input placeholder="Nombre" value={cliente.nombre} onChange={e=>setCliente({...cliente,nombre:e.target.value})}/>
-          <input placeholder="Cédula" value={cliente.cedula} onChange={e=>setCliente({...cliente,cedula:e.target.value})}/>
-          <input placeholder="Teléfono" value={cliente.telefono} onChange={e=>setCliente({...cliente,telefono:e.target.value})}/>
-          <input placeholder="Dirección" value={cliente.direccion} onChange={e=>setCliente({...cliente,direccion:e.target.value})}/>
-          <button onClick={guardarCliente}>{editCliente ? "Guardar cambios" : "Crear cliente"}</button>
+      <button onClick={registrarPago}>Generar comprobante</button>
 
-          {clientes.map(c=>(
-            <div key={c.id} style={{border:"1px solid #ddd",padding:10,marginTop:10}}>
-              <b>{c.nombre}</b>
-              <p>{c.telefono} · {c.cedula}</p>
-              <button onClick={()=>editarCliente(c)}>Editar</button>
-              <button onClick={()=>eliminarCliente(c.id)}>Eliminar</button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {tab==="motos" && (
-        <div>
-          <h2>Motos</h2>
-          <input placeholder="Placa" value={moto.placa} onChange={e=>setMoto({...moto,placa:e.target.value})}/>
-          <input placeholder="Marca" value={moto.marca} onChange={e=>setMoto({...moto,marca:e.target.value})}/>
-          <input placeholder="Modelo" value={moto.modelo} onChange={e=>setMoto({...moto,modelo:e.target.value})}/>
-          <input placeholder="Año" value={moto.anio} onChange={e=>setMoto({...moto,anio:e.target.value})}/>
-          <input placeholder="ID Cliente asignado" value={moto.clienteId} onChange={e=>setMoto({...moto,clienteId:e.target.value})}/>
-          <input placeholder="Pago diario" value={moto.pagoDiario} onChange={e=>setMoto({...moto,pagoDiario:e.target.value})}/>
-          <button onClick={guardarMoto}>{editMoto ? "Guardar cambios" : "Crear moto"}</button>
-
-          {motos.map(m=>(
-            <div key={m.id} style={{border:"1px solid #ddd",padding:10,marginTop:10}}>
-              <b>{m.placa}</b>
-              <p>{m.marca} {m.modelo} · RD${m.pagoDiario}</p>
-              <p>ID Cliente: {m.clienteId || "Sin asignar"}</p>
-              <button onClick={()=>editarMoto(m)}>Editar</button>
-              <button onClick={()=>eliminarMoto(m.id)}>Eliminar</button>
-            </div>
-          ))}
+      {ultimo && (
+        <div style={{marginTop:20}}>
+          <h2>Comprobante</h2>
+          <p>{ultimo.id}</p>
+          <QRCodeCanvas value={ultimo.url} />
+          <p>{ultimo.url}</p>
         </div>
       )}
     </div>
   );
 }
 
-function App() {
+function App(){
   const [user,setUser]=useState(null);
   useEffect(()=>onAuthStateChanged(auth,setUser),[]);
   if(!user) return <Login />;
