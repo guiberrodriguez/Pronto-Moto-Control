@@ -1,58 +1,58 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
-import { addDoc, collection, getDocs } from "firebase/firestore";
-import { auth, db } from "./firebase";
+import { auth } from "./firebase";
 
-function App(){
-  const [user,setUser]=useState(null);
+function Login({onLogin}) {
   const [email,setEmail]=useState("");
   const [pass,setPass]=useState("");
-  const [data,setData]=useState([]);
-  const [name,setName]=useState("");
+
+  return (
+    <div style={{padding:40}}>
+      <h1>Pronto Moto Control</h1>
+      <input placeholder="Correo" onChange={e=>setEmail(e.target.value)} />
+      <input placeholder="Contraseña" type="password" onChange={e=>setPass(e.target.value)} />
+      <button onClick={()=>signInWithEmailAndPassword(auth,email,pass)}>Entrar</button>
+    </div>
+  );
+}
+
+function Dashboard() {
+  const [tab,setTab]=useState("inicio");
+
+  return (
+    <div style={{padding:40}}>
+      <h1>Panel Principal</h1>
+      <button onClick={()=>signOut(auth)}>Salir</button>
+
+      <div style={{marginTop:20}}>
+        <button onClick={()=>setTab("inicio")}>Inicio</button>
+        <button onClick={()=>setTab("clientes")}>Clientes</button>
+        <button onClick={()=>setTab("motos")}>Motos</button>
+        <button onClick={()=>setTab("pagos")}>Pagos</button>
+        <button onClick={()=>setTab("gastos")}>Gastos</button>
+      </div>
+
+      <div style={{marginTop:30}}>
+        {tab==="inicio" && <h2>Bienvenido al sistema</h2>}
+        {tab==="clientes" && <h2>Módulo Clientes</h2>}
+        {tab==="motos" && <h2>Módulo Motos</h2>}
+        {tab==="pagos" && <h2>Módulo Pagos</h2>}
+        {tab==="gastos" && <h2>Módulo Gastos</h2>}
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [user,setUser]=useState(null);
 
   useEffect(()=>{
     onAuthStateChanged(auth,setUser);
   },[]);
 
-  async function login(){
-    await signInWithEmailAndPassword(auth,email,pass);
-  }
-
-  async function addData(){
-    await addDoc(collection(db,"test"),{name});
-    loadData();
-  }
-
-  async function loadData(){
-    const snap=await getDocs(collection(db,"test"));
-    setData(snap.docs.map(d=>d.data()));
-  }
-
-  if(!user){
-    return (
-      <div style={{padding:40}}>
-        <h1>Login</h1>
-        <input placeholder="email" onChange={e=>setEmail(e.target.value)} />
-        <input placeholder="password" type="password" onChange={e=>setPass(e.target.value)} />
-        <button onClick={login}>Entrar</button>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{padding:40}}>
-      <h1>Pronto Moto (Conectado)</h1>
-      <button onClick={()=>signOut(auth)}>Salir</button>
-
-      <h2>Prueba Firestore</h2>
-      <input placeholder="nombre" onChange={e=>setName(e.target.value)} />
-      <button onClick={addData}>Guardar</button>
-      <button onClick={loadData}>Cargar</button>
-
-      {data.map((d,i)=><p key={i}>{d.name}</p>)}
-    </div>
-  );
+  if(!user) return <Login />;
+  return <Dashboard />;
 }
 
-createRoot(document.getElementById("root")).render(<App/>);
+createRoot(document.getElementById("root")).render(<App />);
