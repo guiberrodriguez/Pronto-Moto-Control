@@ -572,3 +572,444 @@ function Dashboard({user}){
       estatus
     };
   }
+  
+    const rankingMotos=[...motosVisibles].sort((a,b)=>{
+    const netoA=ingresosPorMoto(a.id)-gastosPorMoto(a.id);
+    const netoB=ingresosPorMoto(b.id)-gastosPorMoto(b.id);
+    return netoB-netoA;
+  });
+
+  const motosMorosas=motosVisibles.filter(m=>m.clienteId && atrasoMoto(m)>=1);
+
+  const clientesFiltrados = useMemo(()=>{
+    const q = busquedaCliente.toLowerCase().trim();
+
+    if(!q) return clientesVisibles;
+
+    return clientesVisibles.filter(c=>{
+      const texto = [
+        c.idCliente,
+        c.nombre,
+        c.cedula,
+        c.telefono,
+        c.telefonoResidencial,
+        c.telefonoReferencia,
+        c.correo,
+        c.pais,
+        c.nacionalidad,
+        c.provincia,
+        c.municipio,
+        c.sexo
+      ].join(" ").toLowerCase();
+
+      return texto.includes(q);
+    });
+  },[clientesVisibles,busquedaCliente]);
+
+  const clientesPagoFiltrados = useMemo(()=>{
+    const q = busquedaClientePago.toLowerCase().trim();
+
+    if(!q) return clientesVisibles;
+
+    return clientesVisibles.filter(c=>{
+      const texto = [
+        c.idCliente,
+        c.nombre,
+        c.cedula,
+        c.telefono,
+        c.telefonoResidencial,
+        c.telefonoReferencia,
+        c.correo,
+        c.pais,
+        c.nacionalidad,
+        c.provincia,
+        c.municipio,
+        c.sexo
+      ].join(" ").toLowerCase();
+
+      return texto.includes(q);
+    });
+  },[clientesVisibles,busquedaClientePago]);
+
+  const clientePago = clientesVisibles.find(c=>c.id===clientePagoId) || null;
+  const motosClientePago = motosVisibles.filter(m=>m.clienteId===clientePagoId);
+  const motoPagoSeleccionada = motosVisibles.find(m=>m.id===pago.motoId) || null;
+  const deudaPagoSeleccionada = motoPagoSeleccionada ? deudaMoto(motoPagoSeleccionada) : null;
+
+  async function generarIdCliente(pais){
+    const code=countryCode(pais);
+    const year=currentYear();
+    const prefijo=`${code}${year}`;
+    const existentes=clientes.filter(c=>String(c.idCliente||"").startsWith(prefijo));
+    const secuencia=String(existentes.length + 1).padStart(2,"0");
+    return `${prefijo}-${secuencia}`;
+  }
+
+  async function guardarCliente(){
+    if(!esAdmin) return alert("Solo el administrador puede crear o editar clientes");
+    if(!cliente.nombre) return alert("El nombre del cliente es obligatorio");
+
+    const clienteFinal = {
+      ...cliente,
+      municipio: cliente.municipio || (provinciasRD[cliente.provincia] || [])[0] || ""
+    };
+
+    if(editCliente){
+      await updateDoc(doc(db,"clientes",editCliente),clienteFinal);
+      setEditCliente(null);
+    }else{
+      const nuevoId=await generarIdCliente(cliente.pais);
+      await addDoc(collection(db,"clientes"),{
+        ...clienteFinal,
+        idCliente:nuevoId
+      });
+    }
+
+    setCliente({
+      idCliente:"",
+      pais:"República Dominicana",
+      nacionalidad:"Dominicana",
+      provincia:"Distrito Nacional",
+      municipio:"Santo Domingo de Guzmán",
+      sexo:"Masculino",
+      nombre:"",
+      cedula:"",
+      correo:"",
+      telefono:"",
+      telefonoResidencial:"",
+      telefonoReferencia:"",
+      direccion:"",
+      referencia:"",
+      riesgo:"Nuevo cliente",
+      cobradorId:""
+    });
+
+    cargar();
+  }
+
+  function editarCliente(c){
+    if(!esAdmin) return alert("Solo el administrador puede editar clientes");
+
+    setCliente({
+      idCliente:c.idCliente||"",
+      pais:c.pais||"República Dominicana",
+      nacionalidad:c.nacionalidad||"Dominicana",
+      provincia:c.provincia||"Distrito Nacional",
+      municipio:c.municipio||"Santo Domingo de Guzmán",
+      sexo:c.sexo||"Masculino",
+      nombre:c.nombre||"",
+      cedula:c.cedula||"",
+      correo:c.correo||"",
+      telefono:c.telefono||"",
+      telefonoResidencial:c.telefonoResidencial||"",
+      telefonoReferencia:c.telefonoReferencia||"",
+      direccion:c.direccion||"",
+      referencia:c.referencia||"",
+      riesgo:c.riesgo||"Nuevo cliente",
+      cobradorId:c.cobradorId||""
+    });
+
+    setEditCliente(c.id);
+    setTab("clientes");
+  }
+
+  async function eliminarCliente(id){
+    if(!esAdmin) return alert("Solo el administrador puede eliminar clientes");
+
+    if(confirm("¿Eliminar este cliente? Las motos asignadas quedarán sin cliente.")){
+      await deleteDoc(doc(db,"clientes",id));
+
+      for(const m of motos.filter(x=>x.clienteId===id)){
+        await updateDoc(doc(db,"motos",m.id),{
+          ...m,
+          clienteId:"",
+          estado:"Disponible"
+        });
+      }
+
+      cargar();
+    }
+  }
+
+  async function guardarMoto(){
+    if(!esAdmin) return alert("Solo el administrador puede crear o editar motos");
+    if(!moto.placa) return alert("La placa es obligatoria");
+
+    const datos={
+      ...moto,
+      estado:moto.clienteId?"Alquilada":"Disponible",
+      fechaAsignacion:moto.clienteId ? (moto.fechaAsignacion || today()) : ""
+    };
+
+    if(editMoto){
+      await updateDoc(doc(db,"motos",editMoto),datos);
+      setEditMoto(null);
+    }else{
+      await addDoc(collection(db,"motos"),datos);
+    }
+
+    setMoto({
+      placa:"",
+      marca:"",
+      modelo:"",
+      anio:"",
+      tracker:"",
+      clienteId:"",
+      fechaAsignacion:today(),
+      pagoDiario:"400",
+      deposito:"5000"
+    });
+
+    cargar();
+  }
+
+  function editarMoto(m){
+    if(!esAdmin) return alert("Solo el administrador puede editar motos");
+
+    setMoto({
+      placa:m.placa||"",
+      marca:m.marca||"",
+      modelo:m.modelo||"",
+      anio:m.anio||"",
+      tracker:m.tracker||"",
+      clienteId:m.clienteId||"",
+      fechaAsignacion:m.fechaAsignacion||today(),
+      pagoDiario:m.pagoDiario||"400",
+      deposito:m.deposito||"5000"
+    });
+
+    setEditMoto(m.id);
+    setTab("motos");
+  }
+
+  async function eliminarMoto(id){
+    if(!esAdmin) return alert("Solo el administrador puede eliminar motos");
+
+    if(confirm("¿Eliminar esta moto?")){
+      await deleteDoc(doc(db,"motos",id));
+      cargar();
+    }
+  }
+
+  async function registrarPago(){
+    const motoSeleccionada=motosVisibles.find(m=>m.id===pago.motoId);
+    if(!clientePago) return alert("Selecciona un cliente");
+    if(!motoSeleccionada) return alert("Selecciona una moto del cliente");
+
+    const deuda=deudaMoto(motoSeleccionada);
+    const montoPagado=Number(pago.monto || 0);
+    const pendienteDespues=Math.max(0, deuda.montoPendiente - montoPagado);
+    const id=receiptId(pagos.length);
+
+    const comprobante={
+      id,
+      fecha:today(),
+      clienteId:clientePago.id,
+      idCliente:clientePago.idCliente || "",
+      cliente:clientePago.nombre || "",
+      cedula:clientePago.cedula || "",
+      telefono:clientePago.telefono || "",
+      cobradorId:usuarioActual?.uid || usuarioActual?.id || "",
+      cobrador:usuarioActual?.nombre || user.email || "",
+      motoId:motoSeleccionada.id,
+      moto:`${motoSeleccionada.placa} ${motoSeleccionada.marca||""} ${motoSeleccionada.modelo||""}`,
+      cuotaDiaria:Number(motoSeleccionada.pagoDiario || 0),
+      cuotasPendientes:deuda.cuotasPendientes,
+      montoPendienteAntes:deuda.montoPendiente,
+      monto:Number(pago.monto || 0),
+      montoPendienteDespues:pendienteDespues,
+      metodo:pago.metodo,
+      estatus:pendienteDespues <= 0 ? "Al día" : deuda.estatus,
+      url:`${BASE_URL}/validar/${id}`
+    };
+
+    await addDoc(collection(db,"pagos"),comprobante);
+    setUltimo(comprobante);
+    setPago({motoId:"",monto:"400",metodo:"Efectivo"});
+    cargar();
+  }
+
+  async function guardarGasto(){
+    if(!esAdmin) return alert("Solo el administrador puede registrar gastos");
+    if(!gasto.motoId) return alert("Selecciona una moto");
+    if(!gasto.monto) return alert("El monto es obligatorio");
+
+    if(editGasto){
+      await updateDoc(doc(db,"gastos",editGasto),gasto);
+      setEditGasto(null);
+    }else{
+      await addDoc(collection(db,"gastos"),gasto);
+    }
+
+    setGasto({
+      motoId:"",
+      fecha:today(),
+      categoria:"Reparación",
+      monto:"",
+      proveedor:"",
+      nota:""
+    });
+
+    cargar();
+  }
+
+  function editarGasto(g){
+    if(!esAdmin) return alert("Solo el administrador puede editar gastos");
+
+    setGasto({
+      motoId:g.motoId||"",
+      fecha:g.fecha||today(),
+      categoria:g.categoria||"Reparación",
+      monto:g.monto||"",
+      proveedor:g.proveedor||"",
+      nota:g.nota||""
+    });
+
+    setEditGasto(g.id);
+    setTab("gastos");
+  }
+
+  async function eliminarGasto(id){
+    if(!esAdmin) return alert("Solo el administrador puede eliminar gastos");
+
+    if(confirm("¿Eliminar este gasto?")){
+      await deleteDoc(doc(db,"gastos",id));
+      cargar();
+    }
+  }
+
+  async function subirAdjunto(){
+    if(!esAdmin) return alert("Solo el administrador puede subir adjuntos");
+    if(!clienteAdjunto) return alert("Selecciona un cliente");
+    if(!archivo) return alert("Selecciona un archivo");
+
+    const ruta=`clientes/${clienteAdjunto}/${Date.now()}-${archivo.name}`;
+    const archivoRef=ref(storage,ruta);
+
+    await uploadBytes(archivoRef,archivo);
+    const url=await getDownloadURL(archivoRef);
+
+    await addDoc(collection(db,"adjuntos"),{
+      clienteId:clienteAdjunto,
+      nombre:archivo.name,
+      tipo:archivo.type,
+      ruta,
+      url,
+      fecha:today()
+    });
+
+    setArchivo(null);
+    setClienteAdjunto("");
+    cargar();
+  }
+
+  async function eliminarAdjunto(a){
+    if(!esAdmin) return alert("Solo el administrador puede eliminar adjuntos");
+
+    if(confirm("¿Eliminar este adjunto?")){
+      await deleteObject(ref(storage,a.ruta));
+      await deleteDoc(doc(db,"adjuntos",a.id));
+      cargar();
+    }
+  }
+
+  async function guardarUsuario(){
+    if(!esAdmin) return alert("Solo el administrador puede gestionar usuarios");
+    if(!usuarioForm.uid || !usuarioForm.correo) return alert("Debes colocar UID y correo del usuario creado en Firebase Authentication");
+
+    await setDoc(doc(db,"usuarios",usuarioForm.uid),usuarioForm);
+
+    setUsuarioForm({
+      uid:"",
+      nombre:"",
+      correo:"",
+      rol:"cobrador"
+    });
+
+    cargar();
+  }
+
+  async function cambiarPassword(){
+    if(!nuevaPassword || nuevaPassword.length < 6){
+      return alert("La contraseña debe tener al menos 6 caracteres");
+    }
+
+    await updatePassword(auth.currentUser,nuevaPassword);
+    setNuevaPassword("");
+    alert("Contraseña actualizada");
+  }
+
+  function mensajeWhatsAppPago(p){
+    return `Hola ${p.cliente || ""}, su pago ha sido registrado correctamente.\n\nID: ${p.id}\nMoto: ${p.moto}\nMonto pagado: ${money(p.monto)}\nPendiente: ${money(p.montoPendienteDespues || 0)}\nComprobante: ${p.url}`;
+  }
+
+  function mensajeWhatsAppMora(m){
+    const c=clientes.find(x=>x.id===m.clienteId);
+    const d=deudaMoto(m);
+
+    return `Hola ${c?.nombre || ""}, tienes ${d.cuotasPendientes} cuota(s) pendiente(s) de pago de la motocicleta ${m.placa}. Deuda estimada: ${money(d.montoPendiente)}. Favor regularizar.`;
+  }
+
+  function imprimirContrato(m){
+    const c=clientes.find(x=>x.id===m.clienteId);
+    if(!c) return alert("Esta moto no tiene cliente asignado");
+
+    const html=`
+      <h1>${empresa.nombre}</h1>
+      <p class="centro">${empresa.telefono} · ${empresa.direccion}</p>
+      <h2>CONTRATO DE ALQUILER DE MOTOCICLETA</h2>
+      <p><b>Fecha:</b> ${today()}</p>
+      <p><b>Arrendador:</b> ${empresa.nombre} · RNC/Cédula: ${empresa.rnc||"N/A"}</p>
+      <p><b>Arrendatario:</b> ${c.nombre} · ID Cliente: ${c.idCliente || c.id} · Cédula: ${c.cedula} · Teléfono: ${c.telefono}</p>
+      <p><b>Sexo:</b> ${c.sexo || ""} · <b>Correo:</b> ${c.correo || ""}</p>
+      <p><b>País:</b> ${c.pais || ""} · <b>Nacionalidad:</b> ${c.nacionalidad || ""}</p>
+      <p><b>Provincia:</b> ${c.provincia || ""} · <b>Municipio:</b> ${c.municipio || ""}</p>
+      <p><b>Dirección:</b> ${c.direccion}</p>
+
+      <table>
+        <tr>
+          <th>Placa</th>
+          <th>Marca</th>
+          <th>Modelo</th>
+          <th>Año</th>
+          <th>GPS / Tracker</th>
+          <th>Pago diario</th>
+          <th>Depósito</th>
+        </tr>
+        <tr>
+          <td>${m.placa}</td>
+          <td>${m.marca}</td>
+          <td>${m.modelo}</td>
+          <td>${m.anio}</td>
+          <td>${m.tracker||"N/A"}</td>
+          <td>${money(m.pagoDiario)}</td>
+          <td>${money(m.deposito)}</td>
+        </tr>
+      </table>
+
+      <h3>Condiciones principales</h3>
+      <ol>
+        <li>El pago es diario, exceptuando los domingos.</li>
+        <li>Al acumular tres cuotas vencidas, el contrato podrá ser cancelado.</li>
+        <li>El arrendador podrá recuperar la motocicleta por las vías legales correspondientes.</li>
+        <li>El arrendatario asume multas, accidentes, daños, uso indebido y cualquier responsabilidad derivada del uso de la motocicleta.</li>
+        <li>Queda prohibido prestar, ceder, subarrendar o usar la motocicleta en actividades ilícitas.</li>
+      </ol>
+
+      <p>${empresa.notas||""}</p>
+
+      <br/><br/>
+      <table class="firmas">
+        <tr>
+          <td>Firma Arrendador</td>
+          <td>Firma Arrendatario</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td></td>
+        </tr>
+      </table>
+    `;
+
+    abrirImpresion("Contrato "+m.placa,html,"normal");
+  }
