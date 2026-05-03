@@ -243,3 +243,242 @@ function cleanPhone(phone){
 function whatsappUrl(phone,text){
   return `https://wa.me/1${cleanPhone(phone)}?text=${encodeURIComponent(text)}`;
 }
+
+function Login(){
+  const [email,setEmail]=useState("");
+  const [pass,setPass]=useState("");
+  const [error,setError]=useState("");
+
+  async function login(){
+    try{
+      setError("");
+      await signInWithEmailAndPassword(auth,email,pass);
+    }catch(e){
+      setError(e.message);
+    }
+  }
+
+  return (
+    <div className="login">
+      <div className="card loginCard">
+        <div className="logoBox bigLogo">
+          <img src="/logo.png" alt="Pronto Moto" onError={e=>{e.currentTarget.style.display="none"}} />
+        </div>
+
+        <h1>Pronto Moto Control</h1>
+        <p className="muted">Acceso privado</p>
+
+        {error && <div className="alert">{error}</div>}
+
+        <input placeholder="Correo" value={email} onChange={e=>setEmail(e.target.value)} />
+        <input type="password" placeholder="Contraseña" value={pass} onChange={e=>setPass(e.target.value)} />
+
+        <button onClick={login}>Entrar</button>
+      </div>
+    </div>
+  );
+}
+
+function ValidarComprobante(){
+  const [data,setData]=useState(null);
+  const [loading,setLoading]=useState(true);
+
+  useEffect(()=>{
+    async function load(){
+      const id = window.location.pathname.split("/validar/")[1];
+      const snap = await getDocs(collection(db,"pagos"));
+      const pagos = snap.docs.map(d=>d.data());
+      setData(pagos.find(p=>p.id===id) || null);
+      setLoading(false);
+    }
+
+    load();
+  },[]);
+
+  if(loading){
+    return <div className="app"><div className="card"><h1>Validando comprobante...</h1></div></div>;
+  }
+
+  if(!data){
+    return <div className="app"><div className="card"><h1>Comprobante no encontrado</h1></div></div>;
+  }
+
+  return (
+    <div className="app">
+      <div className="card validCard">
+        <div className="logoBox bigLogo">
+          <img src="/logo.png" alt="Pronto Moto" onError={e=>{e.currentTarget.style.display="none"}} />
+        </div>
+
+        <h1>Comprobante válido</h1>
+        <p className="success">Validado en la nube</p>
+
+        <table>
+          <tbody>
+            <tr><th>ID</th><td>{data.id}</td></tr>
+            <tr><th>Fecha</th><td>{data.fecha}</td></tr>
+            <tr><th>ID Cliente</th><td>{data.idCliente || data.clienteId}</td></tr>
+            <tr><th>Cliente</th><td>{data.cliente}</td></tr>
+            <tr><th>Moto</th><td>{data.moto}</td></tr>
+            <tr><th>Cuotas pendientes</th><td>{data.cuotasPendientes || 0}</td></tr>
+            <tr><th>Monto pendiente antes</th><td>{money(data.montoPendienteAntes || 0)}</td></tr>
+            <tr><th>Monto pagado</th><td>{money(data.monto)}</td></tr>
+            <tr><th>Monto pendiente después</th><td>{money(data.montoPendienteDespues || 0)}</td></tr>
+            <tr><th>Método</th><td>{data.metodo}</td></tr>
+            <tr><th>Cobrador</th><td>{data.cobrador || ""}</td></tr>
+            <tr><th>Estatus</th><td>{data.estatus || "N/A"}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function abrirImpresion(titulo,html,tipoPapel="normal"){
+  const anterior=document.getElementById("print-frame");
+  if(anterior) anterior.remove();
+
+  const iframe=document.createElement("iframe");
+  iframe.id="print-frame";
+  iframe.style.position="fixed";
+  iframe.style.right="0";
+  iframe.style.bottom="0";
+  iframe.style.width="0";
+  iframe.style.height="0";
+  iframe.style.border="0";
+  document.body.appendChild(iframe);
+
+  const ticketCss = tipoPapel === "termico"
+    ? `
+      @page { size: 80mm auto; margin: 3mm; }
+      body{font-family:Arial,sans-serif;width:72mm;padding:0;margin:0;color:#111;background:white;font-size:11px;}
+      h1{font-size:16px;text-align:center;margin:4px 0;}
+      h2{font-size:13px;text-align:center;margin:4px 0;}
+      p{margin:3px 0;}
+      table{width:100%;border-collapse:collapse;margin-top:6px;font-size:11px;}
+      td,th{border-bottom:1px dashed #999;padding:4px 0;text-align:left;}
+      .centro{text-align:center;}
+      img{max-width:120px;}
+      .firmas td{height:50px;}
+    `
+    : `
+      @page { size: auto; margin: 12mm; }
+      body{font-family:Arial,sans-serif;padding:30px;color:#333;background:white;}
+      h1,h2{text-align:center;}
+      table{width:100%;border-collapse:collapse;margin-top:20px;}
+      td,th{border:1px solid #ddd;padding:8px;text-align:left;}
+      .firmas td{height:80px;}
+      .centro{text-align:center;}
+      img{max-width:180px;}
+    `;
+
+  const documento=iframe.contentWindow.document;
+  documento.open();
+  documento.write(`
+    <html>
+      <head>
+        <title>${titulo}</title>
+        <style>${ticketCss}</style>
+      </head>
+      <body>${html}</body>
+    </html>
+  `);
+  documento.close();
+
+  setTimeout(()=>{
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+  },700);
+}
+
+function Dashboard({user}){
+  const [tab,setTab]=useState("inicio");
+
+  const [clientes,setClientes]=useState([]);
+  const [motos,setMotos]=useState([]);
+  const [pagos,setPagos]=useState([]);
+  const [gastos,setGastos]=useState([]);
+  const [adjuntos,setAdjuntos]=useState([]);
+  const [usuarios,setUsuarios]=useState([]);
+
+  const [usuarioActual,setUsuarioActual]=useState(null);
+  const [ultimo,setUltimo]=useState(null);
+  const [clienteVista,setClienteVista]=useState(null);
+
+  const [busquedaCliente,setBusquedaCliente]=useState("");
+  const [busquedaClientePago,setBusquedaClientePago]=useState("");
+  const [clientePagoId,setClientePagoId]=useState("");
+  const [papelComprobante,setPapelComprobante]=useState("normal");
+
+  const [nuevaPassword,setNuevaPassword]=useState("");
+
+  const [usuarioForm,setUsuarioForm]=useState({
+    uid:"",
+    nombre:"",
+    correo:"",
+    rol:"cobrador"
+  });
+
+  const [empresa,setEmpresa]=useState({
+    nombre:"Pronto Moto",
+    telefono:"",
+    direccion:"",
+    rnc:"",
+    notas:""
+  });
+
+  const [cliente,setCliente]=useState({
+    idCliente:"",
+    pais:"República Dominicana",
+    nacionalidad:"Dominicana",
+    provincia:"Distrito Nacional",
+    municipio:"Santo Domingo de Guzmán",
+    sexo:"Masculino",
+    nombre:"",
+    cedula:"",
+    correo:"",
+    telefono:"",
+    telefonoResidencial:"",
+    telefonoReferencia:"",
+    direccion:"",
+    referencia:"",
+    riesgo:"Nuevo cliente",
+    cobradorId:""
+  });
+
+  const [moto,setMoto]=useState({
+    placa:"",
+    marca:"",
+    modelo:"",
+    anio:"",
+    tracker:"",
+    clienteId:"",
+    fechaAsignacion:today(),
+    pagoDiario:"400",
+    deposito:"5000"
+  });
+
+  const [pago,setPago]=useState({
+    motoId:"",
+    monto:"400",
+    metodo:"Efectivo"
+  });
+
+  const [gasto,setGasto]=useState({
+    motoId:"",
+    fecha:today(),
+    categoria:"Reparación",
+    monto:"",
+    proveedor:"",
+    nota:""
+  });
+
+  const [clienteAdjunto,setClienteAdjunto]=useState("");
+  const [archivo,setArchivo]=useState(null);
+
+  const [editCliente,setEditCliente]=useState(null);
+  const [editMoto,setEditMoto]=useState(null);
+  const [editGasto,setEditGasto]=useState(null);
+
+  const esAdmin = !usuarioActual || usuarioActual.rol === "admin";
+  const municipiosDisponibles = provinciasRD[cliente.provincia] || [];
