@@ -1093,3 +1093,553 @@ function Dashboard({user}){
       }
     }
   },[motosMorosas.length]);
+  
+    return (
+    <div className="app">
+      <div className="header">
+        <div className="brand">
+          <div className="logoBox">
+            <img src="/logo.png" alt="Pronto Moto" onError={e=>{e.currentTarget.style.display="none"}} />
+          </div>
+
+          <div>
+            <p className="muted">Sistema comercial de renta diaria</p>
+            <h1>Pronto Moto Control PRO</h1>
+            <p className="muted">
+              Usuario: {usuarioActual?.nombre || user.email} · Rol: {usuarioActual?.rol || "admin"}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <button onClick={cargar}>Actualizar</button>
+          <button onClick={()=>signOut(auth)}>Salir</button>
+        </div>
+      </div>
+
+      <div className="gridStats">
+        <div className="card stat"><span>Clientes</span><b>{clientesVisibles.length}</b></div>
+        <div className="card stat"><span>Motos</span><b>{motosVisibles.length}</b></div>
+        <div className="card stat"><span>Morosas</span><b>{motosMorosas.length}</b></div>
+        <div className="card stat"><span>Ingresos</span><b>{money(totalIngresos)}</b></div>
+        <div className="card stat"><span>Gastos</span><b>{money(totalGastos)}</b></div>
+        <div className="card stat"><span>Neto</span><b>{money(neto)}</b></div>
+      </div>
+
+      <div className="tabs">
+        <button className={tab==="inicio"?"active":""} onClick={()=>setTab("inicio")}>Inicio</button>
+        <button className={tab==="clientes"?"active":""} onClick={()=>setTab("clientes")}>Clientes</button>
+        <button className={tab==="motos"?"active":""} onClick={()=>setTab("motos")}>Motos</button>
+        <button className={tab==="pagos"?"active":""} onClick={()=>setTab("pagos")}>Pagos</button>
+        {esAdmin && <button className={tab==="gastos"?"active":""} onClick={()=>setTab("gastos")}>Gastos</button>}
+        <button className={tab==="morosidad"?"active":""} onClick={()=>setTab("morosidad")}>Morosidad</button>
+        <button className={tab==="ranking"?"active":""} onClick={()=>setTab("ranking")}>Ranking</button>
+        {esAdmin && <button className={tab==="adjuntos"?"active":""} onClick={()=>setTab("adjuntos")}>Adjuntos</button>}
+        {esAdmin && <button className={tab==="empresa"?"active":""} onClick={()=>setTab("empresa")}>Empresa</button>}
+        <button className={tab==="configuracion"?"active":""} onClick={()=>setTab("configuracion")}>Configuración</button>
+      </div>
+
+      {tab==="inicio" && (
+        <>
+          <div className="card">
+            <h2>Dashboard financiero</h2>
+            <p>Ingresos totales: <b>{money(totalIngresos)}</b></p>
+            <p>Gastos totales: <b>{money(totalGastos)}</b></p>
+            <p>Neto general: <b>{money(neto)}</b></p>
+            {!esAdmin && <p>Vista limitada a clientes asignados al cobrador.</p>}
+          </div>
+
+          <div className="card">
+            <h2>Gráficas rápidas</h2>
+
+            <p><b>Ingresos</b> {money(totalIngresos)}</p>
+            <div style={{background:"#eee",borderRadius:10,overflow:"hidden",height:18}}>
+              <div style={{width:`${Math.min(100,totalIngresos/(totalIngresos+totalGastos || 1)*100)}%`,background:"#ff6600",height:18}}></div>
+            </div>
+
+            <p><b>Gastos</b> {money(totalGastos)}</p>
+            <div style={{background:"#eee",borderRadius:10,overflow:"hidden",height:18}}>
+              <div style={{width:`${Math.min(100,totalGastos/(totalIngresos+totalGastos || 1)*100)}%`,background:"#dc2626",height:18}}></div>
+            </div>
+
+            <p><b>Morosidad</b> {motosMorosas.length} moto(s)</p>
+            <div style={{background:"#eee",borderRadius:10,overflow:"hidden",height:18}}>
+              <div style={{width:`${Math.min(100,(motosMorosas.length/(motosVisibles.length || 1))*100)}%`,background:"#25D366",height:18}}></div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {tab==="configuracion" && (
+        <div className="card">
+          <h2>Configuración</h2>
+
+          <h3>Cambiar contraseña</h3>
+          <input
+            type="password"
+            placeholder="Nueva contraseña"
+            value={nuevaPassword}
+            onChange={e=>setNuevaPassword(e.target.value)}
+          />
+          <button onClick={cambiarPassword}>Cambiar contraseña</button>
+
+          {esAdmin && (
+            <>
+              <h3>Gestión de usuarios / cobradores</h3>
+              <p className="muted">
+                Primero crea el usuario en Firebase Authentication. Luego copia su UID y regístralo aquí.
+              </p>
+
+              <input placeholder="UID de Firebase Auth" value={usuarioForm.uid} onChange={e=>setUsuarioForm({...usuarioForm,uid:e.target.value})}/>
+              <input placeholder="Nombre" value={usuarioForm.nombre} onChange={e=>setUsuarioForm({...usuarioForm,nombre:e.target.value})}/>
+              <input placeholder="Correo" value={usuarioForm.correo} onChange={e=>setUsuarioForm({...usuarioForm,correo:e.target.value})}/>
+              <select value={usuarioForm.rol} onChange={e=>setUsuarioForm({...usuarioForm,rol:e.target.value})}>
+                <option value="admin">Admin</option>
+                <option value="cobrador">Cobrador</option>
+              </select>
+              <button onClick={guardarUsuario}>Guardar usuario</button>
+
+              <h3>Usuarios registrados</h3>
+              {usuarios.map(u=>(
+                <div className="item" key={u.id}>
+                  <b>{u.nombre}</b>
+                  <p>{u.correo}</p>
+                  <p>Rol: {u.rol}</p>
+                  <p>UID: {u.uid}</p>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+      )}
+
+      {tab==="ranking" && (
+        <div className="card">
+          <h2>Ranking de motos por rentabilidad</h2>
+
+          {rankingMotos.map((m,index)=>(
+            <div className="item" key={m.id}>
+              <b>#{index+1} · {m.placa}</b>
+              <p>{m.marca} {m.modelo}</p>
+              <p>Ingresos: {money(ingresosPorMoto(m.id))}</p>
+              <p>Gastos: {money(gastosPorMoto(m.id))}</p>
+              <p>Neto: {money(ingresosPorMoto(m.id)-gastosPorMoto(m.id))}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab==="morosidad" && (
+        <div className="card">
+          <h2>Control de morosidad</h2>
+
+          {motosMorosas.length===0 && <p>No hay motos con atraso registrado.</p>}
+
+          {motosMorosas.map(m=>{
+            const c=clientes.find(x=>x.id===m.clienteId);
+            const d=deudaMoto(m);
+
+            return (
+              <div className="item" key={m.id}>
+                <b>{m.placa}</b>
+                <p>Cliente: {c?.nombre || "N/A"}</p>
+                <p>Cuotas pendientes: {d.cuotasPendientes}</p>
+                <p>Deuda estimada: {money(d.montoPendiente)}</p>
+                <p>Estatus: {d.estatus}</p>
+
+                {c?.telefono && (
+                  <a href={whatsappUrl(c.telefono,mensajeWhatsAppMora(m))} target="_blank" rel="noreferrer">
+                    <button className="whatsappBtn">WhatsApp</button>
+                  </a>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {tab==="empresa" && esAdmin && (
+        <div className="card">
+          <h2>Datos de empresa</h2>
+
+          <input placeholder="Nombre de empresa" value={empresa.nombre} onChange={e=>setEmpresa({...empresa,nombre:e.target.value})}/>
+          <input placeholder="Teléfono" value={empresa.telefono} onChange={e=>setEmpresa({...empresa,telefono:e.target.value})}/>
+          <input placeholder="Dirección" value={empresa.direccion} onChange={e=>setEmpresa({...empresa,direccion:e.target.value})}/>
+          <input placeholder="RNC / Cédula" value={empresa.rnc} onChange={e=>setEmpresa({...empresa,rnc:e.target.value})}/>
+          <input placeholder="Notas adicionales para contrato" value={empresa.notas} onChange={e=>setEmpresa({...empresa,notas:e.target.value})}/>
+        </div>
+      )}
+
+      {tab==="clientes" && (
+        <div className="card">
+          <h2>{editCliente ? "Editar cliente" : "Crear cliente"}</h2>
+
+          <input 
+            placeholder="Buscar cliente por nombre, ID, cédula, teléfono, correo, provincia..."
+            value={busquedaCliente}
+            onChange={e=>setBusquedaCliente(e.target.value)}
+          />
+
+          {esAdmin && (
+            <>
+              {editCliente && <p><b>ID Cliente:</b> {cliente.idCliente}</p>}
+
+              <select value={cliente.pais} onChange={e=>setCliente({...cliente,pais:e.target.value})}>
+                {paises.map(p=><option key={p} value={p}>{p}</option>)}
+              </select>
+
+              <select value={cliente.nacionalidad} onChange={e=>setCliente({...cliente,nacionalidad:e.target.value})}>
+                {nacionalidades.map(n=><option key={n} value={n}>{n}</option>)}
+              </select>
+
+              <select
+                value={cliente.provincia}
+                onChange={e=>{
+                  const prov=e.target.value;
+                  setCliente({
+                    ...cliente,
+                    provincia:prov,
+                    municipio:(provinciasRD[prov] || [])[0] || ""
+                  });
+                }}
+              >
+                {Object.keys(provinciasRD).map(p=><option key={p} value={p}>{p}</option>)}
+              </select>
+
+              <select value={cliente.municipio} onChange={e=>setCliente({...cliente,municipio:e.target.value})}>
+                {municipiosDisponibles.map(m=><option key={m} value={m}>{m}</option>)}
+              </select>
+
+              <select value={cliente.sexo} onChange={e=>setCliente({...cliente,sexo:e.target.value})}>
+                <option>Masculino</option>
+                <option>Femenino</option>
+              </select>
+
+              <input placeholder="Nombre" value={cliente.nombre} onChange={e=>setCliente({...cliente,nombre:e.target.value})}/>
+              <input placeholder="Cédula / Pasaporte" value={cliente.cedula} onChange={e=>setCliente({...cliente,cedula:e.target.value})}/>
+              <input placeholder="Correo electrónico" value={cliente.correo} onChange={e=>setCliente({...cliente,correo:e.target.value})}/>
+              <input placeholder="Teléfono móvil" value={cliente.telefono} onChange={e=>setCliente({...cliente,telefono:e.target.value})}/>
+              <input placeholder="Teléfono residencial" value={cliente.telefonoResidencial} onChange={e=>setCliente({...cliente,telefonoResidencial:e.target.value})}/>
+              <input placeholder="Teléfono de referencia" value={cliente.telefonoReferencia} onChange={e=>setCliente({...cliente,telefonoReferencia:e.target.value})}/>
+              <input placeholder="Dirección" value={cliente.direccion} onChange={e=>setCliente({...cliente,direccion:e.target.value})}/>
+              <input placeholder="Referencia personal" value={cliente.referencia} onChange={e=>setCliente({...cliente,referencia:e.target.value})}/>
+              <input placeholder="Riesgo" value={cliente.riesgo} onChange={e=>setCliente({...cliente,riesgo:e.target.value})}/>
+
+              <select value={cliente.cobradorId} onChange={e=>setCliente({...cliente,cobradorId:e.target.value})}>
+                <option value="">Sin cobrador asignado</option>
+                {usuarios.filter(u=>u.rol==="cobrador").map(u=>(
+                  <option key={u.uid || u.id} value={u.uid || u.id}>{u.nombre} · {u.correo}</option>
+                ))}
+              </select>
+
+              <button onClick={guardarCliente}>{editCliente ? "Guardar cambios" : "Crear cliente"}</button>
+            </>
+          )}
+
+          {clientesFiltrados.map(c=>(
+            <div className="item" key={c.id}>
+              <b>{c.idCliente || c.id} · {c.nombre}</b>
+              <p>{c.pais || "N/A"} · {c.nacionalidad || "N/A"} · {c.sexo || "N/A"}</p>
+              <p>{c.provincia || "N/A"} · {c.municipio || "N/A"}</p>
+              <p>{c.telefono} · {c.cedula}</p>
+              <p>{c.correo}</p>
+              <p>Cobrador: {usuarios.find(u=>(u.uid || u.id)===c.cobradorId)?.nombre || "Sin asignar"}</p>
+
+              {esAdmin && <button onClick={()=>editarCliente(c)}>Editar</button>}
+              <button onClick={()=>setClienteVista(c)}>Perfil</button>
+
+              {c.telefono && (
+                <a href={whatsappUrl(c.telefono,`Hola ${c.nombre}, te contactamos de Pronto Moto.`)} target="_blank" rel="noreferrer">
+                  <button className="whatsappBtn">WhatsApp</button>
+                </a>
+              )}
+
+              {esAdmin && <button className="deleteBtn" onClick={()=>eliminarCliente(c.id)}>Eliminar</button>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {clienteVista && (
+        <div className="card">
+          <h2>Perfil del cliente</h2>
+
+          <p><b>ID Cliente:</b> {clienteVista.idCliente || clienteVista.id}</p>
+          <p><b>Nombre:</b> {clienteVista.nombre}</p>
+          <p><b>Sexo:</b> {clienteVista.sexo}</p>
+          <p><b>País:</b> {clienteVista.pais}</p>
+          <p><b>Nacionalidad:</b> {clienteVista.nacionalidad}</p>
+          <p><b>Provincia:</b> {clienteVista.provincia}</p>
+          <p><b>Municipio:</b> {clienteVista.municipio}</p>
+          <p><b>Cédula:</b> {clienteVista.cedula}</p>
+          <p><b>Correo:</b> {clienteVista.correo}</p>
+          <p><b>Teléfono móvil:</b> {clienteVista.telefono}</p>
+          <p><b>Teléfono residencial:</b> {clienteVista.telefonoResidencial}</p>
+          <p><b>Teléfono referencia:</b> {clienteVista.telefonoReferencia}</p>
+          <p><b>Dirección:</b> {clienteVista.direccion}</p>
+
+          <h3>Motos asignadas</h3>
+          {motos.filter(m=>m.clienteId===clienteVista.id).map(m=>(
+            <div className="item" key={m.id}>{m.placa} - {m.marca} {m.modelo}</div>
+          ))}
+
+          <h3>Pagos</h3>
+          {pagos.filter(p=>p.clienteId===clienteVista.id).map(p=>(
+            <div className="item" key={p.docId}>{p.id} - {money(p.monto)}</div>
+          ))}
+
+          <h3>Adjuntos</h3>
+          {adjuntos.filter(a=>a.clienteId===clienteVista.id).map(a=>(
+            <div className="item" key={a.id}>
+              <a href={a.url} target="_blank" rel="noreferrer">{a.nombre}</a>
+            </div>
+          ))}
+
+          <button onClick={()=>setClienteVista(null)}>Cerrar perfil</button>
+        </div>
+      )}
+
+      {tab==="motos" && (
+        <div className="card">
+          <h2>{editMoto ? "Editar moto" : "Crear moto"}</h2>
+
+          {esAdmin && (
+            <>
+              <input placeholder="Placa" value={moto.placa} onChange={e=>setMoto({...moto,placa:e.target.value})}/>
+              <input placeholder="Marca" value={moto.marca} onChange={e=>setMoto({...moto,marca:e.target.value})}/>
+              <input placeholder="Modelo" value={moto.modelo} onChange={e=>setMoto({...moto,modelo:e.target.value})}/>
+              <input placeholder="Año" value={moto.anio} onChange={e=>setMoto({...moto,anio:e.target.value})}/>
+              <input placeholder="Tracker / GPS" value={moto.tracker} onChange={e=>setMoto({...moto,tracker:e.target.value})}/>
+
+              <select value={moto.clienteId} onChange={e=>setMoto({...moto,clienteId:e.target.value})}>
+                <option value="">Sin cliente asignado</option>
+                {clientes.map(c=><option key={c.id} value={c.id}>{c.idCliente || c.id} · {c.nombre}</option>)}
+              </select>
+
+              <input type="date" value={moto.fechaAsignacion} onChange={e=>setMoto({...moto,fechaAsignacion:e.target.value})}/>
+              <input placeholder="Pago diario" value={moto.pagoDiario} onChange={e=>setMoto({...moto,pagoDiario:e.target.value})}/>
+              <input placeholder="Depósito" value={moto.deposito} onChange={e=>setMoto({...moto,deposito:e.target.value})}/>
+
+              <button onClick={guardarMoto}>{editMoto ? "Guardar cambios" : "Crear moto"}</button>
+            </>
+          )}
+
+          {motosVisibles.map(m=>{
+            const d=deudaMoto(m);
+
+            return (
+              <div className="item" key={m.id}>
+                <b>{m.placa}</b>
+                <p>{m.marca} {m.modelo} · {m.anio}</p>
+                <p>Pago diario: {money(m.pagoDiario)}</p>
+                <p>Estado: {m.estado || "Disponible"}</p>
+                <p>Cliente: {clientes.find(c=>c.id===m.clienteId)?.nombre || "Sin asignar"}</p>
+                <p>Cuotas pendientes: {d.cuotasPendientes}</p>
+                <p>Monto pendiente: {money(d.montoPendiente)}</p>
+                <p>Estatus: {d.estatus}</p>
+                <p>Ingresos: {money(ingresosPorMoto(m.id))}</p>
+                <p>Gastos: {money(gastosPorMoto(m.id))}</p>
+                <p>Neto moto: {money(ingresosPorMoto(m.id)-gastosPorMoto(m.id))}</p>
+
+                {esAdmin && <button onClick={()=>editarMoto(m)}>Editar</button>}
+                {esAdmin && <button onClick={()=>imprimirContrato(m)}>Contrato</button>}
+                {esAdmin && <button className="deleteBtn" onClick={()=>eliminarMoto(m.id)}>Eliminar</button>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {tab==="pagos" && (
+        <div className="card">
+          <h2>Registrar pago</h2>
+
+          <input
+            placeholder="Buscar cliente para pago por nombre, ID, cédula, teléfono..."
+            value={busquedaClientePago}
+            onChange={e=>setBusquedaClientePago(e.target.value)}
+          />
+
+          <select
+            value={clientePagoId}
+            onChange={e=>{
+              setClientePagoId(e.target.value);
+              setPago({...pago,motoId:""});
+            }}
+          >
+            <option value="">Seleccionar cliente</option>
+            {clientesPagoFiltrados.map(c=>(
+              <option key={c.id} value={c.id}>
+                {c.idCliente || c.id} · {c.nombre} · {c.telefono}
+              </option>
+            ))}
+          </select>
+
+          {clientePago && (
+            <div className="item">
+              <h3>Cliente seleccionado</h3>
+              <p><b>ID:</b> {clientePago.idCliente || clientePago.id}</p>
+              <p><b>Nombre:</b> {clientePago.nombre}</p>
+              <p><b>Cédula:</b> {clientePago.cedula}</p>
+              <p><b>Teléfono:</b> {clientePago.telefono}</p>
+            </div>
+          )}
+
+          <select value={pago.motoId} onChange={e=>setPago({...pago,motoId:e.target.value})}>
+            <option value="">Seleccionar moto del cliente</option>
+            {motosClientePago.map(m=>(
+              <option key={m.id} value={m.id}>
+                {m.placa} · {m.marca} {m.modelo}
+              </option>
+            ))}
+          </select>
+
+          {motoPagoSeleccionada && deudaPagoSeleccionada && (
+            <div className="item">
+              <h3>Información de pago</h3>
+              <p><b>Moto:</b> {motoPagoSeleccionada.placa} {motoPagoSeleccionada.marca} {motoPagoSeleccionada.modelo}</p>
+              <p><b>Cuota diaria:</b> {money(motoPagoSeleccionada.pagoDiario)}</p>
+              <p><b>Cuotas pendientes:</b> {deudaPagoSeleccionada.cuotasPendientes}</p>
+              <p><b>Monto pendiente:</b> {money(deudaPagoSeleccionada.montoPendiente)}</p>
+              <p><b>Estatus:</b> {deudaPagoSeleccionada.estatus}</p>
+            </div>
+          )}
+
+          <input placeholder="Monto pagado" value={pago.monto} onChange={e=>setPago({...pago,monto:e.target.value})}/>
+
+          <select value={pago.metodo} onChange={e=>setPago({...pago,metodo:e.target.value})}>
+            <option>Efectivo</option>
+            <option>Depósito</option>
+            <option>Transferencia bancaria</option>
+          </select>
+
+          <select value={papelComprobante} onChange={e=>setPapelComprobante(e.target.value)}>
+            <option value="normal">Papel normal / PDF</option>
+            <option value="termico">Ticket térmico 80mm / Bluetooth</option>
+          </select>
+
+          <button onClick={registrarPago}>Generar comprobante</button>
+
+          {ultimo && (
+            <div className="item">
+              <h2>Comprobante</h2>
+              <p><b>ID:</b> {ultimo.id}</p>
+              <p><b>ID Cliente:</b> {ultimo.idCliente}</p>
+              <p><b>Cliente:</b> {ultimo.cliente}</p>
+              <p><b>Moto:</b> {ultimo.moto}</p>
+              <p><b>Monto pagado:</b> {money(ultimo.monto)}</p>
+              <p><b>Pendiente después:</b> {money(ultimo.montoPendienteDespues)}</p>
+
+              <QRCodeCanvas value={ultimo.url} />
+              <p>{ultimo.url}</p>
+
+              <button onClick={()=>imprimirComprobante(ultimo,"normal")}>Imprimir PDF</button>
+              <button onClick={()=>imprimirComprobante(ultimo,"termico")}>Imprimir térmico</button>
+
+              {ultimo.clienteId && clientes.find(c=>c.id===ultimo.clienteId)?.telefono && (
+                <a href={whatsappUrl(clientes.find(c=>c.id===ultimo.clienteId)?.telefono,mensajeWhatsAppPago(ultimo))} target="_blank" rel="noreferrer">
+                  <button className="whatsappBtn">Enviar WhatsApp</button>
+                </a>
+              )}
+            </div>
+          )}
+
+          <h2>Historial de pagos</h2>
+
+          {pagosVisibles.map(p=>(
+            <div className="item" key={p.docId}>
+              <b>{p.id}</b>
+              <p>{p.fecha} · {p.cliente}</p>
+              <p>{p.moto} · {money(p.monto)}</p>
+              <p>Cobrador: {p.cobrador || ""}</p>
+
+              <button onClick={()=>imprimirComprobante(p,"normal")}>PDF</button>
+              <button onClick={()=>imprimirComprobante(p,"termico")}>Térmico</button>
+
+              {p.clienteId && clientes.find(c=>c.id===p.clienteId)?.telefono && (
+                <a href={whatsappUrl(clientes.find(c=>c.id===p.clienteId)?.telefono,mensajeWhatsAppPago(p))} target="_blank" rel="noreferrer">
+                  <button className="whatsappBtn">WhatsApp</button>
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab==="gastos" && esAdmin && (
+        <div className="card">
+          <h2>{editGasto ? "Editar gasto" : "Registrar gasto"}</h2>
+
+          <select value={gasto.motoId} onChange={e=>setGasto({...gasto,motoId:e.target.value})}>
+            <option value="">Seleccionar moto</option>
+            {motos.map(m=><option key={m.id} value={m.id}>{m.placa}</option>)}
+          </select>
+
+          <input type="date" value={gasto.fecha} onChange={e=>setGasto({...gasto,fecha:e.target.value})}/>
+          <input placeholder="Categoría" value={gasto.categoria} onChange={e=>setGasto({...gasto,categoria:e.target.value})}/>
+          <input placeholder="Monto" value={gasto.monto} onChange={e=>setGasto({...gasto,monto:e.target.value})}/>
+          <input placeholder="Proveedor / Taller" value={gasto.proveedor} onChange={e=>setGasto({...gasto,proveedor:e.target.value})}/>
+          <input placeholder="Nota" value={gasto.nota} onChange={e=>setGasto({...gasto,nota:e.target.value})}/>
+
+          <button onClick={guardarGasto}>{editGasto ? "Guardar cambios" : "Guardar gasto"}</button>
+
+          <h2>Historial de gastos</h2>
+
+          {gastos.map(g=>(
+            <div className="item" key={g.id}>
+              <b>{g.categoria}</b>
+              <p>Fecha: {g.fecha}</p>
+              <p>Moto: {motos.find(m=>m.id===g.motoId)?.placa || "N/A"}</p>
+              <p>Monto: {money(g.monto)}</p>
+              <p>Proveedor: {g.proveedor}</p>
+              <p>Nota: {g.nota}</p>
+
+              <button onClick={()=>editarGasto(g)}>Editar</button>
+              <button className="deleteBtn" onClick={()=>eliminarGasto(g.id)}>Eliminar</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab==="adjuntos" && esAdmin && (
+        <div className="card">
+          <h2>Adjuntos por cliente</h2>
+
+          <select value={clienteAdjunto} onChange={e=>setClienteAdjunto(e.target.value)}>
+            <option value="">Seleccionar cliente</option>
+            {clientes.map(c=><option key={c.id} value={c.id}>{c.idCliente || c.id} · {c.nombre}</option>)}
+          </select>
+
+          <input type="file" onChange={e=>setArchivo(e.target.files[0])}/>
+          <button onClick={subirAdjunto}>Subir adjunto</button>
+
+          <h2>Documentos guardados</h2>
+
+          {adjuntos.map(a=>(
+            <div className="item" key={a.id}>
+              <b>{a.nombre}</b>
+              <p>Cliente: {clientes.find(c=>c.id===a.clienteId)?.nombre || "N/A"}</p>
+              <p>Fecha: {a.fecha}</p>
+              <a href={a.url} target="_blank" rel="noreferrer">Ver documento</a><br/>
+              <button className="deleteBtn" onClick={()=>eliminarAdjunto(a)}>Eliminar</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function App(){
+  const [user,setUser]=useState(null);
+  const path=window.location.pathname;
+
+  useEffect(()=>onAuthStateChanged(auth,setUser),[]);
+
+  if(path.startsWith("/validar/")) return <ValidarComprobante/>;
+  if(!user) return <Login/>;
+
+  return <Dashboard user={user}/>;
+}
+
+createRoot(document.getElementById("root")).render(<App/>);
