@@ -332,3 +332,243 @@ function ValidarComprobante(){
     </div>
   );
 }
+
+function abrirImpresion(titulo,html,tipoPapel="normal"){
+  const anterior=document.getElementById("print-frame");
+  if(anterior) anterior.remove();
+
+  const iframe=document.createElement("iframe");
+  iframe.id="print-frame";
+  iframe.style.position="fixed";
+  iframe.style.right="0";
+  iframe.style.bottom="0";
+  iframe.style.width="0";
+  iframe.style.height="0";
+  iframe.style.border="0";
+  document.body.appendChild(iframe);
+
+  const ticketCss = tipoPapel === "termico"
+    ? `
+      @page { size: 80mm auto; margin: 3mm; }
+      body{font-family:Arial,sans-serif;width:72mm;padding:0;margin:0;color:#111;background:white;font-size:11px;}
+      h1{font-size:16px;text-align:center;margin:4px 0;}
+      h2{font-size:13px;text-align:center;margin:4px 0;}
+      p{margin:3px 0;}
+      table{width:100%;border-collapse:collapse;margin-top:6px;font-size:11px;}
+      td,th{border-bottom:1px dashed #999;padding:4px 0;text-align:left;}
+      .centro{text-align:center;}
+      img{max-width:120px;}
+      .firmas td{height:50px;}
+    `
+    : `
+      @page { size: auto; margin: 12mm; }
+      body{font-family:Arial,sans-serif;padding:30px;color:#333;background:white;}
+      h1,h2{text-align:center;}
+      table{width:100%;border-collapse:collapse;margin-top:20px;}
+      td,th{border:1px solid #ddd;padding:8px;text-align:left;}
+      .firmas td{height:80px;}
+      .centro{text-align:center;}
+      img{max-width:180px;}
+    `;
+
+  const documento=iframe.contentWindow.document;
+  documento.open();
+  documento.write(`
+    <html>
+      <head>
+        <title>${titulo}</title>
+        <style>${ticketCss}</style>
+      </head>
+      <body>${html}</body>
+    </html>
+  `);
+  documento.close();
+
+  setTimeout(()=>{
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+  },700);
+}
+
+function Dashboard({user}){
+  const [tab,setTab]=useState("inicio");
+
+  const [clientes,setClientes]=useState([]);
+  const [motos,setMotos]=useState([]);
+  const [pagos,setPagos]=useState([]);
+  const [gastos,setGastos]=useState([]);
+  const [adjuntos,setAdjuntos]=useState([]);
+  const [usuarios,setUsuarios]=useState([]);
+
+  const [usuarioActual,setUsuarioActual]=useState(null);
+  const [ultimo,setUltimo]=useState(null);
+  const [clienteVista,setClienteVista]=useState(null);
+
+  const [busquedaCliente,setBusquedaCliente]=useState("");
+  const [busquedaClientePago,setBusquedaClientePago]=useState("");
+  const [clientePagoId,setClientePagoId]=useState("");
+  const [papelComprobante,setPapelComprobante]=useState("normal");
+
+  const [nuevaPassword,setNuevaPassword]=useState("");
+
+  const [usuarioForm,setUsuarioForm]=useState({
+    uid:"",
+    nombre:"",
+    correo:"",
+    rol:"cobrador"
+  });
+
+  const [empresa,setEmpresa]=useState({
+    nombre:"Pronto Moto",
+    telefono:"",
+    direccion:"",
+    rnc:"",
+    notas:""
+  });
+
+  const [cliente,setCliente]=useState({
+    idCliente:"",
+    pais:"República Dominicana",
+    nacionalidad:"Dominicana",
+    provincia:"Distrito Nacional",
+    municipio:"Santo Domingo de Guzmán",
+    sexo:"Masculino",
+    nombre:"",
+    cedula:"",
+    correo:"",
+    telefono:"",
+    telefonoResidencial:"",
+    telefonoReferencia:"",
+    direccion:"",
+    referencia:"",
+    riesgo:"Nuevo cliente",
+    cobradorId:""
+  });
+
+  const [moto,setMoto]=useState({
+    placa:"",
+    marca:"",
+    modelo:"",
+    anio:"",
+    tracker:"",
+    clienteId:"",
+    fechaAsignacion:today(),
+    pagoDiario:"400",
+    deposito:"5000"
+  });
+
+  const [pago,setPago]=useState({
+    motoId:"",
+    monto:"400",
+    metodo:"Efectivo"
+  });
+
+  const [gasto,setGasto]=useState({
+    motoId:"",
+    fecha:today(),
+    categoria:"Reparación",
+    monto:"",
+    proveedor:"",
+    nota:""
+  });
+
+  const [clienteAdjunto,setClienteAdjunto]=useState("");
+  const [archivo,setArchivo]=useState(null);
+
+  const [editCliente,setEditCliente]=useState(null);
+  const [editMoto,setEditMoto]=useState(null);
+  const [editGasto,setEditGasto]=useState(null);
+
+  const esAdmin = !usuarioActual || usuarioActual.rol === "admin";
+  const municipiosDisponibles = provinciasRD[cliente.provincia] || [];
+
+  async function cargar(){
+    const c=await getDocs(collection(db,"clientes"));
+    const m=await getDocs(collection(db,"motos"));
+    const p=await getDocs(collection(db,"pagos"));
+    const g=await getDocs(collection(db,"gastos"));
+    const a=await getDocs(collection(db,"adjuntos"));
+    const u=await getDocs(collection(db,"usuarios"));
+
+    const usuariosData=u.docs.map(d=>({id:d.id,...d.data()}));
+    const perfil=usuariosData.find(x=>x.uid===user.uid || x.correo===user.email) || {
+      uid:user.uid,
+      nombre:user.email,
+      correo:user.email,
+      rol:"admin"
+    };
+
+    setUsuarioActual(perfil);
+    setUsuarios(usuariosData);
+    setClientes(c.docs.map(d=>({id:d.id,...d.data()})));
+    setMotos(m.docs.map(d=>({id:d.id,...d.data()})));
+    setPagos(p.docs.map(d=>({docId:d.id,...d.data()})));
+    setGastos(g.docs.map(d=>({id:d.id,...d.data()})));
+    setAdjuntos(a.docs.map(d=>({id:d.id,...d.data()})));
+  }
+
+  useEffect(()=>{ cargar(); },[]);
+
+  const clientesVisibles = useMemo(()=>{
+    if(esAdmin) return clientes;
+    return clientes.filter(c=>c.cobradorId===usuarioActual?.uid || c.cobradorId===usuarioActual?.id);
+  },[clientes,usuarioActual,esAdmin]);
+
+  const motosVisibles = useMemo(()=>{
+    if(esAdmin) return motos;
+    const idsClientes=new Set(clientesVisibles.map(c=>c.id));
+    return motos.filter(m=>idsClientes.has(m.clienteId));
+  },[motos,clientesVisibles,esAdmin]);
+
+  const pagosVisibles = useMemo(()=>{
+    if(esAdmin) return pagos;
+    const idsClientes=new Set(clientesVisibles.map(c=>c.id));
+    return pagos.filter(p=>idsClientes.has(p.clienteId));
+  },[pagos,clientesVisibles,esAdmin]);
+
+  const totalIngresos=pagosVisibles.reduce((s,p)=>s+Number(p.monto||0),0);
+  const totalGastos=gastos.reduce((s,g)=>s+Number(g.monto||0),0);
+  const neto=totalIngresos-totalGastos;
+
+  function ingresosPorMoto(motoId){
+    return pagos.filter(p=>p.motoId===motoId).reduce((s,p)=>s+Number(p.monto||0),0);
+  }
+
+  function gastosPorMoto(motoId){
+    return gastos.filter(g=>g.motoId===motoId).reduce((s,g)=>s+Number(g.monto||0),0);
+  }
+
+  function pagosPorMoto(motoId){
+    return pagos
+      .filter(p=>p.motoId===motoId)
+      .sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
+  }
+
+  function ultimoPagoMoto(motoId){
+    return pagosPorMoto(motoId)[0] || null;
+  }
+
+  function atrasoMoto(m){
+    if(!m.clienteId) return 0;
+
+    const ultimo=ultimoPagoMoto(m.id);
+    const fechaBase=ultimo?.fecha || m.fechaAsignacion || today();
+
+    return businessDaysBetween(fechaBase,today());
+  }
+
+  function deudaMoto(m){
+    const cuotasPendientes = atrasoMoto(m);
+    const montoPendiente = cuotasPendientes * Number(m.pagoDiario || 0);
+
+    let estatus = "Al día";
+    if(cuotasPendientes >= 3) estatus = "Recuperación";
+    else if(cuotasPendientes >= 2) estatus = "Riesgo alto";
+    else if(cuotasPendientes >= 1) estatus = "Pendiente";
+
+    return {
+      cuotasPendientes,
+      montoPendiente,
+      estatus
+    };
+  }
