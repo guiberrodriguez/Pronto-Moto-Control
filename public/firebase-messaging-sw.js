@@ -2,12 +2,12 @@ importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js
 importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js");
 
 firebase.initializeApp({
-  apiKey: "",
-  authDomain: "TU_AUTH_DOMAIN",
-  projectId: "TU_PROJECT_ID",
-  storageBucket: "TU_STORAGE_BUCKET",
-  messagingSenderId: "TU_MESSAGING_SENDER_ID",
-  appId: "TU_APP_ID"
+  apiKey: "AIzaSyC9cOBGzTfCSxRI4c9-PH8-9nGXGTX32V4",
+  authDomain: "pronto-moto-control.firebaseapp.com",
+  projectId: "pronto-moto-control",
+  storageBucket: "pronto-moto-control.firebasestorage.app",
+  messagingSenderId: "371130122184",
+  appId: "1:371130122184:web:7dc67b1ec5d6603d418afd"
 });
 
 const messaging = firebase.messaging();
