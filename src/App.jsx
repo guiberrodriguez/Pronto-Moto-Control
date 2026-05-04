@@ -656,6 +656,22 @@ function Dashboard({user}){
   });
 
   const motosMorosas=motosVisibles.filter(m=>m.clienteId && atrasoMoto(m)>=1);
+  
+  useEffect(()=>{
+  if(motosMorosas.length === 0) return;
+
+  motosMorosas.forEach(m=>{
+    const c = clientes.find(x=>x.id === m.clienteId);
+    if(!c) return;
+
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification("Cliente en atraso", {
+        body: `${c.nombre} tiene cuotas pendientes (${m.placa})`
+      });
+    }
+  });
+
+},[motosMorosas.length]);
 
   const clientesFiltrados = useMemo(()=>{
     const q = busquedaCliente.toLowerCase().trim();
@@ -925,7 +941,28 @@ function Dashboard({user}){
     };
 
     await addDoc(collection(db,"pagos"),comprobante);
+    
+    if(clientePago?.cobradorId){
+      await addDoc(collection(db,"notificaciones"),{
+        tipo:"cobrador",
+        titulo:"Cobro realizado",
+        mensaje:`Pago recibido de ${clientePago.nombre}`,
+        usuarioId:clientePago.cobradorId,
+        fechaHora:nowDateTime(),
+        leida:false
+      });
+    }
 
+    await addDoc(collection(db,"notificaciones"),{
+      tipo:"admin",
+      titulo:"Nuevo ingreso",
+      mensaje:`Se registró un pago de ${money(pago.monto)}`,
+      clienteId:clientePago.id,
+      motoId:motoSeleccionada.id,
+      fechaHora:nowDateTime(),
+      leida:false
+    });
+    
     if(["Azul","CardNet","PayPal","Stripe","Link de pago externo"].includes(pago.metodo)){
       await addDoc(collection(db,"pagosDigitales"),{
         comprobanteId:id,
