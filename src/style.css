@@ -545,3 +545,22 @@ body.darkMode .chartBar {
     padding: 10px 12px;
   }
 }
+
+.topBar {
+  z-index: 9999;
+}
+
+.menuArea {
+  z-index: 10000;
+}
+
+.dropdownMenu {
+  z-index: 99999 !important;
+}
+
+.gridStats,
+.tabs,
+.card {
+  position: relative;
+  z-index: 1;
+}
