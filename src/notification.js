@@ -51,7 +51,12 @@ export function escucharNotificaciones() {
   onMessage(messaging, (payload) => {
     console.log("📩 Notificación recibida:", payload);
 
-    // 🔔 Mostrar alerta REAL en la app
-    alert(payload.notification?.title + " - " + payload.notification?.body);
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification(payload.notification?.title || "Pronto Moto", {
+        body: payload.notification?.body || "Nueva notificación"
+      });
+    } else {
+      alert((payload.notification?.title || "Pronto Moto") + " - " + (payload.notification?.body || "Nueva notificación"));
+    }
   });
 }
