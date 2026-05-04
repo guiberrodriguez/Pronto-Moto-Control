@@ -1093,7 +1093,7 @@ function Dashboard({user}){
       "Authorization": "key=TU_SERVER_KEY"
     },
     body: JSON.stringify({
-      to: "TU_TOKEN_AQUI",
+      to: "e5tCHCGmRc2O8WX74ux_z9:APA91bE_pjc0a05HJzCCXAInhwcC9mBhfCCWpHU871MPJcmxoMPHWZUU2F5vHm45ZHxkYx-GvM-Xa2ARp_AImIfKuc9bvR5RWKkVnvyQwqJJVJiDcYC72Q8",
       notification: {
         title: "Pronto Moto",
         body: "Notificación funcionando 🔥"
@@ -1280,7 +1280,10 @@ function Dashboard({user}){
 
         <div>
           <button onClick={cargar}>Actualizar</button>
-          <button onClick={()=>signOut(auth)}>Salir</button>
+          <button onClick={pruebaNotificacionDirecta}>
+  Probar notificación 🔔
+</button>
+           <button onClick={()=>signOut(auth)}>Salir</button>
         </div>
       </div>
 
