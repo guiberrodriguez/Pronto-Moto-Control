@@ -1311,33 +1311,51 @@ function Dashboard({user}){
             {tab==="inicio" && (
         <>
           <div className="card">
-            <h2>Dashboard financiero</h2>
-            <p>Ingresos totales: <b>{money(totalIngresos)}</b></p>
-            <p>Gastos totales: <b>{money(totalGastos)}</b></p>
-            <p>Neto general: <b>{money(neto)}</b></p>
-            {!esAdmin && <p>Vista limitada a clientes asignados al cobrador.</p>}
-          </div>
+  <h2>Gráficas PRO</h2>
 
-          <div className="card">
-            <h2>Gráficas</h2>
+  <div className="proChart">
 
-            <p><b>Ingresos</b> {money(totalIngresos)}</p>
-            <div style={{background:"#eee",borderRadius:10,overflow:"hidden",height:20}}>
-              <div style={{width:`${Math.min(100,totalIngresos/(totalIngresos+totalGastos || 1)*100)}%`,background:"#ff6600",height:20}}></div>
-            </div>
+    <div className="chartRow">
+      <div className="chartLabel">
+        <span>Ingresos</span>
+        <span>{money(totalIngresos)}</span>
+      </div>
+      <div className="chartBar">
+        <div
+          className="chartFill chartIncome"
+          style={{width:`${Math.min(100,totalIngresos/(totalIngresos+totalGastos || 1)*100)}%`}}
+        ></div>
+      </div>
+    </div>
 
-            <p><b>Gastos</b> {money(totalGastos)}</p>
-            <div style={{background:"#eee",borderRadius:10,overflow:"hidden",height:20}}>
-              <div style={{width:`${Math.min(100,totalGastos/(totalIngresos+totalGastos || 1)*100)}%`,background:"#dc2626",height:20}}></div>
-            </div>
+    <div className="chartRow">
+      <div className="chartLabel">
+        <span>Gastos</span>
+        <span>{money(totalGastos)}</span>
+      </div>
+      <div className="chartBar">
+        <div
+          className="chartFill chartExpense"
+          style={{width:`${Math.min(100,totalGastos/(totalIngresos+totalGastos || 1)*100)}%`}}
+        ></div>
+      </div>
+    </div>
 
-            <p><b>Morosidad</b> {motosMorosas.length} moto(s)</p>
-            <div style={{background:"#eee",borderRadius:10,overflow:"hidden",height:20}}>
-              <div style={{width:`${Math.min(100,(motosMorosas.length/(motosVisibles.length || 1))*100)}%`,background:"#25D366",height:20}}></div>
-            </div>
-          </div>
-        </>
-      )}
+    <div className="chartRow">
+      <div className="chartLabel">
+        <span>Morosidad</span>
+        <span>{motosMorosas.length} / {motosVisibles.length}</span>
+      </div>
+      <div className="chartBar">
+        <div
+          className="chartFill chartDebt"
+          style={{width:`${Math.min(100,(motosMorosas.length/(motosVisibles.length || 1))*100)}%`}}
+        ></div>
+      </div>
+    </div>
+
+  </div>
+</div>
 
       {tab==="configuracion" && (
         <div className="card">
