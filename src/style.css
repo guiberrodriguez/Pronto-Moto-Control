@@ -20,10 +20,32 @@
   --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
 }
 
-body {
-  background: radial-gradient(circle at top left, rgba(255, 102, 0, 0.12), transparent 28%),
+body.lightMode {
+  --bg: #f3f4f6;
+  --card: #ffffff;
+  --card-soft: #f9fafb;
+  --text: #111827;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  background: radial-gradient(circle at top left, rgba(255,102,0,0.12), transparent 28%),
               linear-gradient(135deg, #f8fafc, var(--bg));
   color: var(--text);
+}
+
+body.darkMode {
+  --bg: #020617;
+  --card: #0f172a;
+  --card-soft: #111827;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --border: #273449;
+  --shadow: 0 12px 28px rgba(0,0,0,0.45);
+  background: radial-gradient(circle at top left, rgba(255,102,0,0.12), transparent 30%),
+              linear-gradient(135deg, #020617, #0f172a);
+  color: var(--text);
+}
+
+body {
   min-height: 100vh;
 }
 
@@ -31,59 +53,105 @@ body {
   width: 100%;
   max-width: 1280px;
   margin: auto;
-  padding: 22px;
+  padding: 18px;
 }
 
-.header {
-  background: linear-gradient(135deg, #ffffff, #fff7ed);
-  border: 1px solid rgba(255, 102, 0, 0.12);
-  border-radius: 24px;
-  padding: 18px;
-  margin-bottom: 22px;
+/* TOP BAR */
+.topBar {
+  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 14px;
-  flex-wrap: wrap;
-  box-shadow: var(--shadow);
-  animation: fadeUp 0.35s ease;
+  margin-bottom: 18px;
+  padding: 8px 4px 12px;
+  position: relative;
+  animation: fadeUp 0.35s ease both;
 }
 
-.brand {
+.brandArea {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
-.logoBox {
-  width: 62px;
-  height: 62px;
-  border-radius: 18px;
-  background: white;
-  display: flex;
+.logoMain {
+  width: 86px;
+  height: 86px;
+  object-fit: contain;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.saludo {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+
+.menuArea {
+  position: relative;
+}
+
+.iconBtn {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 22px rgba(255, 102, 0, 0.16);
-  overflow: hidden;
 }
 
-.logoBox img {
-  width: 52px;
-  height: 52px;
-  object-fit: contain;
+.iconBtn:hover {
+  background: linear-gradient(135deg, var(--primary), #f59e0b);
+  color: white;
 }
 
-.bigLogo {
-  width: 92px;
-  height: 92px;
-  margin: 0 auto 14px;
+.dropdownMenu {
+  position: absolute;
+  top: 58px;
+  right: 0;
+  width: 245px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 20px 45px rgba(15,23,42,0.18);
+  padding: 8px;
+  z-index: 999;
+  animation: fadeUp 0.2s ease both;
 }
 
-.bigLogo img {
-  width: 78px;
-  height: 78px;
+.dropdownMenu button {
+  width: 100%;
+  margin: 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text);
+  border: none;
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-start;
 }
 
+.dropdownMenu button:hover {
+  background: rgba(255,102,0,0.12);
+  color: var(--primary);
+  transform: none;
+  box-shadow: none;
+}
+
+/* GENERAL */
 h1 {
   font-size: 24px;
   line-height: 1.1;
@@ -115,14 +183,19 @@ p {
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid rgba(229, 231, 235, 0.9);
+  background: rgba(255,255,255,0.94);
+  border: 1px solid rgba(229,231,235,0.9);
   border-radius: 22px;
   padding: 20px;
   margin-bottom: 18px;
   box-shadow: var(--shadow);
   backdrop-filter: blur(10px);
   animation: fadeUp 0.35s ease both;
+}
+
+body.darkMode .card {
+  background: rgba(15,23,42,0.94);
+  border-color: var(--border);
 }
 
 .item {
@@ -139,6 +212,7 @@ p {
   margin-bottom: 4px;
 }
 
+/* STATS */
 .gridStats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
@@ -150,6 +224,10 @@ p {
   text-align: center;
   padding: 18px 12px;
   background: linear-gradient(180deg, #ffffff, #fff7ed);
+}
+
+body.darkMode .stat {
+  background: linear-gradient(180deg, #111827, #0f172a);
 }
 
 .stat span {
@@ -167,6 +245,7 @@ p {
   color: var(--primary);
 }
 
+/* TABS */
 .tabs {
   display: flex;
   gap: 10px;
@@ -177,8 +256,8 @@ p {
 }
 
 .tabs button {
-  background: #ffffff;
-  color: #374151;
+  background: var(--card);
+  color: var(--text);
   border: 1px solid var(--border);
   white-space: nowrap;
   box-shadow: none;
@@ -188,9 +267,10 @@ p {
   background: linear-gradient(135deg, var(--primary), #f59e0b);
   color: white;
   border-color: transparent;
-  box-shadow: 0 10px 20px rgba(255, 102, 0, 0.25);
+  box-shadow: 0 10px 20px rgba(255,102,0,0.25);
 }
 
+/* BUTTONS */
 button {
   border: 0;
   border-radius: 13px;
@@ -201,12 +281,12 @@ button {
   font-weight: 750;
   cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
-  box-shadow: 0 8px 18px rgba(255, 102, 0, 0.23);
+  box-shadow: 0 8px 18px rgba(255,102,0,0.23);
 }
 
 button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(255, 102, 0, 0.28);
+  box-shadow: 0 12px 24px rgba(255,102,0,0.28);
 }
 
 button:active {
@@ -216,15 +296,16 @@ button:active {
 .deleteBtn {
   background: linear-gradient(135deg, var(--danger), #ef4444) !important;
   color: white !important;
-  box-shadow: 0 8px 18px rgba(220, 38, 38, 0.22);
+  box-shadow: 0 8px 18px rgba(220,38,38,0.22);
 }
 
 .whatsappBtn {
   background: linear-gradient(135deg, #16a34a, var(--success)) !important;
   color: white !important;
-  box-shadow: 0 8px 18px rgba(37, 211, 102, 0.22);
+  box-shadow: 0 8px 18px rgba(37,211,102,0.22);
 }
 
+/* INPUTS */
 input,
 select {
   width: 100%;
@@ -232,7 +313,7 @@ select {
   padding: 12px 13px;
   border: 1px solid var(--border);
   border-radius: 14px;
-  background: white;
+  background: var(--card);
   color: var(--text);
   font-size: 15px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
@@ -242,7 +323,7 @@ input:focus,
 select:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 4px rgba(255, 102, 0, 0.16);
+  box-shadow: 0 0 0 4px rgba(255,102,0,0.16);
 }
 
 a {
@@ -255,6 +336,7 @@ a:hover {
   text-decoration: underline;
 }
 
+/* TABLES */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -275,20 +357,33 @@ th {
   font-weight: 700;
 }
 
+/* LOGIN */
 .login {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: radial-gradient(circle at top, rgba(255, 102, 0, 0.18), transparent 35%),
+  background: radial-gradient(circle at top, rgba(255,102,0,0.18), transparent 35%),
               linear-gradient(135deg, #fff7ed, #f8fafc);
+}
+
+body.darkMode .login {
+  background: radial-gradient(circle at top, rgba(255,102,0,0.18), transparent 35%),
+              linear-gradient(135deg, #020617, #0f172a);
 }
 
 .loginCard {
   width: 100%;
   max-width: 380px;
   text-align: center;
+}
+
+.loginLogo img {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  margin-bottom: 12px;
 }
 
 .alert {
@@ -310,12 +405,21 @@ th {
   margin: 40px auto;
 }
 
+/* CHARTS */
+.chartCard {
+  background: linear-gradient(135deg, rgba(255,255,255,0.96), rgba(255,247,237,0.92));
+}
+
+body.darkMode .chartCard {
+  background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,41,59,0.92));
+}
+
 .proChart {
   margin-top: 14px;
 }
 
 .chartRow {
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
 .chartLabel {
@@ -328,17 +432,30 @@ th {
 }
 
 .chartBar {
-  height: 24px;
+  height: 28px;
   background: #e5e7eb;
   border-radius: 999px;
   overflow: hidden;
   box-shadow: inset 0 2px 5px rgba(0,0,0,0.08);
 }
 
+body.darkMode .chartBar {
+  background: #273449;
+}
+
 .chartFill {
   height: 100%;
   border-radius: 999px;
   transition: width 0.85s cubic-bezier(.2,.8,.2,1);
+  position: relative;
+}
+
+.chartFill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+  animation: shimmer 2s infinite;
 }
 
 .chartIncome {
@@ -353,6 +470,7 @@ th {
   background: linear-gradient(90deg, #16a34a, #25d366);
 }
 
+/* ANIMATIONS */
 @keyframes fadeUp {
   from {
     opacity: 0;
@@ -364,89 +482,27 @@ th {
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #020617;
-    --card: #0f172a;
-    --card-soft: #111827;
-    --text: #e5e7eb;
-    --muted: #9ca3af;
-    --border: #273449;
-    --shadow: 0 12px 28px rgba(0,0,0,0.45);
-  }
-
-  body {
-    background: radial-gradient(circle at top left, rgba(255, 102, 0, 0.12), transparent 30%),
-                linear-gradient(135deg, #020617, #0f172a);
-    color: var(--text);
-  }
-
-  .header {
-    background: linear-gradient(135deg, rgba(15,23,42,0.98), rgba(30,41,59,0.95));
-    border-color: rgba(255, 102, 0, 0.18);
-  }
-
-  .card {
-    background: rgba(15, 23, 42, 0.94);
-    border-color: var(--border);
-  }
-
-  .stat {
-    background: linear-gradient(180deg, #111827, #0f172a);
-  }
-
-  .item {
-    background: #111827;
-    border-color: var(--border);
-  }
-
-  .tabs button {
-    background: #111827;
-    color: #e5e7eb;
-    border-color: var(--border);
-  }
-
-  input,
-  select {
-    background: #020617;
-    color: var(--text);
-    border-color: var(--border);
-  }
-
-  .logoBox {
-    background: #111827;
-  }
-
-  .chartBar {
-    background: #273449;
-  }
-
-  .login {
-    background: radial-gradient(circle at top, rgba(255, 102, 0, 0.18), transparent 35%),
-                linear-gradient(135deg, #020617, #0f172a);
-  }
-
-  th,
-  td {
-    border-color: var(--border);
-  }
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
+/* MOBILE */
 @media (max-width: 760px) {
   .app {
     padding: 14px;
   }
 
-  .header {
-    border-radius: 20px;
-    align-items: flex-start;
+  .topBar {
+    padding-top: 4px;
   }
 
-  .brand {
-    width: 100%;
+  .logoMain {
+    width: 76px;
+    height: 76px;
   }
 
-  h1 {
+  .saludo {
     font-size: 20px;
   }
 
@@ -468,6 +524,10 @@ th {
   select {
     font-size: 16px;
   }
+
+  .dropdownMenu {
+    width: 230px;
+  }
 }
 
 @media (max-width: 420px) {
@@ -475,14 +535,9 @@ th {
     grid-template-columns: 1fr;
   }
 
-  .logoBox {
-    width: 54px;
-    height: 54px;
-  }
-
-  .logoBox img {
-    width: 44px;
-    height: 44px;
+  .logoMain {
+    width: 68px;
+    height: 68px;
   }
 
   .tabs button {
