@@ -1084,7 +1084,27 @@ function Dashboard({user}){
   function mensajeWhatsAppPago(p){
     return `Hola ${p.cliente || ""}, su pago ha sido registrado correctamente.\n\nID: ${p.id}\nMoto: ${p.moto}\nMonto pagado: ${money(p.monto)}\nPendiente: ${money(p.montoPendienteDespues || 0)}\nComprobante: ${p.url}`;
   }
+  
+  async function pruebaNotificacionDirecta() {
+  const res = await fetch("https://fcm.googleapis.com/fcm/send", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "key=TU_SERVER_KEY"
+    },
+    body: JSON.stringify({
+      to: "TU_TOKEN_AQUI",
+      notification: {
+        title: "Pronto Moto",
+        body: "Notificación funcionando 🔥"
+      }
+    })
+  });
 
+  const data = await res.json();
+  console.log(data);
+}
+  
   function mensajeWhatsAppMora(m){
     const c=clientes.find(x=>x.id===m.clienteId);
     const d=deudaMoto(m);
