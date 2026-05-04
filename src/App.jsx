@@ -1111,3 +1111,262 @@ function Dashboard({user}){
 
     return `Hola ${c?.nombre || ""}, tienes ${d.cuotasPendientes} cuota(s) pendiente(s) de pago de la motocicleta ${m.placa}. Deuda estimada: ${money(d.montoPendiente)}. Favor regularizar.`;
   }
+  
+    function imprimirContrato(m){
+    const c=clientes.find(x=>x.id===m.clienteId);
+    if(!c) return alert("Esta moto no tiene cliente asignado");
+
+    const html=`
+      <h1>${empresa.nombre}</h1>
+      <p class="centro">${empresa.telefono} · ${empresa.direccion}</p>
+      <h2>CONTRATO DE ALQUILER DE MOTOCICLETA</h2>
+      <p><b>Fecha:</b> ${today()}</p>
+      <p><b>Arrendador:</b> ${empresa.nombre} · RNC/Cédula: ${empresa.rnc||"N/A"}</p>
+      <p><b>Arrendatario:</b> ${c.nombre} · ID Cliente: ${c.idCliente || c.id} · Cédula: ${c.cedula} · Teléfono: ${c.telefono}</p>
+      <p><b>Sexo:</b> ${c.sexo || ""} · <b>Correo:</b> ${c.correo || ""}</p>
+      <p><b>País:</b> ${c.pais || ""} · <b>Nacionalidad:</b> ${c.nacionalidad || ""}</p>
+      <p><b>Provincia:</b> ${c.provincia || ""} · <b>Municipio:</b> ${c.municipio || ""}</p>
+      <p><b>Dirección:</b> ${c.direccion}</p>
+
+      <table>
+        <tr>
+          <th>Placa</th>
+          <th>Marca</th>
+          <th>Modelo</th>
+          <th>Año</th>
+          <th>GPS / Tracker</th>
+          <th>Pago diario</th>
+          <th>Depósito</th>
+        </tr>
+        <tr>
+          <td>${m.placa}</td>
+          <td>${m.marca}</td>
+          <td>${m.modelo}</td>
+          <td>${m.anio}</td>
+          <td>${m.tracker||"N/A"}</td>
+          <td>${money(m.pagoDiario)}</td>
+          <td>${money(m.deposito)}</td>
+        </tr>
+      </table>
+
+      <h3>Condiciones principales</h3>
+      <ol>
+        <li>El pago es diario, exceptuando los domingos.</li>
+        <li>Al acumular tres cuotas vencidas, el contrato podrá ser cancelado.</li>
+        <li>El arrendador podrá recuperar la motocicleta por las vías legales correspondientes.</li>
+        <li>El arrendatario asume multas, accidentes, daños, uso indebido y cualquier responsabilidad derivada del uso de la motocicleta.</li>
+        <li>Queda prohibido prestar, ceder, subarrendar o usar la motocicleta en actividades ilícitas.</li>
+      </ol>
+
+      <p>${empresa.notas||""}</p>
+
+      <br/><br/>
+      <table class="firmas">
+        <tr>
+          <td>Firma Arrendador</td>
+          <td>Firma Arrendatario</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td></td>
+        </tr>
+      </table>
+    `;
+
+    abrirImpresion("Contrato "+m.placa,html,"normal");
+  }
+
+  function comprobanteHtml(p,tipo="normal"){
+    const ubicacionTexto = p.ubicacionCobro?.lat
+      ? `<p><b>Ubicación:</b> ${locationMapUrl(p.ubicacionCobro)}</p>`
+      : "";
+
+    if(tipo==="termico"){
+      return `
+        <h1>${empresa.nombre}</h1>
+        <p class="centro">${empresa.telefono}</p>
+        <p class="centro">${empresa.direccion}</p>
+        <h2>COMPROBANTE</h2>
+
+        <p><b>ID:</b> ${p.id}</p>
+        <p><b>Fecha:</b> ${p.fecha}</p>
+        <p><b>ID Cliente:</b> ${p.idCliente || p.clienteId}</p>
+        <p><b>Cliente:</b> ${p.cliente}</p>
+        <p><b>Moto:</b> ${p.moto}</p>
+        <p><b>Cuota diaria:</b> ${money(p.cuotaDiaria)}</p>
+        <p><b>Cuotas pend.:</b> ${p.cuotasPendientes || 0}</p>
+        <p><b>Pendiente antes:</b> ${money(p.montoPendienteAntes || 0)}</p>
+        <p><b>Pagado:</b> ${money(p.monto)}</p>
+        <p><b>Pendiente después:</b> ${money(p.montoPendienteDespues || 0)}</p>
+        <p><b>Método:</b> ${p.metodo}</p>
+        <p><b>Pago digital:</b> ${p.estadoPagoDigital || "N/A"}</p>
+        <p><b>Cobrador:</b> ${p.cobrador || ""}</p>
+        <p><b>Estatus:</b> ${p.estatus || "N/A"}</p>
+
+        <div class="centro" style="margin-top:10px">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(p.url)}" />
+          <p>Validar QR</p>
+        </div>
+      `;
+    }
+
+    return `
+      <h1>${empresa.nombre}</h1>
+      <p class="centro">${empresa.telefono} · ${empresa.direccion}</p>
+      <h2>COMPROBANTE DE PAGO</h2>
+
+      <table>
+        <tr><th>ID Comprobante</th><td>${p.id}</td></tr>
+        <tr><th>Fecha</th><td>${p.fecha}</td></tr>
+        <tr><th>ID Cliente</th><td>${p.idCliente || p.clienteId}</td></tr>
+        <tr><th>Cliente</th><td>${p.cliente}</td></tr>
+        <tr><th>Cédula</th><td>${p.cedula || ""}</td></tr>
+        <tr><th>Teléfono</th><td>${p.telefono || ""}</td></tr>
+        <tr><th>Moto</th><td>${p.moto}</td></tr>
+        <tr><th>Cuota diaria</th><td>${money(p.cuotaDiaria)}</td></tr>
+        <tr><th>Cuotas pendientes</th><td>${p.cuotasPendientes || 0}</td></tr>
+        <tr><th>Monto pendiente antes del pago</th><td>${money(p.montoPendienteAntes || 0)}</td></tr>
+        <tr><th>Monto pagado</th><td>${money(p.monto)}</td></tr>
+        <tr><th>Monto pendiente después del pago</th><td>${money(p.montoPendienteDespues || 0)}</td></tr>
+        <tr><th>Método</th><td>${p.metodo}</td></tr>
+        <tr><th>Link pago</th><td>${p.linkPago || ""}</td></tr>
+        <tr><th>Estado pago digital</th><td>${p.estadoPagoDigital || "N/A"}</td></tr>
+        <tr><th>Cobrador</th><td>${p.cobrador || ""}</td></tr>
+        <tr><th>Estatus</th><td>${p.estatus || "N/A"}</td></tr>
+        <tr><th>Validación</th><td>${p.url}</td></tr>
+      </table>
+
+      ${ubicacionTexto}
+
+      <div class="centro" style="margin-top:20px">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=170x170&data=${encodeURIComponent(p.url)}" />
+        <p>Código QR de validación</p>
+      </div>
+    `;
+  }
+
+  function imprimirComprobante(p,tipo="normal"){
+    abrirImpresion("Comprobante "+p.id,comprobanteHtml(p,tipo),tipo);
+  }
+
+  useEffect(()=>{
+    if(motosMorosas.length > 0 && "Notification" in window){
+      if(Notification.permission === "granted"){
+        new Notification("Pronto Moto",{
+          body:`Tienes ${motosMorosas.length} moto(s) con atraso.`
+        });
+      }else if(Notification.permission !== "denied"){
+        Notification.requestPermission();
+      }
+    }
+  },[motosMorosas.length]);
+
+  return (
+    <div className="app">
+      <div className="header">
+        <div className="brand">
+          <div className="logoBox">
+            <img src="/logo.png" alt="Pronto Moto" onError={e=>{e.currentTarget.style.display="none"}} />
+          </div>
+
+          <div>
+            <p className="muted">Sistema empresarial de renta diaria</p>
+            <h1>Pronto Moto Control Enterprise</h1>
+            <p className="muted">
+              Usuario: {usuarioActual?.nombre || user.email} · Rol: {usuarioActual?.rol || "admin"}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <button onClick={cargar}>Actualizar</button>
+          <button onClick={()=>signOut(auth)}>Salir</button>
+        </div>
+      </div>
+
+      <div className="gridStats">
+        <div className="card stat"><span>Clientes</span><b>{clientesVisibles.length}</b></div>
+        <div className="card stat"><span>Motos</span><b>{motosVisibles.length}</b></div>
+        <div className="card stat"><span>Morosas</span><b>{motosMorosas.length}</b></div>
+        <div className="card stat"><span>Ingresos</span><b>{money(totalIngresos)}</b></div>
+        <div className="card stat"><span>Gastos</span><b>{money(totalGastos)}</b></div>
+        <div className="card stat"><span>Neto</span><b>{money(neto)}</b></div>
+      </div>
+
+      <div className="tabs">
+        <button className={tab==="inicio"?"active":""} onClick={()=>setTab("inicio")}>Inicio</button>
+        <button className={tab==="clientes"?"active":""} onClick={()=>setTab("clientes")}>Clientes</button>
+        <button className={tab==="motos"?"active":""} onClick={()=>setTab("motos")}>Motos</button>
+        <button className={tab==="pagos"?"active":""} onClick={()=>setTab("pagos")}>Pagos</button>
+        {esAdmin && <button className={tab==="gastos"?"active":""} onClick={()=>setTab("gastos")}>Gastos</button>}
+        <button className={tab==="morosidad"?"active":""} onClick={()=>setTab("morosidad")}>Morosidad</button>
+        <button className={tab==="ranking"?"active":""} onClick={()=>setTab("ranking")}>Ranking</button>
+        {esAdmin && <button className={tab==="adjuntos"?"active":""} onClick={()=>setTab("adjuntos")}>Adjuntos</button>}
+        {esAdmin && <button className={tab==="pagosDigitales"?"active":""} onClick={()=>setTab("pagosDigitales")}>Pagos digitales</button>}
+        {esAdmin && <button className={tab==="notificaciones"?"active":""} onClick={()=>setTab("notificaciones")}>Notificaciones</button>}
+        {esAdmin && <button className={tab==="empresa"?"active":""} onClick={()=>setTab("empresa")}>Empresa</button>}
+        <button className={tab==="configuracion"?"active":""} onClick={()=>setTab("configuracion")}>Configuración</button>
+      </div>
+
+      {tab==="inicio" && (
+        <>
+          <div className="card">
+            <h2>Dashboard financiero</h2>
+            <p>Ingresos totales: <b>{money(totalIngresos)}</b></p>
+            <p>Gastos totales: <b>{money(totalGastos)}</b></p>
+            <p>Neto general: <b>{money(neto)}</b></p>
+            {!esAdmin && <p>Vista limitada a clientes asignados al cobrador.</p>}
+          </div>
+
+          <div className="card">
+            <h2>Gráficas PRO</h2>
+
+            <div className="proChart">
+              <div className="chartRow">
+                <div className="chartLabel">
+                  <span>Ingresos</span>
+                  <span>{money(totalIngresos)}</span>
+                </div>
+                <div className="chartBar">
+                  <div
+                    className="chartFill chartIncome"
+                    style={{
+                      width: `${Math.min(100,totalIngresos / (totalIngresos + totalGastos || 1) * 100)}%`
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="chartRow">
+                <div className="chartLabel">
+                  <span>Gastos</span>
+                  <span>{money(totalGastos)}</span>
+                </div>
+                <div className="chartBar">
+                  <div
+                    className="chartFill chartExpense"
+                    style={{
+                      width: `${Math.min(100,totalGastos / (totalIngresos + totalGastos || 1) * 100)}%`
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="chartRow">
+                <div className="chartLabel">
+                  <span>Morosidad</span>
+                  <span>{motosMorosas.length} / {motosVisibles.length}</span>
+                </div>
+                <div className="chartBar">
+                  <div
+                    className="chartFill chartDebt"
+                    style={{
+                      width: `${Math.min(100,motosMorosas.length / (motosVisibles.length || 1) * 100)}%`
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
