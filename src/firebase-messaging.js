@@ -15,7 +15,7 @@ export async function activarNotificacionesPush() {
     }
 
     const token = await getToken(messaging, {
-      vapidKey: BIEJf5ClQUq88BoTmUx5OZ2gv8Am5pg_cn5Kn4MbMbmxY7OwQ4SXA2RoISGa2zZo2LLfpJOvs_mppgqA5-ZWZI4
+      vapidKey: "BIEJf5ClQUq88BoTmUx5OZ2gv8Am5pg_cn5Kn4MbMbmxY7OwQ4SXA2RoISGa2zZo2LLfpJOvs_mppgqA5-ZWZI4"
     });
 
     if (token && auth.currentUser) {
