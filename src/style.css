@@ -189,3 +189,145 @@ input, select {
   color: green;
   font-weight: bold;
 }
+
+/* =========================
+   MODO OSCURO ENTERPRISE
+========================= */
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #0f172a;
+    color: #e5e7eb;
+  }
+
+  .card {
+    background: #111827;
+    color: #e5e7eb;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  .item {
+    background: #1f2937;
+    border-color: #374151;
+  }
+
+  input,
+  select {
+    background: #0f172a;
+    color: #e5e7eb;
+    border-color: #374151;
+  }
+
+  .tabs button {
+    background: #1f2937;
+    color: #e5e7eb;
+  }
+
+  .tabs .active {
+    background: #ff6600;
+    color: white;
+  }
+
+  .muted {
+    color: #9ca3af;
+  }
+
+  .logoBox {
+    background: #1f2937;
+  }
+}
+
+/* =========================
+   ANIMACIONES ENTERPRISE
+========================= */
+
+.card {
+  animation: fadeUp 0.35s ease;
+}
+
+.item {
+  animation: fadeUp 0.25s ease;
+}
+
+button {
+  transform: translateY(0);
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+}
+
+.tabs button {
+  transition: all 0.25s ease;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: #ff6600;
+  box-shadow: 0 0 0 3px rgba(255,102,0,0.18);
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================
+   GRÁFICAS PRO BASE
+========================= */
+
+.proChart {
+  margin-top: 14px;
+}
+
+.chartRow {
+  margin-bottom: 14px;
+}
+
+.chartLabel {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.chartBar {
+  height: 22px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.chartFill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.8s ease;
+}
+
+.chartIncome {
+  background: linear-gradient(90deg, #ff6600, #f59e0b);
+}
+
+.chartExpense {
+  background: linear-gradient(90deg, #dc2626, #ef4444);
+}
+
+.chartDebt {
+  background: linear-gradient(90deg, #16a34a, #25D366);
+}
+
+@media (prefers-color-scheme: dark) {
+  .chartBar {
+    background: #374151;
+  }
+}
