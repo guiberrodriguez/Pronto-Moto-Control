@@ -952,6 +952,12 @@ function Dashboard({user}){
       leida:false
     });
 
+    if ("Notification" in window && Notification.permission === "granted") {
+  new Notification("Pronto Moto", {
+    body: `Pago recibido de ${clientePago.nombre}`
+  });
+}
+
     setUltimo(comprobante);
     setPago({
       motoId:"",
