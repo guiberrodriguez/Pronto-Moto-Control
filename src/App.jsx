@@ -1,3 +1,4 @@
+import { activarNotificacionesPush, escucharNotificaciones } from "./firebase-messaging";
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -572,7 +573,17 @@ function Dashboard({user}){
     setPagosDigitales(pd.docs.map(d=>({id:d.id,...d.data()})));
   }
 
-  useEffect(()=>{ cargar(); },[]);
+  useEffect(()=>{
+  cargar();
+
+  async function initPush(){
+    const token = await activarNotificacionesPush();
+    console.log("Token push:", token);
+    escucharNotificaciones();
+  }
+
+  initPush();
+},[]);
 
   const clientesVisibles = useMemo(()=>{
     if(esAdmin) return clientes;
