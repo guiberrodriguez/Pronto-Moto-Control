@@ -928,3 +928,307 @@ function Dashboard({user}){
       console.log(e);
     }
   }
+  
+    async function registrarPago(){
+    const motoSeleccionada=motosVisibles.find(m=>m.id===pago.motoId);
+
+    if(!clientePago) return alert("Selecciona un cliente");
+    if(!motoSeleccionada) return alert("Selecciona una moto del cliente");
+
+    const deuda=deudaMoto(motoSeleccionada);
+    const montoPagado=Number(pago.monto || 0);
+    const pendienteDespues=Math.max(0, deuda.montoPendiente - montoPagado);
+    const id=receiptId(pagos.length);
+
+    let ubicacionCobro=null;
+
+    try{
+      ubicacionCobro=await getLocation();
+    }catch(e){
+      ubicacionCobro=null;
+    }
+
+    const comprobante={
+      id,
+      fecha:today(),
+      fechaHora:nowDateTime(),
+      clienteId:clientePago.id,
+      idCliente:clientePago.idCliente || "",
+      cliente:clientePago.nombre || "",
+      cedula:clientePago.cedula || "",
+      telefono:clientePago.telefono || "",
+      cobradorId:usuarioActual?.uid || usuarioActual?.id || "",
+      cobrador:usuarioActual?.nombre || user.email || "",
+      motoId:motoSeleccionada.id,
+      moto:`${motoSeleccionada.placa} ${motoSeleccionada.marca||""} ${motoSeleccionada.modelo||""}`,
+      cuotaDiaria:Number(motoSeleccionada.pagoDiario || 0),
+      cuotasPendientes:deuda.cuotasPendientes,
+      montoPendienteAntes:deuda.montoPendiente,
+      monto:Number(pago.monto || 0),
+      montoPendienteDespues:pendienteDespues,
+      metodo:pago.metodo,
+      linkPago:pago.linkPago || "",
+      estadoPagoDigital:pago.estadoPagoDigital || "No aplica",
+      estatus:pendienteDespues <= 0 ? "Al día" : deuda.estatus,
+      ubicacionCobro,
+      url:`${BASE_URL}/validar/${id}`
+    };
+
+    try{
+      await addDoc(collection(db,"pagos"),comprobante);
+
+      try{
+        if(clientePago?.cobradorId){
+          await addDoc(collection(db,"notificaciones"),{
+            tipo:"cobrador",
+            titulo:"Cobro realizado",
+            mensaje:`Pago recibido de ${clientePago.nombre}`,
+            usuarioId:clientePago.cobradorId,
+            clienteId:clientePago.id,
+            motoId:motoSeleccionada.id,
+            fechaHora:nowDateTime(),
+            leida:false
+          });
+        }
+
+        await addDoc(collection(db,"notificaciones"),{
+          tipo:"admin",
+          titulo:"Nuevo ingreso",
+          mensaje:`Se registró un pago de ${money(pago.monto)}`,
+          clienteId:clientePago.id,
+          motoId:motoSeleccionada.id,
+          fechaHora:nowDateTime(),
+          leida:false
+        });
+
+        if("Notification" in window && Notification.permission === "granted"){
+          new Notification("Pronto Moto", {
+            body:`Pago recibido de ${clientePago.nombre}`
+          });
+        }
+      }catch(e){
+        console.log("No se pudo guardar o mostrar la notificación:", e);
+      }
+
+      try{
+        if(["Azul","CardNet","PayPal","Stripe","Link de pago externo"].includes(pago.metodo)){
+          await addDoc(collection(db,"pagosDigitales"),{
+            comprobanteId:id,
+            clienteId:clientePago.id,
+            cliente:clientePago.nombre || "",
+            motoId:motoSeleccionada.id,
+            moto:motoSeleccionada.placa || "",
+            monto:Number(pago.monto || 0),
+            pasarela:pago.metodo,
+            linkPago:pago.linkPago || "",
+            estado:pago.estadoPagoDigital || "Pendiente",
+            fecha:today(),
+            fechaHora:nowDateTime()
+          });
+        }
+      }catch(e){
+        console.log("No se pudo registrar el pago digital:", e);
+      }
+
+      setUltimo(comprobante);
+      setPago({
+        motoId:"",
+        monto:"400",
+        metodo:"Efectivo",
+        linkPago:"",
+        estadoPagoDigital:"No aplica"
+      });
+
+      alert("Pago registrado correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo registrar el pago");
+      console.log(e);
+    }
+  }
+
+  async function eliminarPago(p){
+    if(!esAdmin) return alert("Solo el administrador puede eliminar pagos");
+
+    const confirmar = confirm(`¿Seguro que deseas eliminar el pago ${p.id}?`);
+    if(!confirmar) return;
+
+    try{
+      await deleteDoc(doc(db,"pagos",p.docId));
+      alert("Pago eliminado correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo eliminar el pago");
+      console.log(e);
+    }
+  }
+
+  async function guardarGasto(){
+    if(!esAdmin) return alert("Solo el administrador puede registrar gastos");
+    if(!gasto.motoId) return alert("Selecciona una moto");
+    if(!gasto.monto) return alert("El monto es obligatorio");
+
+    try{
+      if(editGasto){
+        await updateDoc(doc(db,"gastos",editGasto),gasto);
+        alert("Gasto actualizado correctamente");
+        setEditGasto(null);
+      }else{
+        await addDoc(collection(db,"gastos"),gasto);
+        alert("Gasto registrado correctamente");
+      }
+
+      setGasto({
+        motoId:"",
+        fecha:today(),
+        categoria:"Reparación",
+        monto:"",
+        proveedor:"",
+        nota:""
+      });
+
+      cargar();
+    }catch(e){
+      alert("No se pudo guardar el gasto");
+      console.log(e);
+    }
+  }
+
+  function editarGasto(g){
+    if(!esAdmin) return alert("Solo el administrador puede editar gastos");
+
+    setGasto({
+      motoId:g.motoId||"",
+      fecha:g.fecha||today(),
+      categoria:g.categoria||"Reparación",
+      monto:g.monto||"",
+      proveedor:g.proveedor||"",
+      nota:g.nota||""
+    });
+
+    setEditGasto(g.id);
+    setTab("gastos");
+  }
+
+  async function eliminarGasto(id){
+    if(!esAdmin) return alert("Solo el administrador puede eliminar gastos");
+
+    const confirmar = confirm("¿Seguro que deseas eliminar este gasto?");
+    if(!confirmar) return;
+
+    try{
+      await deleteDoc(doc(db,"gastos",id));
+      alert("Gasto eliminado correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo eliminar el gasto");
+      console.log(e);
+    }
+  }
+
+  async function subirAdjunto(){
+    if(!esAdmin) return alert("Solo el administrador puede subir adjuntos");
+    if(!clienteAdjunto) return alert("Selecciona un cliente");
+    if(!archivo) return alert("Selecciona un archivo");
+
+    const ruta=`clientes/${clienteAdjunto}/${Date.now()}-${archivo.name}`;
+    const archivoRef=ref(storage,ruta);
+
+    try{
+      await uploadBytes(archivoRef,archivo);
+      const url=await getDownloadURL(archivoRef);
+
+      await addDoc(collection(db,"adjuntos"),{
+        clienteId:clienteAdjunto,
+        nombre:archivo.name,
+        tipo:archivo.type,
+        ruta,
+        url,
+        fecha:today()
+      });
+
+      setArchivo(null);
+      setClienteAdjunto("");
+      alert("Adjunto subido correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo subir el adjunto");
+      console.log(e);
+    }
+  }
+
+  async function eliminarAdjunto(a){
+    if(!esAdmin) return alert("Solo el administrador puede eliminar adjuntos");
+
+    const confirmar = confirm("¿Seguro que deseas eliminar este adjunto?");
+    if(!confirmar) return;
+
+    try{
+      await deleteObject(ref(storage,a.ruta));
+      await deleteDoc(doc(db,"adjuntos",a.id));
+      alert("Adjunto eliminado correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo eliminar el adjunto");
+      console.log(e);
+    }
+  }
+
+  async function guardarUsuario(){
+    if(!esAdmin) return alert("Solo el administrador puede gestionar usuarios");
+    if(!usuarioForm.uid || !usuarioForm.correo){
+      return alert("Debes colocar UID y correo del usuario creado en Firebase Authentication");
+    }
+
+    try{
+      await setDoc(doc(db,"usuarios",usuarioForm.uid),usuarioForm);
+
+      setUsuarioForm({
+        uid:"",
+        nombre:"",
+        correo:"",
+        rol:"cobrador"
+      });
+
+      alert("Usuario guardado correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo guardar el usuario");
+      console.log(e);
+    }
+  }
+
+  async function cambiarPassword(){
+    if(!nuevaPassword || nuevaPassword.length < 6){
+      return alert("La contraseña debe tener al menos 6 caracteres");
+    }
+
+    try{
+      await updatePassword(auth.currentUser,nuevaPassword);
+      setNuevaPassword("");
+      alert("Contraseña actualizada");
+    }catch(e){
+      alert("No se pudo cambiar la contraseña. Vuelve a iniciar sesión e intenta otra vez.");
+      console.log(e);
+    }
+  }
+
+  async function marcarNotificacionLeida(n){
+    try{
+      await updateDoc(doc(db,"notificaciones",n.id),{...n,leida:true});
+      cargar();
+    }catch(e){
+      console.log("No se pudo marcar la notificación:", e);
+    }
+  }
+
+  function mensajeWhatsAppPago(p){
+    return `Hola ${p.cliente || ""}, su pago ha sido registrado correctamente.\n\nID: ${p.id}\nMoto: ${p.moto}\nMonto pagado: ${money(p.monto)}\nPendiente: ${money(p.montoPendienteDespues || 0)}\nComprobante: ${p.url}`;
+  }
+
+  function mensajeWhatsAppMora(m){
+    const c=clientes.find(x=>x.id===m.clienteId);
+    const d=deudaMoto(m);
+
+    return `Hola ${c?.nombre || ""}, tienes ${d.cuotasPendientes} cuota(s) pendiente(s) de pago de la motocicleta ${m.placa}. Deuda estimada: ${money(d.montoPendiente)}. Favor regularizar.`;
+  }
