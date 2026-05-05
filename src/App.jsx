@@ -678,3 +678,253 @@ function Dashboard({user}){
   });
 
   const motosMorosas=motosVisibles.filter(m=>m.clienteId && atrasoMoto(m)>=1);
+  
+    const clientesFiltrados = useMemo(()=>{
+    const q = busquedaCliente.toLowerCase().trim();
+
+    if(!q) return clientesVisibles;
+
+    return clientesVisibles.filter(c=>{
+      const texto = [
+        c.idCliente,
+        c.nombre,
+        c.cedula,
+        c.telefono,
+        c.telefonoResidencial,
+        c.telefonoReferencia,
+        c.correo,
+        c.pais,
+        c.nacionalidad,
+        c.provincia,
+        c.municipio,
+        c.sexo
+      ].join(" ").toLowerCase();
+
+      return texto.includes(q);
+    });
+  },[clientesVisibles,busquedaCliente]);
+
+  const clientesPagoFiltrados = useMemo(()=>{
+    const q = busquedaClientePago.toLowerCase().trim();
+
+    if(!q) return clientesVisibles;
+
+    return clientesVisibles.filter(c=>{
+      const texto = [
+        c.idCliente,
+        c.nombre,
+        c.cedula,
+        c.telefono,
+        c.telefonoResidencial,
+        c.telefonoReferencia,
+        c.correo,
+        c.pais,
+        c.nacionalidad,
+        c.provincia,
+        c.municipio,
+        c.sexo
+      ].join(" ").toLowerCase();
+
+      return texto.includes(q);
+    });
+  },[clientesVisibles,busquedaClientePago]);
+
+  const clientePago = clientesVisibles.find(c=>c.id===clientePagoId) || null;
+  const motosClientePago = motosVisibles.filter(m=>m.clienteId===clientePagoId);
+  const motoPagoSeleccionada = motosVisibles.find(m=>m.id===pago.motoId) || null;
+  const deudaPagoSeleccionada = motoPagoSeleccionada ? deudaMoto(motoPagoSeleccionada) : null;
+
+  async function generarIdCliente(pais){
+    const code=countryCode(pais);
+    const year=currentYear();
+    const prefijo=`${code}${year}`;
+    const existentes=clientes.filter(c=>String(c.idCliente||"").startsWith(prefijo));
+    const secuencia=String(existentes.length + 1).padStart(2,"0");
+    return `${prefijo}-${secuencia}`;
+  }
+
+  async function guardarCliente(){
+    if(!esAdmin) return alert("Solo el administrador puede crear o editar clientes");
+    if(!cliente.nombre) return alert("El nombre del cliente es obligatorio");
+
+    const clienteFinal = {
+      ...cliente,
+      municipio: cliente.municipio || (provinciasRD[cliente.provincia] || [])[0] || ""
+    };
+
+    try{
+      if(editCliente){
+        await updateDoc(doc(db,"clientes",editCliente),clienteFinal);
+        alert("Cliente actualizado correctamente");
+        setEditCliente(null);
+      }else{
+        const nuevoId=await generarIdCliente(cliente.pais);
+        await addDoc(collection(db,"clientes"),{
+          ...clienteFinal,
+          idCliente:nuevoId
+        });
+        alert("Cliente creado correctamente");
+      }
+
+      setCliente({
+        idCliente:"",
+        pais:"República Dominicana",
+        nacionalidad:"Dominicana",
+        provincia:"Distrito Nacional",
+        municipio:"Santo Domingo de Guzmán",
+        sexo:"Masculino",
+        nombre:"",
+        cedula:"",
+        correo:"",
+        telefono:"",
+        telefonoResidencial:"",
+        telefonoReferencia:"",
+        direccion:"",
+        referencia:"",
+        riesgo:"Nuevo cliente",
+        cobradorId:"",
+        ubicacion:null
+      });
+
+      cargar();
+    }catch(e){
+      alert("No se pudo guardar el cliente");
+      console.log(e);
+    }
+  }
+
+  function editarCliente(c){
+    if(!esAdmin) return alert("Solo el administrador puede editar clientes");
+
+    setCliente({
+      idCliente:c.idCliente||"",
+      pais:c.pais||"República Dominicana",
+      nacionalidad:c.nacionalidad||"Dominicana",
+      provincia:c.provincia||"Distrito Nacional",
+      municipio:c.municipio||"Santo Domingo de Guzmán",
+      sexo:c.sexo||"Masculino",
+      nombre:c.nombre||"",
+      cedula:c.cedula||"",
+      correo:c.correo||"",
+      telefono:c.telefono||"",
+      telefonoResidencial:c.telefonoResidencial||"",
+      telefonoReferencia:c.telefonoReferencia||"",
+      direccion:c.direccion||"",
+      referencia:c.referencia||"",
+      riesgo:c.riesgo||"Nuevo cliente",
+      cobradorId:c.cobradorId||"",
+      ubicacion:c.ubicacion||null
+    });
+
+    setEditCliente(c.id);
+    setTab("clientes");
+  }
+
+  async function eliminarCliente(id){
+    if(!esAdmin) return alert("Solo el administrador puede eliminar clientes");
+
+    const confirmar = confirm("¿Seguro que deseas eliminar este cliente? Las motos asignadas quedarán sin cliente.");
+    if(!confirmar) return;
+
+    try{
+      await deleteDoc(doc(db,"clientes",id));
+
+      for(const m of motos.filter(x=>x.clienteId===id)){
+        await updateDoc(doc(db,"motos",m.id),{
+          ...m,
+          clienteId:"",
+          estado:"Disponible"
+        });
+      }
+
+      alert("Cliente eliminado correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo eliminar el cliente");
+      console.log(e);
+    }
+  }
+
+  async function capturarUbicacionCliente(){
+    try{
+      const ubicacion=await getLocation();
+      setCliente({...cliente,ubicacion});
+      alert("Ubicación capturada correctamente");
+    }catch(e){
+      alert("No se pudo capturar la ubicación: " + e.message);
+    }
+  }
+
+  async function guardarMoto(){
+    if(!esAdmin) return alert("Solo el administrador puede crear o editar motos");
+    if(!moto.placa) return alert("La placa es obligatoria");
+
+    const datos={
+      ...moto,
+      estado:moto.clienteId?"Alquilada":"Disponible",
+      fechaAsignacion:moto.clienteId ? (moto.fechaAsignacion || today()) : ""
+    };
+
+    try{
+      if(editMoto){
+        await updateDoc(doc(db,"motos",editMoto),datos);
+        alert("Moto actualizada correctamente");
+        setEditMoto(null);
+      }else{
+        await addDoc(collection(db,"motos"),datos);
+        alert("Moto creada correctamente");
+      }
+
+      setMoto({
+        placa:"",
+        marca:"",
+        modelo:"",
+        anio:"",
+        tracker:"",
+        clienteId:"",
+        fechaAsignacion:today(),
+        pagoDiario:"400",
+        deposito:"5000"
+      });
+
+      cargar();
+    }catch(e){
+      alert("No se pudo guardar la moto");
+      console.log(e);
+    }
+  }
+
+  function editarMoto(m){
+    if(!esAdmin) return alert("Solo el administrador puede editar motos");
+
+    setMoto({
+      placa:m.placa||"",
+      marca:m.marca||"",
+      modelo:m.modelo||"",
+      anio:m.anio||"",
+      tracker:m.tracker||"",
+      clienteId:m.clienteId||"",
+      fechaAsignacion:m.fechaAsignacion||today(),
+      pagoDiario:m.pagoDiario||"400",
+      deposito:m.deposito||"5000"
+    });
+
+    setEditMoto(m.id);
+    setTab("motos");
+  }
+
+  async function eliminarMoto(id){
+    if(!esAdmin) return alert("Solo el administrador puede eliminar motos");
+
+    const confirmar = confirm("¿Seguro que deseas eliminar esta moto?");
+    if(!confirmar) return;
+
+    try{
+      await deleteDoc(doc(db,"motos",id));
+      alert("Moto eliminada correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo eliminar la moto");
+      console.log(e);
+    }
+  }
