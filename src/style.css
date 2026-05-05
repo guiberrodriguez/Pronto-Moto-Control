@@ -564,3 +564,30 @@ body.darkMode .chartBar {
   position: relative;
   z-index: 1;
 }
+
+/* Corrige fecha que sobresale */
+input[type="date"] {
+  max-width: 100%;
+  min-width: 0;
+  display: block;
+  overflow: hidden;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* Evita que el efecto del botón activo se corte */
+.tabs {
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 10px 0 18px;
+}
+
+.tabs button.active {
+  box-shadow: none !important;
+}
+
+/* Ajuste extra móvil */
+.card,
+.item {
+  overflow: hidden;
+}
