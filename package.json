@@ -10,7 +10,7 @@
     "react-dom": "latest",
     "firebase": "latest",
     "qrcode.react": "latest",
-    "lucide-react": "^0.400.0"
+    "lucide-react": "^0.400.0",
     "recharts": "latest"
   },
   "devDependencies": {}
