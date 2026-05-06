@@ -1123,3 +1123,25 @@ function Dashboard({user}){
     </div>
   );
 }
+
+function App(){
+  const [user,setUser]=useState(null);
+  const path=window.location.pathname;
+
+  useEffect(()=>onAuthStateChanged(auth,setUser),[]);
+
+  if(path.startsWith("/validar/")) return <ValidarComprobante/>;
+  if(!user) return <Login/>;
+
+  return <Dashboard user={user}/>;
+}
+
+createRoot(document.getElementById("root")).render(<App/>);
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js")
+      .then(() => console.log("Service Worker registrado"))
+      .catch(err => console.log("Error SW:", err));
+  });
+}
