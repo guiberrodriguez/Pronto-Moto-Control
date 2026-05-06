@@ -1463,3 +1463,364 @@ function Dashboard({user}){
 
     abrirImpresion("Contrato "+m.placa,html,"normal");
   }
+  
+    function comprobanteHtml(p,tipo="normal"){
+    const ubicacionTexto = p.ubicacionCobro?.lat
+      ? `<p><b>Ubicación:</b> ${locationMapUrl(p.ubicacionCobro)}</p>`
+      : "";
+
+    if(tipo==="termico"){
+      return `
+        <div class="centro">
+          <img class="printLogo" src="${BASE_URL}/logo.png" />
+        </div>
+
+        <h1>${empresa.nombre}</h1>
+        <p class="centro">${empresa.telefono}</p>
+        <p class="centro">${empresa.direccion}</p>
+        <h2>COMPROBANTE</h2>
+
+        <p><b>ID:</b> ${p.id}</p>
+        <p><b>Fecha:</b> ${p.fecha}</p>
+        <p><b>ID Cliente:</b> ${p.idCliente || p.clienteId}</p>
+        <p><b>Cliente:</b> ${p.cliente}</p>
+        <p><b>Moto:</b> ${p.moto}</p>
+        <p><b>Cuota diaria:</b> ${money(p.cuotaDiaria)}</p>
+        <p><b>Cuotas pend.:</b> ${p.cuotasPendientes || 0}</p>
+        <p><b>Pendiente antes:</b> ${money(p.montoPendienteAntes || 0)}</p>
+        <p><b>Pagado:</b> ${money(p.monto)}</p>
+        <p><b>Pendiente después:</b> ${money(p.montoPendienteDespues || 0)}</p>
+        <p><b>Método:</b> ${p.metodo}</p>
+        <p><b>Pago digital:</b> ${p.estadoPagoDigital || "N/A"}</p>
+        <p><b>Cobrador:</b> ${p.cobrador || ""}</p>
+        <p><b>Estatus:</b> ${p.estatus || "N/A"}</p>
+
+        <div class="centro" style="margin-top:10px">
+          <img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(p.url)}" />
+          <p>Validar QR</p>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="centro">
+        <img class="printLogo" src="${BASE_URL}/logo.png" />
+      </div>
+
+      <h1>${empresa.nombre}</h1>
+      <p class="centro">${empresa.telefono} · ${empresa.direccion}</p>
+      <h2>COMPROBANTE DE PAGO</h2>
+
+      <table>
+        <tr><th>ID Comprobante</th><td>${p.id}</td></tr>
+        <tr><th>Fecha</th><td>${p.fecha}</td></tr>
+        <tr><th>ID Cliente</th><td>${p.idCliente || p.clienteId}</td></tr>
+        <tr><th>Cliente</th><td>${p.cliente}</td></tr>
+        <tr><th>Cédula</th><td>${p.cedula || ""}</td></tr>
+        <tr><th>Teléfono</th><td>${p.telefono || ""}</td></tr>
+        <tr><th>Moto</th><td>${p.moto}</td></tr>
+        <tr><th>Cuota diaria</th><td>${money(p.cuotaDiaria)}</td></tr>
+        <tr><th>Cuotas pendientes</th><td>${p.cuotasPendientes || 0}</td></tr>
+        <tr><th>Monto pendiente antes del pago</th><td>${money(p.montoPendienteAntes || 0)}</td></tr>
+        <tr><th>Monto pagado</th><td>${money(p.monto)}</td></tr>
+        <tr><th>Monto pendiente después del pago</th><td>${money(p.montoPendienteDespues || 0)}</td></tr>
+        <tr><th>Método</th><td>${p.metodo}</td></tr>
+        <tr><th>Link pago</th><td>${p.linkPago || ""}</td></tr>
+        <tr><th>Estado pago digital</th><td>${p.estadoPagoDigital || "N/A"}</td></tr>
+        <tr><th>Cobrador</th><td>${p.cobrador || ""}</td></tr>
+        <tr><th>Estatus</th><td>${p.estatus || "N/A"}</td></tr>
+        <tr><th>Validación</th><td>${p.url}</td></tr>
+      </table>
+
+      ${ubicacionTexto}
+
+      <div class="centro" style="margin-top:20px">
+        <img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=170x170&data=${encodeURIComponent(p.url)}" />
+        <p>Código QR de validación</p>
+      </div>
+    `;
+  }
+
+  function imprimirComprobante(p,tipo="normal"){
+    abrirImpresion("Comprobante "+p.id,comprobanteHtml(p,tipo),tipo);
+  }
+
+  useEffect(()=>{
+    if(motosMorosas.length > 0 && "Notification" in window){
+      if(Notification.permission === "granted"){
+        new Notification("Pronto Moto",{
+          body:`Tienes ${motosMorosas.length} moto(s) con atraso.`
+        });
+      }else if(Notification.permission !== "denied"){
+        Notification.requestPermission();
+      }
+    }
+  },[motosMorosas.length]);
+
+  const navItems = [
+    {id:"inicio", label:"Inicio", icon:Home, admin:false},
+    {id:"clientes", label:"Clientes", icon:Users, admin:false},
+    {id:"motos", label:"Motos", icon:Bike, admin:false},
+    {id:"pagos", label:"Pagos", icon:CreditCard, admin:false},
+    {id:"gastos", label:"Gastos", icon:Wallet, admin:true},
+    {id:"morosidad", label:"Morosidad", icon:AlertTriangle, admin:false},
+    {id:"ranking", label:"Ranking", icon:Trophy, admin:false},
+    {id:"adjuntos", label:"Adjuntos", icon:Paperclip, admin:true},
+    {id:"pagosDigitales", label:"Pagos digitales", icon:ShieldCheck, admin:true},
+    {id:"empresa", label:"Empresa", icon:Building2, admin:true}
+  ];
+
+  return (
+    <div className="premiumShell">
+      <div className="topBar premiumTopBar">
+        <div className="brandArea premiumBrand">
+          <img
+            src="/logo.png"
+            alt="Pronto Moto"
+            className="logoMain premiumLogo"
+            onError={e=>{e.currentTarget.style.display="none"}}
+          />
+
+          <div>
+            <p className="muted">Panel empresarial</p>
+            <h2 className="saludo">Hola {getNombreUsuario(usuarioActual,user)}!</h2>
+          </div>
+        </div>
+
+        <div className="menuArea">
+          <button className="iconBtn" onClick={()=>setMenuAbierto(!menuAbierto)} title="Menú">
+            <Menu size={24}/>
+          </button>
+
+          {menuAbierto && (
+            <div className="dropdownMenu premiumDropdown">
+              <button onClick={()=>{toggleTema(); setMenuAbierto(false);}}>
+                {tema === "dark" ? <Sun size={18}/> : <Moon size={18}/>}
+                <span>{tema === "dark" ? "Modo claro" : "Modo oscuro"}</span>
+              </button>
+
+              <button onClick={()=>{cargar(); setMenuAbierto(false);}}>
+                <RefreshCw size={18}/>
+                <span>Actualizar</span>
+              </button>
+
+              <button onClick={()=>{setTab("configuracion"); setMenuAbierto(false);}}>
+                <Settings size={18}/>
+                <span>Configuración</span>
+              </button>
+
+              {esAdmin && (
+                <button onClick={()=>{setTab("notificaciones"); setMenuAbierto(false);}}>
+                  <Bell size={18}/>
+                  <span>Notificaciones</span>
+                </button>
+              )}
+
+              <button onClick={()=>signOut(auth)}>
+                <LogOut size={18}/>
+                <span>Salir</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="premiumLayout">
+        <aside className="sideNav">
+          {navItems.filter(item=>!item.admin || esAdmin).map(item=>{
+            const Icon=item.icon;
+            return (
+              <button
+                key={item.id}
+                className={tab===item.id ? "sideNavBtn active" : "sideNavBtn"}
+                onClick={()=>setTab(item.id)}
+              >
+                <Icon size={18}/>
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </aside>
+
+        <main className="mainPanel">
+          <div className="tabs mobileTabs">
+            {navItems.filter(item=>!item.admin || esAdmin).map(item=>{
+              const Icon=item.icon;
+              return (
+                <button
+                  key={item.id}
+                  className={tab===item.id ? "active" : ""}
+                  onClick={()=>setTab(item.id)}
+                >
+                  <Icon size={15}/>
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {tab==="inicio" && (
+            <>
+              <div className="executiveHero">
+                <div className="executiveMain">
+                  <p className="muted">Dashboard ejecutivo</p>
+
+                  <h1>Resumen financiero</h1>
+
+                  <div className="executiveMetrics">
+                    <div className="executiveMetric">
+                      <span>Ingresos</span>
+                      <b>{money(totalIngresos)}</b>
+                    </div>
+
+                    <div className="executiveMetric">
+                      <span>Gastos</span>
+                      <b>{money(totalGastos)}</b>
+                    </div>
+
+                    <div className="executiveMetric successMetric">
+                      <span>Neto</span>
+                      <b>{money(neto)}</b>
+                    </div>
+                  </div>
+
+                  {!esAdmin && (
+                    <p className="muted">
+                      Vista limitada a clientes asignados al cobrador.
+                    </p>
+                  )}
+                </div>
+
+                <div className="executiveWidgets">
+                  <div className="executiveWidget orangeWidget">
+                    <div>
+                      <p>Motos activas</p>
+                      <h2>{motosVisibles.length}</h2>
+                    </div>
+                    <Bike size={28}/>
+                  </div>
+
+                  <div className="executiveWidget blueWidget">
+                    <div>
+                      <p>Clientes</p>
+                      <h2>{clientesVisibles.length}</h2>
+                    </div>
+                    <Users size={28}/>
+                  </div>
+
+                  <div className="executiveWidget redWidget">
+                    <div>
+                      <p>Morosidad</p>
+                      <h2>{motosMorosas.length}</h2>
+                    </div>
+                    <AlertTriangle size={28}/>
+                  </div>
+                </div>
+              </div>
+
+              <div className="activityGrid">
+                <div className="card activityCard">
+                  <div className="sectionHeader">
+                    <div>
+                      <p className="muted">Actividad reciente</p>
+                      <h2>Últimos pagos</h2>
+                    </div>
+                  </div>
+
+                  {pagosVisibles.slice(0,5).map(p=>(
+                    <div className="activityItem" key={p.docId}>
+                      <div>
+                        <b>{p.cliente}</b>
+                        <p>{p.moto}</p>
+                      </div>
+
+                      <div className="activityAmount">
+                        {money(p.monto)}
+                      </div>
+                    </div>
+                  ))}
+
+                  {pagosVisibles.length===0 && (
+                    <p>No hay pagos recientes.</p>
+                  )}
+                </div>
+
+                <div className="card activityCard">
+                  <div className="sectionHeader">
+                    <div>
+                      <p className="muted">Alertas</p>
+                      <h2>Morosidad</h2>
+                    </div>
+                  </div>
+
+                  {motosMorosas.slice(0,5).map(m=>{
+                    const clienteMora = clientes.find(c=>c.id===m.clienteId);
+                    const deuda = deudaMoto(m);
+
+                    return (
+                      <div className="activityItem" key={m.id}>
+                        <div>
+                          <b>{m.placa}</b>
+                          <p>{clienteMora?.nombre || "Sin cliente"}</p>
+                        </div>
+
+                        <div className="dangerPill">
+                          {deuda.cuotasPendientes} cuotas
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {motosMorosas.length===0 && (
+                    <p>No hay morosidad registrada.</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="card chartCard premiumChartCard">
+                <div className="sectionHeader">
+                  <div>
+                    <p className="muted">Indicadores visuales</p>
+                    <h2>Gráficas financieras</h2>
+                  </div>
+                </div>
+
+                <div className="chartsGrid">
+                  <div className="realChartCard">
+                    <h3>Ingresos vs Gastos</h3>
+
+                    <ResponsiveContainer width="100%" height={260}>
+                      <BarChart data={chartFinanzas}>
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar dataKey="ingresos" radius={[12,12,0,0]} fill="#ff6600" />
+                        <Bar dataKey="gastos" radius={[12,12,0,0]} fill="#ef4444" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  <div className="realChartCard">
+                    <h3>Morosidad</h3>
+
+                    <ResponsiveContainer width="100%" height={260}>
+                      <PieChart>
+                        <Pie
+                          data={chartMorosidad}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={90}
+                          dataKey="value"
+                          label
+                        >
+                          <Cell fill="#22c55e" />
+                          <Cell fill="#ef4444" />
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
