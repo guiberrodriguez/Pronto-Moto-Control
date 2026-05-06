@@ -1557,21 +1557,123 @@ function Dashboard({user}){
 
           {tab==="inicio" && (
             <>
-              <div className="heroCard">
-                <div>
-                  <p className="muted">Resumen ejecutivo</p>
-                  <h1>Resumen financiero</h1>
-                  <p>
-                    Ingresos totales: <b>{money(totalIngresos)}</b> · Gastos: <b>{money(totalGastos)}</b> · Neto: <b>{money(neto)}</b>
-                  </p>
-                  {!esAdmin && <p className="muted">Vista limitada a clientes asignados al cobrador.</p>}
-                </div>
+              <div className="executiveHero">
+  <div className="executiveMain">
+    <p className="muted">Dashboard ejecutivo</p>
 
-                <div className="heroBadge">
-                  <ShieldCheck size={28}/>
-                  <span>Sistema activo</span>
-                </div>
-              </div>
+    <h1>Resumen financiero</h1>
+
+    <div className="executiveMetrics">
+      <div className="executiveMetric">
+        <span>Ingresos</span>
+        <b>{money(totalIngresos)}</b>
+      </div>
+
+      <div className="executiveMetric">
+        <span>Gastos</span>
+        <b>{money(totalGastos)}</b>
+      </div>
+
+      <div className="executiveMetric successMetric">
+        <span>Neto</span>
+        <b>{money(neto)}</b>
+      </div>
+    </div>
+
+    {!esAdmin && (
+      <p className="muted">
+        Vista limitada a clientes asignados al cobrador.
+      </p>
+    )}
+  </div>
+
+  <div className="executiveWidgets">
+    <div className="executiveWidget orangeWidget">
+      <div>
+        <p>Motos activas</p>
+        <h2>{motosVisibles.length}</h2>
+      </div>
+      <Bike size={28}/>
+    </div>
+
+    <div className="executiveWidget blueWidget">
+      <div>
+        <p>Clientes</p>
+        <h2>{clientesVisibles.length}</h2>
+      </div>
+      <Users size={28}/>
+    </div>
+
+    <div className="executiveWidget redWidget">
+      <div>
+        <p>Morosidad</p>
+        <h2>{motosMorosas.length}</h2>
+      </div>
+      <AlertTriangle size={28}/>
+    </div>
+  </div>
+</div>
+
+<div className="activityGrid">
+
+  <div className="card activityCard">
+    <div className="sectionHeader">
+      <div>
+        <p className="muted">Actividad reciente</p>
+        <h2>Últimos pagos</h2>
+      </div>
+    </div>
+
+    {pagosVisibles.slice(0,5).map(p=>(
+      <div className="activityItem" key={p.docId}>
+        <div>
+          <b>{p.cliente}</b>
+          <p>{p.moto}</p>
+        </div>
+
+        <div className="activityAmount">
+          {money(p.monto)}
+        </div>
+      </div>
+    ))}
+
+    {pagosVisibles.length===0 && (
+      <p>No hay pagos recientes.</p>
+    )}
+  </div>
+
+  <div className="card activityCard">
+    <div className="sectionHeader">
+      <div>
+        <p className="muted">Alertas</p>
+        <h2>Morosidad</h2>
+      </div>
+    </div>
+
+    {motosMorosas.slice(0,5).map(m=>{
+      const cliente = clientes.find(c=>c.id===m.clienteId);
+      const deuda = deudaMoto(m);
+
+      return (
+        <div className="activityItem" key={m.id}>
+          <div>
+            <b>{m.placa}</b>
+            <p>{cliente?.nombre || "Sin cliente"}</p>
+          </div>
+
+          <div className="dangerPill">
+            {deuda.cuotasPendientes} cuotas
+          </div>
+        </div>
+      );
+    })}
+
+    {motosMorosas.length===0 && (
+      <p>No hay morosidad registrada.</p>
+    )}
+  </div>
+
+</div>
 
               <div className="card chartCard premiumChartCard">
                 <div className="sectionHeader">
