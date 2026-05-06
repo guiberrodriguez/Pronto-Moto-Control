@@ -433,3 +433,208 @@ function ValidarComprobante(){
     </div>
   );
 }
+
+function abrirImpresion(titulo,html,tipoPapel="normal"){
+  const anterior=document.getElementById("print-frame");
+  if(anterior) anterior.remove();
+
+  const iframe=document.createElement("iframe");
+  iframe.id="print-frame";
+  iframe.style.position="fixed";
+  iframe.style.right="0";
+  iframe.style.bottom="0";
+  iframe.style.width="0";
+  iframe.style.height="0";
+  iframe.style.border="0";
+  document.body.appendChild(iframe);
+
+  const ticketCss = tipoPapel === "termico"
+    ? `
+      @page { size: 80mm auto; margin: 3mm; }
+      body{font-family:Arial,sans-serif;width:72mm;padding:0;margin:0;color:#111;background:white;font-size:11px;}
+      h1{font-size:16px;text-align:center;margin:4px 0;}
+      h2{font-size:13px;text-align:center;margin:4px 0;}
+      p{margin:3px 0;}
+      table{width:100%;border-collapse:collapse;margin-top:6px;font-size:11px;}
+      td,th{border-bottom:1px dashed #999;padding:4px 0;text-align:left;}
+      .centro{text-align:center;}
+      img.printLogo{width:280px;max-width:100%;height:auto;object-fit:contain;display:block;margin:0 auto 6px;}
+      img.qr{max-width:120px;}
+      .firmas td{height:50px;}
+    `
+    : `
+      @page { size: auto; margin: 12mm; }
+      body{font-family:Arial,sans-serif;padding:30px;color:#333;background:white;}
+      h1,h2{text-align:center;}
+      table{width:100%;border-collapse:collapse;margin-top:20px;}
+      td,th{border:1px solid #ddd;padding:8px;text-align:left;}
+      .firmas td{height:80px;}
+      .centro{text-align:center;}
+      img.printLogo{width:540px;max-width:100%;height:auto;object-fit:contain;display:block;margin:0 auto 12px;}
+      img.qr{max-width:180px;}
+    `;
+
+  const documento=iframe.contentWindow.document;
+  documento.open();
+  documento.write(`
+    <html>
+      <head>
+        <title>${titulo}</title>
+        <style>${ticketCss}</style>
+      </head>
+      <body>${html}</body>
+    </html>
+  `);
+  documento.close();
+
+  setTimeout(()=>{
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+  },700);
+}
+
+function Dashboard({user}){
+  const [tab,setTab]=useState("inicio");
+  const [menuAbierto,setMenuAbierto]=useState(false);
+  const [tema,setTema]=useState(localStorage.getItem("tema") || "light");
+
+  const [clientes,setClientes]=useState([]);
+  const [motos,setMotos]=useState([]);
+  const [pagos,setPagos]=useState([]);
+  const [gastos,setGastos]=useState([]);
+  const [adjuntos,setAdjuntos]=useState([]);
+  const [usuarios,setUsuarios]=useState([]);
+  const [notificaciones,setNotificaciones]=useState([]);
+  const [pagosDigitales,setPagosDigitales]=useState([]);
+
+  const [usuarioActual,setUsuarioActual]=useState(null);
+  const [ultimo,setUltimo]=useState(null);
+  const [clienteVista,setClienteVista]=useState(null);
+
+  const [busquedaCliente,setBusquedaCliente]=useState("");
+  const [busquedaClientePago,setBusquedaClientePago]=useState("");
+  const [clientePagoId,setClientePagoId]=useState("");
+  const [papelComprobante,setPapelComprobante]=useState("normal");
+
+  const [nuevaPassword,setNuevaPassword]=useState("");
+
+  const [usuarioForm,setUsuarioForm]=useState({
+    uid:"",
+    nombre:"",
+    correo:"",
+    rol:"cobrador"
+  });
+
+  const [empresa,setEmpresa]=useState({
+    nombre:"Pronto Moto",
+    telefono:"",
+    direccion:"",
+    rnc:"",
+    notas:""
+  });
+
+  const [cliente,setCliente]=useState({
+    idCliente:"",
+    pais:"República Dominicana",
+    nacionalidad:"Dominicana",
+    provincia:"Distrito Nacional",
+    municipio:"Santo Domingo de Guzmán",
+    sexo:"Masculino",
+    nombre:"",
+    cedula:"",
+    correo:"",
+    telefono:"",
+    telefonoResidencial:"",
+    telefonoReferencia:"",
+    direccion:"",
+    referencia:"",
+    riesgo:"Nuevo cliente",
+    cobradorId:"",
+    ubicacion:null
+  });
+
+  const [moto,setMoto]=useState({
+    placa:"",
+    marca:"",
+    modelo:"",
+    anio:"",
+    tracker:"",
+    clienteId:"",
+    fechaAsignacion:today(),
+    pagoDiario:"400",
+    deposito:"5000"
+  });
+
+  const [pago,setPago]=useState({
+    motoId:"",
+    monto:"400",
+    metodo:"Efectivo",
+    linkPago:"",
+    estadoPagoDigital:"No aplica"
+  });
+
+  const [gasto,setGasto]=useState({
+    motoId:"",
+    fecha:today(),
+    categoria:"Reparación",
+    monto:"",
+    proveedor:"",
+    nota:""
+  });
+
+  const [clienteAdjunto,setClienteAdjunto]=useState("");
+  const [archivo,setArchivo]=useState(null);
+
+  const [editCliente,setEditCliente]=useState(null);
+  const [editMoto,setEditMoto]=useState(null);
+  const [editGasto,setEditGasto]=useState(null);
+
+  const esAdmin = !usuarioActual || usuarioActual.rol === "admin";
+  const municipiosDisponibles = provinciasRD[cliente.provincia] || [];
+
+  useEffect(()=>{
+    document.body.classList.remove("darkMode","lightMode");
+
+    if(tema === "dark"){
+      document.body.classList.add("darkMode");
+    }else{
+      document.body.classList.add("lightMode");
+    }
+
+    localStorage.setItem("tema",tema);
+  },[tema]);
+
+  function toggleTema(){
+    setTema(prev => prev === "dark" ? "light" : "dark");
+  }
+
+  async function cargar(){
+    const c=await getDocs(collection(db,"clientes"));
+    const m=await getDocs(collection(db,"motos"));
+    const p=await getDocs(collection(db,"pagos"));
+    const g=await getDocs(collection(db,"gastos"));
+    const a=await getDocs(collection(db,"adjuntos"));
+    const u=await getDocs(collection(db,"usuarios"));
+    const n=await getDocs(collection(db,"notificaciones"));
+    const pd=await getDocs(collection(db,"pagosDigitales"));
+
+    const usuariosData=u.docs.map(d=>({id:d.id,...d.data()}));
+    const perfil=usuariosData.find(x=>x.uid===user.uid || x.correo===user.email) || {
+      uid:user.uid,
+      nombre:user.email,
+      correo:user.email,
+      rol:"admin"
+    };
+
+    setUsuarioActual(perfil);
+    setUsuarios(usuariosData);
+    setClientes(c.docs.map(d=>({id:d.id,...d.data()})));
+    setMotos(m.docs.map(d=>({id:d.id,...d.data()})));
+    setPagos(p.docs.map(d=>({docId:d.id,...d.data()})));
+    setGastos(g.docs.map(d=>({id:d.id,...d.data()})));
+    setAdjuntos(a.docs.map(d=>({id:d.id,...d.data()})));
+    setNotificaciones(n.docs.map(d=>({id:d.id,...d.data()})));
+    setPagosDigitales(pd.docs.map(d=>({id:d.id,...d.data()})));
+  }
+
+  useEffect(()=>{ cargar(); },[]);
