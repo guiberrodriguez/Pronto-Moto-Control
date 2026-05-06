@@ -341,3 +341,248 @@ function countryCode(country){
 
   return String(country || "XX").slice(0,2).toUpperCase();
 }
+
+function businessDaysBetween(startDate,endDate){
+  if(!startDate || !endDate) return 0;
+
+  let start = new Date(startDate + "T00:00:00");
+  let end = new Date(endDate + "T00:00:00");
+  let count = 0;
+
+  start.setDate(start.getDate() + 1);
+
+  while(start <= end){
+    if(start.getDay() !== 0) count++;
+    start.setDate(start.getDate() + 1);
+  }
+
+  return count;
+}
+
+function cleanPhone(phone){
+  return String(phone || "").replace(/\D/g,"");
+}
+
+function whatsappUrl(phone,text){
+  return `https://wa.me/1${cleanPhone(phone)}?text=${encodeURIComponent(text)}`;
+}
+
+function getLocation(){
+  return new Promise((resolve,reject)=>{
+    if(!navigator.geolocation){
+      reject(new Error("Este dispositivo no soporta ubicación GPS"));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      pos=>{
+        resolve({
+          lat:pos.coords.latitude,
+          lng:pos.coords.longitude,
+          accuracy:pos.coords.accuracy,
+          fecha:nowDateTime()
+        });
+      },
+      err=>reject(err),
+      {
+        enableHighAccuracy:true,
+        timeout:15000,
+        maximumAge:0
+      }
+    );
+  });
+}
+
+function locationMapUrl(location){
+  if(!location?.lat || !location?.lng) return "";
+  return `https://www.google.com/maps?q=${location.lat},${location.lng}`;
+}
+
+function getNombreUsuario(usuarioActual,user){
+  const fuente = usuarioActual?.nombre || user?.displayName || user?.email || "Usuario";
+  if(fuente.includes("@")) return fuente.split("@")[0].split(".")[0];
+  return fuente.split(" ")[0];
+}
+
+function IconTextButton({icon:Icon,label,onClick,className="",type="button"}){
+  return (
+    <button type={type} className={`iconTextBtn ${className}`} onClick={onClick}>
+      {Icon && <Icon size={18}/>}
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function Login(){
+  const [email,setEmail]=useState("");
+  const [pass,setPass]=useState("");
+  const [error,setError]=useState("");
+
+  async function login(){
+    try{
+      setError("");
+      await signInWithEmailAndPassword(auth,email,pass);
+    }catch(e){
+      setError(e.message);
+    }
+  }
+
+  return (
+    <div className="login premiumLogin">
+      <div className="loginGlow"></div>
+
+      <div className="card loginCard premiumLoginCard">
+        <div className="loginLogo">
+          <img src="/logo.png" alt="Pronto Moto" onError={e=>{e.currentTarget.style.display="none"}} />
+        </div>
+
+        <p className="muted loginSubtitle">Acceso privado empresarial</p>
+
+        {error && <div className="alert">{error}</div>}
+
+        <input placeholder="Correo" value={email} onChange={e=>setEmail(e.target.value)} />
+        <input type="password" placeholder="Contraseña" value={pass} onChange={e=>setPass(e.target.value)} />
+
+        <button onClick={login} className="primaryWideBtn">
+          Entrar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ValidarComprobante(){
+  const [data,setData]=useState(null);
+  const [loading,setLoading]=useState(true);
+
+  useEffect(()=>{
+    async function load(){
+      const id = window.location.pathname.split("/validar/")[1];
+      const snap = await getDocs(collection(db,"pagos"));
+      const pagos = snap.docs.map(d=>d.data());
+      setData(pagos.find(p=>p.id===id) || null);
+      setLoading(false);
+    }
+
+    load();
+  },[]);
+
+  if(loading){
+    return (
+      <div className="premiumShell">
+        <div className="card">
+          <h1>Validando comprobante...</h1>
+        </div>
+      </div>
+    );
+  }
+
+  if(!data){
+    return (
+      <div className="premiumShell">
+        <div className="card">
+          <h1>Comprobante no encontrado</h1>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="premiumShell">
+      <div className="card validCard">
+        <div className="loginLogo">
+          <img src="/logo.png" alt="Pronto Moto" onError={e=>{e.currentTarget.style.display="none"}} />
+        </div>
+
+        <h1>Comprobante válido</h1>
+        <p className="success">Validado en la nube</p>
+
+        <table>
+          <tbody>
+            <tr><th>ID</th><td>{data.id}</td></tr>
+            <tr><th>Fecha</th><td>{data.fecha}</td></tr>
+            <tr><th>ID Cliente</th><td>{data.idCliente || data.clienteId}</td></tr>
+            <tr><th>Cliente</th><td>{data.cliente}</td></tr>
+            <tr><th>Moto</th><td>{data.moto}</td></tr>
+            <tr><th>Cuotas pendientes</th><td>{data.cuotasPendientes || 0}</td></tr>
+            <tr><th>Monto pendiente antes</th><td>{money(data.montoPendienteAntes || 0)}</td></tr>
+            <tr><th>Monto pagado</th><td>{money(data.monto)}</td></tr>
+            <tr><th>Monto pendiente después</th><td>{money(data.montoPendienteDespues || 0)}</td></tr>
+            <tr><th>Método</th><td>{data.metodo}</td></tr>
+            <tr><th>Estado pago digital</th><td>{data.estadoPagoDigital || "N/A"}</td></tr>
+            <tr><th>Cobrador</th><td>{data.cobrador || ""}</td></tr>
+            <tr><th>Estatus</th><td>{data.estatus || "N/A"}</td></tr>
+          </tbody>
+        </table>
+
+        {data.ubicacionCobro?.lat && (
+          <p>
+            <a href={locationMapUrl(data.ubicacionCobro)} target="_blank" rel="noreferrer">
+              Ver ubicación del cobro
+            </a>
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function abrirImpresion(titulo, html, tipoPapel = "normal") {
+  const printWindow = window.open("", "_blank", "width=900,height=700");
+
+  if (!printWindow) {
+    alert("El navegador bloqueó la ventana de impresión. Permite ventanas emergentes para esta app.");
+    return;
+  }
+
+  const ticketCss = tipoPapel === "termico"
+    ? `
+      @page { size: 80mm auto; margin: 3mm; }
+      html,body{font-family:Arial,sans-serif;width:72mm;padding:0;margin:0;color:#111;background:white;font-size:11px;}
+      h1{font-size:16px;text-align:center;margin:4px 0;}
+      h2{font-size:13px;text-align:center;margin:4px 0;}
+      p{margin:3px 0;}
+      table{width:100%;border-collapse:collapse;margin-top:6px;font-size:11px;}
+      td,th{border-bottom:1px dashed #999;padding:4px 0;text-align:left;}
+      .centro{text-align:center;}
+      img.printLogo{width:260px;max-width:100%;height:auto;display:block;margin:0 auto 6px;}
+      img.qr{max-width:120px;}
+      .firmas td{height:50px;}
+    `
+    : `
+      @page { size: auto; margin: 12mm; }
+      html,body{font-family:Arial,sans-serif;padding:0;margin:0;color:#333;background:white;}
+      body{padding:30px;}
+      h1,h2{text-align:center;}
+      table{width:100%;border-collapse:collapse;margin-top:20px;}
+      td,th{border:1px solid #ddd;padding:8px;text-align:left;}
+      .firmas td{height:80px;}
+      .centro{text-align:center;}
+      img.printLogo{width:520px;max-width:100%;height:auto;display:block;margin:0 auto 12px;}
+      img.qr{max-width:180px;}
+    `;
+
+  printWindow.document.open();
+  printWindow.document.write(`
+    <!doctype html>
+    <html>
+      <head>
+        <meta charset="UTF-8" />
+        <title>${titulo}</title>
+        <style>${ticketCss}</style>
+      </head>
+      <body>
+        ${html}
+        <script>
+          window.onload = function(){
+            setTimeout(function(){
+              window.focus();
+              window.print();
+            }, 600);
+          };
+        </script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+}
