@@ -201,3 +201,104 @@ function Dashboard({user}){
   useEffect(()=>{
     cargar();
   },[]);
+  
+    const clientesVisibles = useMemo(()=>{
+    if(esAdmin) return clientes;
+    return clientes.filter(c=>c.cobradorId===usuarioActual?.uid || c.cobradorId===usuarioActual?.id);
+  },[clientes,usuarioActual,esAdmin]);
+
+  const motosVisibles = useMemo(()=>{
+    if(esAdmin) return motos;
+    const idsClientes=new Set(clientesVisibles.map(c=>c.id));
+    return motos.filter(m=>idsClientes.has(m.clienteId));
+  },[motos,clientesVisibles,esAdmin]);
+
+  const pagosVisibles = useMemo(()=>{
+    if(esAdmin) return pagos;
+    const idsClientes=new Set(clientesVisibles.map(c=>c.id));
+    return pagos.filter(p=>idsClientes.has(p.clienteId));
+  },[pagos,clientesVisibles,esAdmin]);
+
+  const totalIngresos=pagosVisibles.reduce((s,p)=>s+Number(p.monto||0),0);
+  const totalGastos=esAdmin ? gastos.reduce((s,g)=>s+Number(g.monto||0),0) : 0;
+  const neto=totalIngresos-totalGastos;
+
+  function ingresosPorMoto(motoId){
+    return pagos.filter(p=>p.motoId===motoId).reduce((s,p)=>s+Number(p.monto||0),0);
+  }
+
+  function gastosPorMoto(motoId){
+    return gastos.filter(g=>g.motoId===motoId).reduce((s,g)=>s+Number(g.monto||0),0);
+  }
+
+  function pagosPorMoto(motoId){
+    return pagos
+      .filter(p=>p.motoId===motoId)
+      .sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
+  }
+
+  function ultimoPagoMoto(motoId){
+    return pagosPorMoto(motoId)[0] || null;
+  }
+
+  function atrasoMoto(m){
+    if(!m.clienteId) return 0;
+    const ultimo=ultimoPagoMoto(m.id);
+    const fechaBase=ultimo?.fecha || m.fechaAsignacion || today();
+    return businessDaysBetween(fechaBase,today());
+  }
+
+  function deudaMoto(m){
+    const cuotasPendientes = atrasoMoto(m);
+    const montoPendiente = cuotasPendientes * Number(m.pagoDiario || 0);
+
+    let estatus = "Al día";
+    if(cuotasPendientes >= 3) estatus = "Recuperación";
+    else if(cuotasPendientes >= 2) estatus = "Riesgo alto";
+    else if(cuotasPendientes >= 1) estatus = "Pendiente";
+
+    return { cuotasPendientes, montoPendiente, estatus };
+  }
+
+  const rankingMotos=[...motosVisibles].sort((a,b)=>{
+    const netoA=ingresosPorMoto(a.id)-gastosPorMoto(a.id);
+    const netoB=ingresosPorMoto(b.id)-gastosPorMoto(b.id);
+    return netoB-netoA;
+  });
+
+  const motosMorosas=motosVisibles.filter(m=>m.clienteId && atrasoMoto(m)>=1);
+
+  const clientesFiltrados = useMemo(()=>{
+    const q = busquedaCliente.toLowerCase().trim();
+    if(!q) return clientesVisibles;
+
+    return clientesVisibles.filter(c=>{
+      const texto = [
+        c.idCliente,c.nombre,c.cedula,c.telefono,c.telefonoResidencial,
+        c.telefonoReferencia,c.correo,c.pais,c.nacionalidad,c.provincia,
+        c.municipio,c.sexo
+      ].join(" ").toLowerCase();
+
+      return texto.includes(q);
+    });
+  },[clientesVisibles,busquedaCliente]);
+
+  const clientesPagoFiltrados = useMemo(()=>{
+    const q = busquedaClientePago.toLowerCase().trim();
+    if(!q) return clientesVisibles;
+
+    return clientesVisibles.filter(c=>{
+      const texto = [
+        c.idCliente,c.nombre,c.cedula,c.telefono,c.telefonoResidencial,
+        c.telefonoReferencia,c.correo,c.pais,c.nacionalidad,c.provincia,
+        c.municipio,c.sexo
+      ].join(" ").toLowerCase();
+
+      return texto.includes(q);
+    });
+  },[clientesVisibles,busquedaClientePago]);
+
+  const clientePago = clientesVisibles.find(c=>c.id===clientePagoId) || null;
+  const motosClientePago = motosVisibles.filter(m=>m.clienteId===clientePagoId);
+  const motoPagoSeleccionada = motosVisibles.find(m=>m.id===pago.motoId) || null;
+  const deudaPagoSeleccionada = motoPagoSeleccionada ? deudaMoto(motoPagoSeleccionada) : null;
