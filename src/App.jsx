@@ -1663,12 +1663,82 @@ function Dashboard({user}){
 </div>
 
               <div className="card chartCard premiumChartCard">
-                <div className="sectionHeader">
-                  <div>
-                    <p className="muted">Indicadores visuales</p>
-                    <h2>Gráficas</h2>
-                  </div>
-                </div>
+
+  <div className="sectionHeader">
+    <div>
+      <p className="muted">Indicadores visuales</p>
+      <h2>Gráficas financieras</h2>
+    </div>
+  </div>
+
+  <div className="chartsGrid">
+
+    <div className="realChartCard">
+      <h3>Ingresos vs Gastos</h3>
+
+      <ResponsiveContainer width="100%" height={260}>
+        <BarChart
+          data={[
+            {
+              name:"Finanzas",
+              ingresos:totalIngresos,
+              gastos:totalGastos
+            }
+          ]}
+        >
+          <XAxis dataKey="name" />
+          <YAxis />
+          <Tooltip />
+
+          <Bar
+            dataKey="ingresos"
+            radius={[12,12,0,0]}
+          />
+
+          <Bar
+            dataKey="gastos"
+            radius={[12,12,0,0]}
+          />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+
+    <div className="realChartCard">
+      <h3>Morosidad</h3>
+
+      <ResponsiveContainer width="100%" height={260}>
+        <PieChart>
+
+          <Pie
+            data={[
+              {
+                name:"Al día",
+                value:motosVisibles.length - motosMorosas.length
+              },
+              {
+                name:"Morosas",
+                value:motosMorosas.length
+              }
+            ]}
+            cx="50%"
+            cy="50%"
+            outerRadius={90}
+            dataKey="value"
+            label
+          >
+            <Cell fill="#22c55e"/>
+            <Cell fill="#ef4444"/>
+          </Pie>
+
+          <Tooltip />
+
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+
+  </div>
+
+</div>
 
                 <div className="proChart">
                   <div className="chartRow">
