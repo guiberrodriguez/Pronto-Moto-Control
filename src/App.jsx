@@ -1222,3 +1222,244 @@ function Dashboard({user}){
       console.log(e);
     }
   }
+  
+    async function guardarGasto(){
+    if(!esAdmin) return alert("Solo el administrador puede registrar gastos");
+    if(!gasto.motoId) return alert("Selecciona una moto");
+    if(!gasto.monto) return alert("El monto es obligatorio");
+
+    try{
+      if(editGasto){
+        await updateDoc(doc(db,"gastos",editGasto),gasto);
+        alert("Gasto actualizado correctamente");
+        setEditGasto(null);
+      }else{
+        await addDoc(collection(db,"gastos"),gasto);
+        alert("Gasto registrado correctamente");
+      }
+
+      setGasto({
+        motoId:"",
+        fecha:today(),
+        categoria:"Reparación",
+        monto:"",
+        proveedor:"",
+        nota:""
+      });
+
+      cargar();
+    }catch(e){
+      alert("No se pudo guardar el gasto");
+      console.log(e);
+    }
+  }
+
+  function editarGasto(g){
+    if(!esAdmin) return alert("Solo el administrador puede editar gastos");
+
+    setGasto({
+      motoId:g.motoId||"",
+      fecha:g.fecha||today(),
+      categoria:g.categoria||"Reparación",
+      monto:g.monto||"",
+      proveedor:g.proveedor||"",
+      nota:g.nota||""
+    });
+
+    setEditGasto(g.id);
+    setTab("gastos");
+  }
+
+  async function eliminarGasto(id){
+    if(!esAdmin) return alert("Solo el administrador puede eliminar gastos");
+
+    const confirmar = confirm("¿Seguro que deseas eliminar este gasto?");
+    if(!confirmar) return;
+
+    try{
+      await deleteDoc(doc(db,"gastos",id));
+      alert("Gasto eliminado correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo eliminar el gasto");
+      console.log(e);
+    }
+  }
+
+  async function subirAdjunto(){
+    if(!esAdmin) return alert("Solo el administrador puede subir adjuntos");
+    if(!clienteAdjunto) return alert("Selecciona un cliente");
+    if(!archivo) return alert("Selecciona un archivo");
+
+    const ruta=`clientes/${clienteAdjunto}/${Date.now()}-${archivo.name}`;
+    const archivoRef=ref(storage,ruta);
+
+    try{
+      await uploadBytes(archivoRef,archivo);
+      const url=await getDownloadURL(archivoRef);
+
+      await addDoc(collection(db,"adjuntos"),{
+        clienteId:clienteAdjunto,
+        nombre:archivo.name,
+        tipo:archivo.type,
+        ruta,
+        url,
+        fecha:today()
+      });
+
+      setArchivo(null);
+      setClienteAdjunto("");
+      alert("Adjunto subido correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo subir el adjunto");
+      console.log(e);
+    }
+  }
+
+  async function eliminarAdjunto(a){
+    if(!esAdmin) return alert("Solo el administrador puede eliminar adjuntos");
+
+    const confirmar = confirm("¿Seguro que deseas eliminar este adjunto?");
+    if(!confirmar) return;
+
+    try{
+      await deleteObject(ref(storage,a.ruta));
+      await deleteDoc(doc(db,"adjuntos",a.id));
+      alert("Adjunto eliminado correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo eliminar el adjunto");
+      console.log(e);
+    }
+  }
+
+  async function guardarUsuario(){
+    if(!esAdmin) return alert("Solo el administrador puede gestionar usuarios");
+    if(!usuarioForm.uid || !usuarioForm.correo){
+      return alert("Debes colocar UID y correo del usuario creado en Firebase Authentication");
+    }
+
+    try{
+      await setDoc(doc(db,"usuarios",usuarioForm.uid),usuarioForm);
+
+      setUsuarioForm({
+        uid:"",
+        nombre:"",
+        correo:"",
+        rol:"cobrador"
+      });
+
+      alert("Usuario guardado correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo guardar el usuario");
+      console.log(e);
+    }
+  }
+
+  async function cambiarPassword(){
+    if(!nuevaPassword || nuevaPassword.length < 6){
+      return alert("La contraseña debe tener al menos 6 caracteres");
+    }
+
+    try{
+      await updatePassword(auth.currentUser,nuevaPassword);
+      setNuevaPassword("");
+      alert("Contraseña actualizada");
+    }catch(e){
+      alert("No se pudo cambiar la contraseña. Vuelve a iniciar sesión e intenta otra vez.");
+      console.log(e);
+    }
+  }
+
+  async function marcarNotificacionLeida(n){
+    try{
+      await updateDoc(doc(db,"notificaciones",n.id),{...n,leida:true});
+      cargar();
+    }catch(e){
+      console.log("No se pudo marcar la notificación:", e);
+    }
+  }
+
+  function mensajeWhatsAppPago(p){
+    return `Hola ${p.cliente || ""}, su pago ha sido registrado correctamente.\n\nID: ${p.id}\nMoto: ${p.moto}\nMonto pagado: ${money(p.monto)}\nPendiente: ${money(p.montoPendienteDespues || 0)}\nComprobante: ${p.url}`;
+  }
+
+  function mensajeWhatsAppMora(m){
+    const c=clientes.find(x=>x.id===m.clienteId);
+    const d=deudaMoto(m);
+
+    return `Hola ${c?.nombre || ""}, tienes ${d.cuotasPendientes} cuota(s) pendiente(s) de pago de la motocicleta ${m.placa}. Deuda estimada: ${money(d.montoPendiente)}. Favor regularizar.`;
+  }
+
+  function imprimirContrato(m){
+    const c=clientes.find(x=>x.id===m.clienteId);
+    if(!c) return alert("Esta moto no tiene cliente asignado");
+
+    const html=`
+      <div class="centro">
+        <img class="printLogo" src="${BASE_URL}/logo.png" />
+      </div>
+
+      <h1>${empresa.nombre}</h1>
+      <p class="centro">${empresa.telefono} · ${empresa.direccion}</p>
+      <h2>CONTRATO DE ALQUILER DE MOTOCICLETA</h2>
+
+      <p><b>Fecha:</b> ${today()}</p>
+      <p><b>Arrendador:</b> ${empresa.nombre} · RNC/Cédula: ${empresa.rnc||"N/A"}</p>
+      <p><b>Arrendatario:</b> ${c.nombre} · ID Cliente: ${c.idCliente || c.id} · Cédula: ${c.cedula} · Teléfono: ${c.telefono}</p>
+      <p><b>Sexo:</b> ${c.sexo || ""} · <b>Correo:</b> ${c.correo || ""}</p>
+      <p><b>País:</b> ${c.pais || ""} · <b>Nacionalidad:</b> ${c.nacionalidad || ""}</p>
+      <p><b>Provincia:</b> ${c.provincia || ""} · <b>Municipio:</b> ${c.municipio || ""}</p>
+      <p><b>Dirección:</b> ${c.direccion}</p>
+
+      <table>
+        <tr>
+          <th>Placa</th>
+          <th>Marca</th>
+          <th>Modelo</th>
+          <th>Año</th>
+          <th>GPS / Tracker</th>
+          <th>Pago diario</th>
+          <th>Depósito</th>
+        </tr>
+        <tr>
+          <td>${m.placa}</td>
+          <td>${m.marca}</td>
+          <td>${m.modelo}</td>
+          <td>${m.anio}</td>
+          <td>${m.tracker||"N/A"}</td>
+          <td>${money(m.pagoDiario)}</td>
+          <td>${money(m.deposito)}</td>
+        </tr>
+      </table>
+
+      <h3>Condiciones principales</h3>
+
+      <ol>
+        <li>El pago es diario, exceptuando los domingos.</li>
+        <li>Al acumular tres cuotas vencidas, el contrato podrá ser cancelado.</li>
+        <li>El arrendador podrá recuperar la motocicleta por las vías legales correspondientes.</li>
+        <li>El arrendatario asume multas, accidentes, daños, uso indebido y cualquier responsabilidad derivada del uso de la motocicleta.</li>
+        <li>Queda prohibido prestar, ceder, subarrendar o usar la motocicleta en actividades ilícitas.</li>
+      </ol>
+
+      <p>${empresa.notas||""}</p>
+
+      <br/><br/>
+
+      <table class="firmas">
+        <tr>
+          <td>Firma Arrendador</td>
+          <td>Firma Arrendatario</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td></td>
+        </tr>
+      </table>
+    `;
+
+    abrirImpresion("Contrato "+m.placa,html,"normal");
+  }
