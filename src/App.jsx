@@ -1425,3 +1425,313 @@ function Dashboard({user}){
       }
     }
   },[motosMorosas.length]);
+  
+    const navItems = [
+    {id:"inicio", label:"Inicio", icon:Home, admin:false},
+    {id:"clientes", label:"Clientes", icon:Users, admin:false},
+    {id:"motos", label:"Motos", icon:Bike, admin:false},
+    {id:"pagos", label:"Pagos", icon:CreditCard, admin:false},
+    {id:"gastos", label:"Gastos", icon:Wallet, admin:true},
+    {id:"morosidad", label:"Morosidad", icon:AlertTriangle, admin:false},
+    {id:"ranking", label:"Ranking", icon:Trophy, admin:false},
+    {id:"adjuntos", label:"Adjuntos", icon:Paperclip, admin:true},
+    {id:"pagosDigitales", label:"Pagos digitales", icon:ShieldCheck, admin:true},
+    {id:"empresa", label:"Empresa", icon:Building2, admin:true}
+  ];
+
+  return (
+    <div className="premiumShell">
+      <div className="topBar premiumTopBar">
+        <div className="brandArea premiumBrand">
+          <img
+            src="/logo.png"
+            alt="Pronto Moto"
+            className="logoMain premiumLogo"
+            onError={e=>{e.currentTarget.style.display="none"}}
+          />
+
+          <div>
+            <p className="muted">Panel empresarial</p>
+            <h2 className="saludo">Hola {getNombreUsuario(usuarioActual,user)}!</h2>
+          </div>
+        </div>
+
+        <div className="menuArea">
+          <button className="iconBtn" onClick={()=>setMenuAbierto(!menuAbierto)} title="Menú">
+            <Menu size={24}/>
+          </button>
+
+          {menuAbierto && (
+            <div className="dropdownMenu premiumDropdown">
+              <button onClick={()=>{toggleTema(); setMenuAbierto(false);}}>
+                {tema === "dark" ? <Sun size={18}/> : <Moon size={18}/>}
+                <span>{tema === "dark" ? "Modo claro" : "Modo oscuro"}</span>
+              </button>
+
+              <button onClick={()=>{cargar(); setMenuAbierto(false);}}>
+                <RefreshCw size={18}/>
+                <span>Actualizar</span>
+              </button>
+
+              <button onClick={()=>{setTab("configuracion"); setMenuAbierto(false);}}>
+                <Settings size={18}/>
+                <span>Configuración</span>
+              </button>
+
+              {esAdmin && (
+                <button onClick={()=>{setTab("notificaciones"); setMenuAbierto(false);}}>
+                  <Bell size={18}/>
+                  <span>Notificaciones</span>
+                </button>
+              )}
+
+              <button onClick={()=>signOut(auth)}>
+                <LogOut size={18}/>
+                <span>Salir</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="premiumLayout">
+        <aside className="sideNav">
+          {navItems.filter(item=>!item.admin || esAdmin).map(item=>{
+            const Icon=item.icon;
+            return (
+              <button
+                key={item.id}
+                className={tab===item.id ? "sideNavBtn active" : "sideNavBtn"}
+                onClick={()=>setTab(item.id)}
+              >
+                <Icon size={18}/>
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </aside>
+
+        <main className="mainPanel">
+          <div className="gridStats premiumStats">
+            <div className="card stat premiumStat">
+              <span>Clientes</span>
+              <b>{clientesVisibles.length}</b>
+            </div>
+            <div className="card stat premiumStat">
+              <span>Motos</span>
+              <b>{motosVisibles.length}</b>
+            </div>
+            <div className="card stat premiumStat dangerStat">
+              <span>Morosas</span>
+              <b>{motosMorosas.length}</b>
+            </div>
+            <div className="card stat premiumStat">
+              <span>Ingresos</span>
+              <b>{money(totalIngresos)}</b>
+            </div>
+            <div className="card stat premiumStat">
+              <span>Gastos</span>
+              <b>{money(totalGastos)}</b>
+            </div>
+            <div className="card stat premiumStat successStat">
+              <span>Neto</span>
+              <b>{money(neto)}</b>
+            </div>
+          </div>
+
+          <div className="tabs mobileTabs">
+            {navItems.filter(item=>!item.admin || esAdmin).map(item=>{
+              const Icon=item.icon;
+              return (
+                <button
+                  key={item.id}
+                  className={tab===item.id ? "active" : ""}
+                  onClick={()=>setTab(item.id)}
+                >
+                  <Icon size={15}/>
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {tab==="inicio" && (
+            <>
+              <div className="heroCard">
+                <div>
+                  <p className="muted">Resumen ejecutivo</p>
+                  <h1>Resumen financiero</h1>
+                  <p>
+                    Ingresos totales: <b>{money(totalIngresos)}</b> · Gastos: <b>{money(totalGastos)}</b> · Neto: <b>{money(neto)}</b>
+                  </p>
+                  {!esAdmin && <p className="muted">Vista limitada a clientes asignados al cobrador.</p>}
+                </div>
+
+                <div className="heroBadge">
+                  <ShieldCheck size={28}/>
+                  <span>Sistema activo</span>
+                </div>
+              </div>
+
+              <div className="card chartCard premiumChartCard">
+                <div className="sectionHeader">
+                  <div>
+                    <p className="muted">Indicadores visuales</p>
+                    <h2>Gráficas</h2>
+                  </div>
+                </div>
+
+                <div className="proChart">
+                  <div className="chartRow">
+                    <div className="chartLabel">
+                      <span>Ingresos</span>
+                      <span>{money(totalIngresos)}</span>
+                    </div>
+                    <div className="chartBar">
+                      <div
+                        className="chartFill chartIncome"
+                        style={{
+                          width: `${Math.min(100,totalIngresos / (totalIngresos + totalGastos || 1) * 100)}%`
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="chartRow">
+                    <div className="chartLabel">
+                      <span>Gastos</span>
+                      <span>{money(totalGastos)}</span>
+                    </div>
+                    <div className="chartBar">
+                      <div
+                        className="chartFill chartExpense"
+                        style={{
+                          width: `${Math.min(100,totalGastos / (totalIngresos + totalGastos || 1) * 100)}%`
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="chartRow">
+                    <div className="chartLabel">
+                      <span>Morosidad</span>
+                      <span>{motosMorosas.length} / {motosVisibles.length}</span>
+                    </div>
+                    <div className="chartBar">
+                      <div
+                        className="chartFill chartDebt"
+                        style={{
+                          width: `${Math.min(100,motosMorosas.length / (motosVisibles.length || 1) * 100)}%`
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {tab==="configuracion" && (
+            <div className="card">
+              <div className="sectionHeader">
+                <div>
+                  <p className="muted">Seguridad y usuarios</p>
+                  <h2>Configuración</h2>
+                </div>
+              </div>
+
+              <h3>Cambiar contraseña</h3>
+              <input
+                type="password"
+                placeholder="Nueva contraseña"
+                value={nuevaPassword}
+                onChange={e=>setNuevaPassword(e.target.value)}
+              />
+              <IconTextButton icon={Settings} label="Cambiar contraseña" onClick={cambiarPassword}/>
+
+              {esAdmin && (
+                <>
+                  <h3>Gestión de usuarios / cobradores</h3>
+                  <p className="muted">
+                    Primero crea el usuario en Firebase Authentication. Luego copia su UID y regístralo aquí.
+                  </p>
+
+                  <input placeholder="UID de Firebase Auth" value={usuarioForm.uid} onChange={e=>setUsuarioForm({...usuarioForm,uid:e.target.value})}/>
+                  <input placeholder="Nombre" value={usuarioForm.nombre} onChange={e=>setUsuarioForm({...usuarioForm,nombre:e.target.value})}/>
+                  <input placeholder="Correo" value={usuarioForm.correo} onChange={e=>setUsuarioForm({...usuarioForm,correo:e.target.value})}/>
+
+                  <select value={usuarioForm.rol} onChange={e=>setUsuarioForm({...usuarioForm,rol:e.target.value})}>
+                    <option value="admin">Admin</option>
+                    <option value="cobrador">Cobrador</option>
+                  </select>
+
+                  <IconTextButton icon={ShieldCheck} label="Guardar usuario" onClick={guardarUsuario}/>
+
+                  <h3>Usuarios registrados</h3>
+                  {usuarios.map(u=>(
+                    <div className="item premiumItem" key={u.id}>
+                      <b>{u.nombre}</b>
+                      <p>{u.correo}</p>
+                      <p>Rol: {u.rol}</p>
+                      <p>UID: {u.uid}</p>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+
+          {tab==="ranking" && (
+            <div className="card">
+              <div className="sectionHeader">
+                <div>
+                  <p className="muted">Rentabilidad por activo</p>
+                  <h2>Ranking de motos</h2>
+                </div>
+              </div>
+
+              {rankingMotos.map((m,index)=>(
+                <div className="item premiumItem" key={m.id}>
+                  <b>#{index+1} · {m.placa}</b>
+                  <p>{m.marca} {m.modelo}</p>
+                  <p>Ingresos: {money(ingresosPorMoto(m.id))}</p>
+                  <p>Gastos: {money(gastosPorMoto(m.id))}</p>
+                  <p>Neto: {money(ingresosPorMoto(m.id)-gastosPorMoto(m.id))}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {tab==="morosidad" && (
+            <div className="card">
+              <div className="sectionHeader">
+                <div>
+                  <p className="muted">Gestión de riesgo</p>
+                  <h2>Control de morosidad</h2>
+                </div>
+              </div>
+
+              {motosMorosas.length===0 && <p>No hay motos con atraso registrado.</p>}
+
+              {motosMorosas.map(m=>{
+                const c=clientes.find(x=>x.id===m.clienteId);
+                const d=deudaMoto(m);
+
+                return (
+                  <div className="item premiumItem" key={m.id}>
+                    <b>{m.placa}</b>
+                    <p>Cliente: {c?.nombre || "N/A"}</p>
+                    <p>Cuotas pendientes: {d.cuotasPendientes}</p>
+                    <p>Deuda estimada: {money(d.montoPendiente)}</p>
+                    <p>Estatus: {d.estatus}</p>
+
+                    {c?.telefono && (
+                      <a href={whatsappUrl(c.telefono,mensajeWhatsAppMora(m))} target="_blank" rel="noreferrer">
+                        <IconTextButton icon={MessageCircle} label="WhatsApp" className="whatsappBtn"/>
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
