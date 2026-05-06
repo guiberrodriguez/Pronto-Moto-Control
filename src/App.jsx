@@ -1735,3 +1735,555 @@ function Dashboard({user}){
               })}
             </div>
           )}
+          
+                    {tab==="empresa" && esAdmin && (
+            <div className="card">
+              <div className="sectionHeader">
+                <div>
+                  <p className="muted">Branding y datos comerciales</p>
+                  <h2>Datos de empresa</h2>
+                </div>
+              </div>
+
+              <input placeholder="Nombre de empresa" value={empresa.nombre} onChange={e=>setEmpresa({...empresa,nombre:e.target.value})}/>
+              <input placeholder="Teléfono" value={empresa.telefono} onChange={e=>setEmpresa({...empresa,telefono:e.target.value})}/>
+              <input placeholder="Dirección" value={empresa.direccion} onChange={e=>setEmpresa({...empresa,direccion:e.target.value})}/>
+              <input placeholder="RNC / Cédula" value={empresa.rnc} onChange={e=>setEmpresa({...empresa,rnc:e.target.value})}/>
+              <input placeholder="Notas adicionales para contrato" value={empresa.notas} onChange={e=>setEmpresa({...empresa,notas:e.target.value})}/>
+            </div>
+          )}
+
+          {tab==="notificaciones" && esAdmin && (
+            <div className="card">
+              <div className="sectionHeader">
+                <div>
+                  <p className="muted">Alertas internas</p>
+                  <h2>Centro de notificaciones</h2>
+                </div>
+              </div>
+
+              {notificaciones.length===0 && <p>No hay notificaciones registradas.</p>}
+
+              {notificaciones.map(n=>(
+                <div className="item premiumItem" key={n.id}>
+                  <b>{n.titulo}</b>
+                  <p>{n.mensaje}</p>
+                  <p>{n.fechaHora}</p>
+                  <p>Estado: {n.leida ? "Leída" : "Pendiente"}</p>
+                  {!n.leida && <IconTextButton icon={Bell} label="Marcar como leída" onClick={()=>marcarNotificacionLeida(n)}/>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {tab==="pagosDigitales" && esAdmin && (
+            <div className="card">
+              <div className="sectionHeader">
+                <div>
+                  <p className="muted">Pasarelas y links externos</p>
+                  <h2>Pagos digitales</h2>
+                </div>
+              </div>
+
+              {pagosDigitales.length===0 && <p>No hay pagos digitales registrados.</p>}
+
+              {pagosDigitales.map(pd=>(
+                <div className="item premiumItem" key={pd.id}>
+                  <b>{pd.comprobanteId}</b>
+                  <p>Cliente: {pd.cliente}</p>
+                  <p>Moto: {pd.moto}</p>
+                  <p>Monto: {money(pd.monto)}</p>
+                  <p>Pasarela: {pd.pasarela}</p>
+                  <p>Estado: {pd.estado}</p>
+                  {pd.linkPago && <a href={pd.linkPago} target="_blank" rel="noreferrer">Abrir link de pago</a>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {tab==="clientes" && (
+            <div className="card">
+              <div className="sectionHeader">
+                <div>
+                  <p className="muted">Base de clientes</p>
+                  <h2>{editCliente ? "Editar cliente" : "Crear cliente"}</h2>
+                </div>
+              </div>
+
+              <div className="searchBox">
+                <Search size={18}/>
+                <input 
+                  placeholder="Buscar cliente por nombre, ID, cédula, teléfono, correo, provincia..."
+                  value={busquedaCliente}
+                  onChange={e=>setBusquedaCliente(e.target.value)}
+                />
+              </div>
+
+              {esAdmin && (
+                <>
+                  {editCliente && <p><b>ID Cliente:</b> {cliente.idCliente}</p>}
+
+                  <select value={cliente.pais} onChange={e=>setCliente({...cliente,pais:e.target.value})}>
+                    {paises.map(p=><option key={p} value={p}>{p}</option>)}
+                  </select>
+
+                  <select value={cliente.nacionalidad} onChange={e=>setCliente({...cliente,nacionalidad:e.target.value})}>
+                    {nacionalidades.map(n=><option key={n} value={n}>{n}</option>)}
+                  </select>
+
+                  <select
+                    value={cliente.provincia}
+                    onChange={e=>{
+                      const prov=e.target.value;
+                      setCliente({
+                        ...cliente,
+                        provincia:prov,
+                        municipio:(provinciasRD[prov] || [])[0] || ""
+                      });
+                    }}
+                  >
+                    {Object.keys(provinciasRD).map(p=><option key={p} value={p}>{p}</option>)}
+                  </select>
+
+                  <select value={cliente.municipio} onChange={e=>setCliente({...cliente,municipio:e.target.value})}>
+                    {municipiosDisponibles.map(m=><option key={m} value={m}>{m}</option>)}
+                  </select>
+
+                  <select value={cliente.sexo} onChange={e=>setCliente({...cliente,sexo:e.target.value})}>
+                    <option>Masculino</option>
+                    <option>Femenino</option>
+                  </select>
+
+                  <input placeholder="Nombre" value={cliente.nombre} onChange={e=>setCliente({...cliente,nombre:e.target.value})}/>
+                  <input placeholder="Cédula / Pasaporte" value={cliente.cedula} onChange={e=>setCliente({...cliente,cedula:e.target.value})}/>
+                  <input placeholder="Correo electrónico" value={cliente.correo} onChange={e=>setCliente({...cliente,correo:e.target.value})}/>
+                  <input placeholder="Teléfono móvil" value={cliente.telefono} onChange={e=>setCliente({...cliente,telefono:e.target.value})}/>
+                  <input placeholder="Teléfono residencial" value={cliente.telefonoResidencial} onChange={e=>setCliente({...cliente,telefonoResidencial:e.target.value})}/>
+                  <input placeholder="Teléfono de referencia" value={cliente.telefonoReferencia} onChange={e=>setCliente({...cliente,telefonoReferencia:e.target.value})}/>
+                  <input placeholder="Dirección" value={cliente.direccion} onChange={e=>setCliente({...cliente,direccion:e.target.value})}/>
+                  <input placeholder="Referencia personal" value={cliente.referencia} onChange={e=>setCliente({...cliente,referencia:e.target.value})}/>
+                  <input placeholder="Riesgo" value={cliente.riesgo} onChange={e=>setCliente({...cliente,riesgo:e.target.value})}/>
+
+                  <select value={cliente.cobradorId} onChange={e=>setCliente({...cliente,cobradorId:e.target.value})}>
+                    <option value="">Sin cobrador asignado</option>
+                    {usuarios.filter(u=>u.rol==="cobrador").map(u=>(
+                      <option key={u.uid || u.id} value={u.uid || u.id}>{u.nombre} · {u.correo}</option>
+                    ))}
+                  </select>
+
+                  <IconTextButton icon={MapPin} label="Capturar ubicación del cliente" onClick={capturarUbicacionCliente}/>
+
+                  {cliente.ubicacion?.lat && (
+                    <p>
+                      <a href={locationMapUrl(cliente.ubicacion)} target="_blank" rel="noreferrer">
+                        Ver ubicación capturada
+                      </a>
+                    </p>
+                  )}
+
+                  <IconTextButton icon={ShieldCheck} label={editCliente ? "Guardar cambios" : "Crear cliente"} onClick={guardarCliente}/>
+                </>
+              )}
+
+              {clientesFiltrados.map(c=>(
+                <div className="item premiumItem" key={c.id}>
+                  <b>{c.idCliente || c.id} · {c.nombre}</b>
+                  <p>{c.pais || "N/A"} · {c.nacionalidad || "N/A"} · {c.sexo || "N/A"}</p>
+                  <p>{c.provincia || "N/A"} · {c.municipio || "N/A"}</p>
+                  <p>{c.telefono} · {c.cedula}</p>
+                  <p>{c.correo}</p>
+                  <p>Cobrador: {usuarios.find(u=>(u.uid || u.id)===c.cobradorId)?.nombre || "Sin asignar"}</p>
+
+                  {c.ubicacion?.lat && (
+                    <p>
+                      <a href={locationMapUrl(c.ubicacion)} target="_blank" rel="noreferrer">
+                        Ver ubicación
+                      </a>
+                    </p>
+                  )}
+
+                  <div className="actionRow">
+                    {esAdmin && <IconTextButton icon={Edit} label="Editar" onClick={()=>editarCliente(c)}/>}
+                    <IconTextButton icon={Eye} label="Perfil" onClick={()=>setClienteVista(c)}/>
+
+                    {c.telefono && (
+                      <a href={whatsappUrl(c.telefono,`Hola ${c.nombre}, te contactamos de Pronto Moto.`)} target="_blank" rel="noreferrer">
+                        <IconTextButton icon={MessageCircle} label="WhatsApp" className="whatsappBtn"/>
+                      </a>
+                    )}
+
+                    {esAdmin && <IconTextButton icon={Trash2} label="Eliminar" className="deleteBtn" onClick={()=>eliminarCliente(c.id)}/>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {clienteVista && (
+            <div className="card profileCard">
+              <div className="sectionHeader">
+                <div>
+                  <p className="muted">Detalle del cliente</p>
+                  <h2>Perfil del cliente</h2>
+                </div>
+              </div>
+
+              <p><b>ID Cliente:</b> {clienteVista.idCliente || clienteVista.id}</p>
+              <p><b>Nombre:</b> {clienteVista.nombre}</p>
+              <p><b>Sexo:</b> {clienteVista.sexo}</p>
+              <p><b>País:</b> {clienteVista.pais}</p>
+              <p><b>Nacionalidad:</b> {clienteVista.nacionalidad}</p>
+              <p><b>Provincia:</b> {clienteVista.provincia}</p>
+              <p><b>Municipio:</b> {clienteVista.municipio}</p>
+              <p><b>Cédula:</b> {clienteVista.cedula}</p>
+              <p><b>Correo:</b> {clienteVista.correo}</p>
+              <p><b>Teléfono móvil:</b> {clienteVista.telefono}</p>
+              <p><b>Teléfono residencial:</b> {clienteVista.telefonoResidencial}</p>
+              <p><b>Teléfono referencia:</b> {clienteVista.telefonoReferencia}</p>
+              <p><b>Dirección:</b> {clienteVista.direccion}</p>
+
+              {clienteVista.ubicacion?.lat && (
+                <p>
+                  <a href={locationMapUrl(clienteVista.ubicacion)} target="_blank" rel="noreferrer">
+                    Ver ubicación en Google Maps
+                  </a>
+                </p>
+              )}
+
+              <h3>Motos asignadas</h3>
+              {motos.filter(m=>m.clienteId===clienteVista.id).map(m=>(
+                <div className="item premiumItem" key={m.id}>{m.placa} - {m.marca} {m.modelo}</div>
+              ))}
+
+              <h3>Pagos</h3>
+              {pagos.filter(p=>p.clienteId===clienteVista.id).map(p=>(
+                <div className="item premiumItem" key={p.docId}>{p.id} - {money(p.monto)}</div>
+              ))}
+
+              <h3>Adjuntos</h3>
+              {adjuntos.filter(a=>a.clienteId===clienteVista.id).map(a=>(
+                <div className="item premiumItem" key={a.id}>
+                  <a href={a.url} target="_blank" rel="noreferrer">{a.nombre}</a>
+                </div>
+              ))}
+
+              <IconTextButton icon={Eye} label="Cerrar perfil" onClick={()=>setClienteVista(null)}/>
+            </div>
+          )}
+
+          {tab==="motos" && (
+            <div className="card">
+              <div className="sectionHeader">
+                <div>
+                  <p className="muted">Inventario y asignaciones</p>
+                  <h2>{editMoto ? "Editar moto" : "Crear moto"}</h2>
+                </div>
+              </div>
+
+              {esAdmin && (
+                <>
+                  <input placeholder="Placa" value={moto.placa} onChange={e=>setMoto({...moto,placa:e.target.value})}/>
+                  <input placeholder="Marca" value={moto.marca} onChange={e=>setMoto({...moto,marca:e.target.value})}/>
+                  <input placeholder="Modelo" value={moto.modelo} onChange={e=>setMoto({...moto,modelo:e.target.value})}/>
+                  <input placeholder="Año" value={moto.anio} onChange={e=>setMoto({...moto,anio:e.target.value})}/>
+                  <input placeholder="Tracker / GPS" value={moto.tracker} onChange={e=>setMoto({...moto,tracker:e.target.value})}/>
+
+                  <select value={moto.clienteId} onChange={e=>setMoto({...moto,clienteId:e.target.value})}>
+                    <option value="">Sin cliente asignado</option>
+                    {clientes.map(c=><option key={c.id} value={c.id}>{c.idCliente || c.id} · {c.nombre}</option>)}
+                  </select>
+
+                  <input className="dateInput" type="date" value={moto.fechaAsignacion} onChange={e=>setMoto({...moto,fechaAsignacion:e.target.value})}/>
+                  <input placeholder="Pago diario" value={moto.pagoDiario} onChange={e=>setMoto({...moto,pagoDiario:e.target.value})}/>
+                  <input placeholder="Depósito" value={moto.deposito} onChange={e=>setMoto({...moto,deposito:e.target.value})}/>
+
+                  <IconTextButton icon={Bike} label={editMoto ? "Guardar cambios" : "Crear moto"} onClick={guardarMoto}/>
+                </>
+              )}
+
+              {motosVisibles.map(m=>{
+                const d=deudaMoto(m);
+
+                return (
+                  <div className="item premiumItem" key={m.id}>
+                    <b>{m.placa}</b>
+                    <p>{m.marca} {m.modelo} · {m.anio}</p>
+                    <p>Pago diario: {money(m.pagoDiario)}</p>
+                    <p>Estado: {m.estado || "Disponible"}</p>
+                    <p>Cliente: {clientes.find(c=>c.id===m.clienteId)?.nombre || "Sin asignar"}</p>
+                    <p>Cuotas pendientes: {d.cuotasPendientes}</p>
+                    <p>Monto pendiente: {money(d.montoPendiente)}</p>
+                    <p>Estatus: {d.estatus}</p>
+                    <p>Ingresos: {money(ingresosPorMoto(m.id))}</p>
+                    <p>Gastos: {money(gastosPorMoto(m.id))}</p>
+                    <p>Neto moto: {money(ingresosPorMoto(m.id)-gastosPorMoto(m.id))}</p>
+
+                    <div className="actionRow">
+                      {esAdmin && <IconTextButton icon={Edit} label="Editar" onClick={()=>editarMoto(m)}/>}
+                      {esAdmin && <IconTextButton icon={FileText} label="Contrato" onClick={()=>imprimirContrato(m)}/>}
+                      {esAdmin && <IconTextButton icon={Trash2} label="Eliminar" className="deleteBtn" onClick={()=>eliminarMoto(m.id)}/>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {tab==="pagos" && (
+            <div className="card">
+              <div className="sectionHeader">
+                <div>
+                  <p className="muted">Cobros y comprobantes</p>
+                  <h2>Registrar pago</h2>
+                </div>
+              </div>
+
+              <div className="searchBox">
+                <Search size={18}/>
+                <input
+                  placeholder="Buscar cliente para pago por nombre, ID, cédula, teléfono..."
+                  value={busquedaClientePago}
+                  onChange={e=>setBusquedaClientePago(e.target.value)}
+                />
+              </div>
+
+              <select
+                value={clientePagoId}
+                onChange={e=>{
+                  setClientePagoId(e.target.value);
+                  setPago({...pago,motoId:""});
+                }}
+              >
+                <option value="">Seleccionar cliente</option>
+                {clientesPagoFiltrados.map(c=>(
+                  <option key={c.id} value={c.id}>
+                    {c.idCliente || c.id} · {c.nombre} · {c.telefono}
+                  </option>
+                ))}
+              </select>
+
+              {clientePago && (
+                <div className="item premiumItem">
+                  <h3>Cliente seleccionado</h3>
+                  <p><b>ID:</b> {clientePago.idCliente || clientePago.id}</p>
+                  <p><b>Nombre:</b> {clientePago.nombre}</p>
+                  <p><b>Cédula:</b> {clientePago.cedula}</p>
+                  <p><b>Teléfono:</b> {clientePago.telefono}</p>
+                </div>
+              )}
+
+              <select value={pago.motoId} onChange={e=>setPago({...pago,motoId:e.target.value})}>
+                <option value="">Seleccionar moto del cliente</option>
+                {motosClientePago.map(m=>(
+                  <option key={m.id} value={m.id}>
+                    {m.placa} · {m.marca} {m.modelo}
+                  </option>
+                ))}
+              </select>
+
+              {motoPagoSeleccionada && deudaPagoSeleccionada && (
+                <div className="item premiumItem">
+                  <h3>Información de pago</h3>
+                  <p><b>Moto:</b> {motoPagoSeleccionada.placa} {motoPagoSeleccionada.marca} {motoPagoSeleccionada.modelo}</p>
+                  <p><b>Cuota diaria:</b> {money(motoPagoSeleccionada.pagoDiario)}</p>
+                  <p><b>Cuotas pendientes:</b> {deudaPagoSeleccionada.cuotasPendientes}</p>
+                  <p><b>Monto pendiente:</b> {money(deudaPagoSeleccionada.montoPendiente)}</p>
+                  <p><b>Estatus:</b> {deudaPagoSeleccionada.estatus}</p>
+                </div>
+              )}
+
+              <input placeholder="Monto pagado" value={pago.monto} onChange={e=>setPago({...pago,monto:e.target.value})}/>
+
+              <select value={pago.metodo} onChange={e=>setPago({...pago,metodo:e.target.value})}>
+                {pasarelasPago.map(m=><option key={m} value={m}>{m}</option>)}
+              </select>
+
+              {["Azul","CardNet","PayPal","Stripe","Link de pago externo"].includes(pago.metodo) && (
+                <>
+                  <input placeholder="Link de pago o referencia" value={pago.linkPago} onChange={e=>setPago({...pago,linkPago:e.target.value})}/>
+                  <select value={pago.estadoPagoDigital} onChange={e=>setPago({...pago,estadoPagoDigital:e.target.value})}>
+                    <option>Pendiente</option>
+                    <option>Pagado</option>
+                    <option>Fallido</option>
+                    <option>Cancelado</option>
+                  </select>
+                </>
+              )}
+
+              <select value={papelComprobante} onChange={e=>setPapelComprobante(e.target.value)}>
+                <option value="normal">Papel normal / PDF</option>
+                <option value="termico">Ticket térmico 80mm / Bluetooth</option>
+              </select>
+
+              <IconTextButton icon={CreditCard} label="Generar comprobante" onClick={registrarPago}/>
+
+              {ultimo && (
+                <div className="item premiumItem">
+                  <h2>Comprobante</h2>
+                  <p><b>ID:</b> {ultimo.id}</p>
+                  <p><b>ID Cliente:</b> {ultimo.idCliente}</p>
+                  <p><b>Cliente:</b> {ultimo.cliente}</p>
+                  <p><b>Moto:</b> {ultimo.moto}</p>
+                  <p><b>Monto pagado:</b> {money(ultimo.monto)}</p>
+                  <p><b>Pendiente después:</b> {money(ultimo.montoPendienteDespues)}</p>
+                  <p><b>Método:</b> {ultimo.metodo}</p>
+                  <p><b>Estado pago digital:</b> {ultimo.estadoPagoDigital}</p>
+
+                  {ultimo.ubicacionCobro?.lat && (
+                    <p>
+                      <a href={locationMapUrl(ultimo.ubicacionCobro)} target="_blank" rel="noreferrer">
+                        Ver ubicación del cobro
+                      </a>
+                    </p>
+                  )}
+
+                  <QRCodeCanvas value={ultimo.url} />
+                  <p>{ultimo.url}</p>
+
+                  <div className="actionRow">
+                    <IconTextButton icon={Printer} label="Imprimir PDF" onClick={()=>imprimirComprobante(ultimo,"normal")}/>
+                    <IconTextButton icon={Printer} label="Imprimir térmico" onClick={()=>imprimirComprobante(ultimo,"termico")}/>
+
+                    {ultimo.clienteId && clientes.find(c=>c.id===ultimo.clienteId)?.telefono && (
+                      <a href={whatsappUrl(clientes.find(c=>c.id===ultimo.clienteId)?.telefono,mensajeWhatsAppPago(ultimo))} target="_blank" rel="noreferrer">
+                        <IconTextButton icon={MessageCircle} label="Enviar WhatsApp" className="whatsappBtn"/>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <h2>Historial de pagos</h2>
+
+              {pagosVisibles.map(p=>(
+                <div className="item premiumItem" key={p.docId}>
+                  <b>{p.id}</b>
+                  <p>{p.fecha} · {p.cliente}</p>
+                  <p>{p.moto} · {money(p.monto)}</p>
+                  <p>Cobrador: {p.cobrador || ""}</p>
+                  <p>Método: {p.metodo}</p>
+
+                  <div className="actionRow">
+                    <IconTextButton icon={Printer} label="PDF" onClick={()=>imprimirComprobante(p,"normal")}/>
+                    <IconTextButton icon={Printer} label="Térmico" onClick={()=>imprimirComprobante(p,"termico")}/>
+
+                    {esAdmin && (
+                      <IconTextButton icon={Trash2} label="Eliminar" className="deleteBtn" onClick={()=>eliminarPago(p)}/>
+                    )}
+
+                    {p.ubicacionCobro?.lat && (
+                      <a href={locationMapUrl(p.ubicacionCobro)} target="_blank" rel="noreferrer">
+                        <IconTextButton icon={MapPin} label="Ubicación"/>
+                      </a>
+                    )}
+
+                    {p.clienteId && clientes.find(c=>c.id===p.clienteId)?.telefono && (
+                      <a href={whatsappUrl(clientes.find(c=>c.id===p.clienteId)?.telefono,mensajeWhatsAppPago(p))} target="_blank" rel="noreferrer">
+                        <IconTextButton icon={MessageCircle} label="WhatsApp" className="whatsappBtn"/>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {tab==="gastos" && esAdmin && (
+            <div className="card">
+              <div className="sectionHeader">
+                <div>
+                  <p className="muted">Costos operativos</p>
+                  <h2>{editGasto ? "Editar gasto" : "Registrar gasto"}</h2>
+                </div>
+              </div>
+
+              <select value={gasto.motoId} onChange={e=>setGasto({...gasto,motoId:e.target.value})}>
+                <option value="">Seleccionar moto</option>
+                {motos.map(m=><option key={m.id} value={m.id}>{m.placa}</option>)}
+              </select>
+
+              <input className="dateInput" type="date" value={gasto.fecha} onChange={e=>setGasto({...gasto,fecha:e.target.value})}/>
+              <input placeholder="Categoría" value={gasto.categoria} onChange={e=>setGasto({...gasto,categoria:e.target.value})}/>
+              <input placeholder="Monto" value={gasto.monto} onChange={e=>setGasto({...gasto,monto:e.target.value})}/>
+              <input placeholder="Proveedor / Taller" value={gasto.proveedor} onChange={e=>setGasto({...gasto,proveedor:e.target.value})}/>
+              <input placeholder="Nota" value={gasto.nota} onChange={e=>setGasto({...gasto,nota:e.target.value})}/>
+
+              <IconTextButton icon={Wallet} label={editGasto ? "Guardar cambios" : "Guardar gasto"} onClick={guardarGasto}/>
+
+              <h2>Historial de gastos</h2>
+
+              {gastos.map(g=>(
+                <div className="item premiumItem" key={g.id}>
+                  <b>{g.categoria}</b>
+                  <p>Fecha: {g.fecha}</p>
+                  <p>Moto: {motos.find(m=>m.id===g.motoId)?.placa || "N/A"}</p>
+                  <p>Monto: {money(g.monto)}</p>
+                  <p>Proveedor: {g.proveedor}</p>
+                  <p>Nota: {g.nota}</p>
+
+                  <div className="actionRow">
+                    <IconTextButton icon={Edit} label="Editar" onClick={()=>editarGasto(g)}/>
+                    <IconTextButton icon={Trash2} label="Eliminar" className="deleteBtn" onClick={()=>eliminarGasto(g.id)}/>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {tab==="adjuntos" && esAdmin && (
+            <div className="card">
+              <div className="sectionHeader">
+                <div>
+                  <p className="muted">Documentos y archivos</p>
+                  <h2>Adjuntos por cliente</h2>
+                </div>
+              </div>
+
+              <select value={clienteAdjunto} onChange={e=>setClienteAdjunto(e.target.value)}>
+                <option value="">Seleccionar cliente</option>
+                {clientes.map(c=><option key={c.id} value={c.id}>{c.idCliente || c.id} · {c.nombre}</option>)}
+              </select>
+
+              <input type="file" onChange={e=>setArchivo(e.target.files[0])}/>
+              <IconTextButton icon={Paperclip} label="Subir adjunto" onClick={subirAdjunto}/>
+
+              <h2>Documentos guardados</h2>
+
+              {adjuntos.map(a=>(
+                <div className="item premiumItem" key={a.id}>
+                  <b>{a.nombre}</b>
+                  <p>Cliente: {clientes.find(c=>c.id===a.clienteId)?.nombre || "N/A"}</p>
+                  <p>Fecha: {a.fecha}</p>
+                  <a href={a.url} target="_blank" rel="noreferrer">Ver documento</a><br/>
+                  <IconTextButton icon={Trash2} label="Eliminar" className="deleteBtn" onClick={()=>eliminarAdjunto(a)}/>
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function App(){
+  const [user,setUser]=useState(null);
+  const path=window.location.pathname;
+
+  useEffect(()=>onAuthStateChanged(auth,setUser),[]);
+
+  if(path.startsWith("/validar/")) return <ValidarComprobante/>;
+  if(!user) return <Login/>;
+
+  return <Dashboard user={user}/>;
+}
+
+createRoot(document.getElementById("root")).render(<App/>);
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js")
+      .then(() => console.log("Service Worker registrado"))
+      .catch(err => console.log("Error SW:", err));
+  });
+}
