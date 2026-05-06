@@ -1504,3 +1504,25 @@ body.darkMode .activityCard::before{
     scroll-behavior:auto!important;
   }
 }
+
+@media(max-width:900px){
+  .mobileTabs{
+    left:12px !important;
+    right:12px !important;
+    bottom:18px !important;
+    transform:none !important;
+
+    width:auto !important;
+    max-width:none !important;
+
+    justify-content:flex-start;
+  }
+
+  .premiumShell{
+    overflow-x:hidden;
+  }
+
+  body{
+    overflow-x:hidden;
+  }
+}
