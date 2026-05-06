@@ -1512,7 +1512,6 @@ function Dashboard({user}){
         </aside>
 
         <main className="mainPanel">
-          </div>
 
           <div className="tabs mobileTabs">
             {navItems.filter(item=>!item.admin || esAdmin).map(item=>{
