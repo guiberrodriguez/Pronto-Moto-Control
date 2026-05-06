@@ -1808,3 +1808,291 @@ function Dashboard({user}){
               </div>
             </>
           )}
+          
+                    {tab==="configuracion" && (
+            <div className="card">
+              <div className="sectionHeader">
+                <div>
+                  <p className="muted">Seguridad y usuarios</p>
+                  <h2>Configuración</h2>
+                </div>
+              </div>
+
+              <h3>Cambiar contraseña</h3>
+              <input
+                type="password"
+                placeholder="Nueva contraseña"
+                value={nuevaPassword}
+                onChange={e=>setNuevaPassword(e.target.value)}
+              />
+              <IconTextButton icon={Settings} label="Cambiar contraseña" onClick={cambiarPassword}/>
+
+              {esAdmin && (
+                <>
+                  <h3>Gestión de usuarios / cobradores</h3>
+                  <p className="muted">
+                    Primero crea el usuario en Firebase Authentication. Luego copia su UID y regístralo aquí.
+                  </p>
+
+                  <input placeholder="UID de Firebase Auth" value={usuarioForm.uid} onChange={e=>setUsuarioForm({...usuarioForm,uid:e.target.value})}/>
+                  <input placeholder="Nombre" value={usuarioForm.nombre} onChange={e=>setUsuarioForm({...usuarioForm,nombre:e.target.value})}/>
+                  <input placeholder="Correo" value={usuarioForm.correo} onChange={e=>setUsuarioForm({...usuarioForm,correo:e.target.value})}/>
+
+                  <select value={usuarioForm.rol} onChange={e=>setUsuarioForm({...usuarioForm,rol:e.target.value})}>
+                    <option value="admin">Admin</option>
+                    <option value="cobrador">Cobrador</option>
+                  </select>
+
+                  <IconTextButton icon={ShieldCheck} label="Guardar usuario" onClick={guardarUsuario}/>
+
+                  <h3>Usuarios registrados</h3>
+                  {usuarios.map(u=>(
+                    <div className="item premiumItem" key={u.id}>
+                      <b>{u.nombre}</b>
+                      <p>{u.correo}</p>
+                      <p>Rol: {u.rol}</p>
+                      <p>UID: {u.uid}</p>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+
+          {tab==="ranking" && (
+            <div className="card">
+              <div className="sectionHeader">
+                <div>
+                  <p className="muted">Rentabilidad por activo</p>
+                  <h2>Ranking de motos</h2>
+                </div>
+              </div>
+
+              {rankingMotos.map((m,index)=>(
+                <div className="item premiumItem" key={m.id}>
+                  <b>#{index+1} · {m.placa}</b>
+                  <p>{m.marca} {m.modelo}</p>
+                  <p>Ingresos: {money(ingresosPorMoto(m.id))}</p>
+                  <p>Gastos: {money(gastosPorMoto(m.id))}</p>
+                  <p>Neto: {money(ingresosPorMoto(m.id)-gastosPorMoto(m.id))}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {tab==="morosidad" && (
+            <div className="card">
+              <div className="sectionHeader">
+                <div>
+                  <p className="muted">Gestión de riesgo</p>
+                  <h2>Control de morosidad</h2>
+                </div>
+              </div>
+
+              {motosMorosas.length===0 && <p>No hay motos con atraso registrado.</p>}
+
+              {motosMorosas.map(m=>{
+                const c=clientes.find(x=>x.id===m.clienteId);
+                const d=deudaMoto(m);
+
+                return (
+                  <div className="item premiumItem" key={m.id}>
+                    <b>{m.placa}</b>
+                    <p>Cliente: {c?.nombre || "N/A"}</p>
+                    <p>Cuotas pendientes: {d.cuotasPendientes}</p>
+                    <p>Deuda estimada: {money(d.montoPendiente)}</p>
+                    <p>Estatus: {d.estatus}</p>
+
+                    {c?.telefono && (
+                      <a href={whatsappUrl(c.telefono,mensajeWhatsAppMora(m))} target="_blank" rel="noreferrer">
+                        <IconTextButton icon={MessageCircle} label="WhatsApp" className="whatsappBtn"/>
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {tab==="empresa" && esAdmin && (
+            <div className="card">
+              <div className="sectionHeader">
+                <div>
+                  <p className="muted">Branding y datos comerciales</p>
+                  <h2>Datos de empresa</h2>
+                </div>
+              </div>
+
+              <input placeholder="Nombre de empresa" value={empresa.nombre} onChange={e=>setEmpresa({...empresa,nombre:e.target.value})}/>
+              <input placeholder="Teléfono" value={empresa.telefono} onChange={e=>setEmpresa({...empresa,telefono:e.target.value})}/>
+              <input placeholder="Dirección" value={empresa.direccion} onChange={e=>setEmpresa({...empresa,direccion:e.target.value})}/>
+              <input placeholder="RNC / Cédula" value={empresa.rnc} onChange={e=>setEmpresa({...empresa,rnc:e.target.value})}/>
+              <input placeholder="Notas adicionales para contrato" value={empresa.notas} onChange={e=>setEmpresa({...empresa,notas:e.target.value})}/>
+            </div>
+          )}
+
+          {tab==="notificaciones" && esAdmin && (
+            <div className="card">
+              <div className="sectionHeader">
+                <div>
+                  <p className="muted">Alertas internas</p>
+                  <h2>Centro de notificaciones</h2>
+                </div>
+              </div>
+
+              {notificaciones.length===0 && <p>No hay notificaciones registradas.</p>}
+
+              {notificaciones.map(n=>(
+                <div className="item premiumItem" key={n.id}>
+                  <b>{n.titulo}</b>
+                  <p>{n.mensaje}</p>
+                  <p>{n.fechaHora}</p>
+                  <p>Estado: {n.leida ? "Leída" : "Pendiente"}</p>
+                  {!n.leida && <IconTextButton icon={Bell} label="Marcar como leída" onClick={()=>marcarNotificacionLeida(n)}/>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {tab==="pagosDigitales" && esAdmin && (
+            <div className="card">
+              <div className="sectionHeader">
+                <div>
+                  <p className="muted">Pasarelas y links externos</p>
+                  <h2>Pagos digitales</h2>
+                </div>
+              </div>
+
+              {pagosDigitales.length===0 && <p>No hay pagos digitales registrados.</p>}
+
+              {pagosDigitales.map(pd=>(
+                <div className="item premiumItem" key={pd.id}>
+                  <b>{pd.comprobanteId}</b>
+                  <p>Cliente: {pd.cliente}</p>
+                  <p>Moto: {pd.moto}</p>
+                  <p>Monto: {money(pd.monto)}</p>
+                  <p>Pasarela: {pd.pasarela}</p>
+                  <p>Estado: {pd.estado}</p>
+                  {pd.linkPago && <a href={pd.linkPago} target="_blank" rel="noreferrer">Abrir link de pago</a>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {tab==="clientes" && (
+            <div className="card">
+              <div className="sectionHeader">
+                <div>
+                  <p className="muted">Base de clientes</p>
+                  <h2>{editCliente ? "Editar cliente" : "Crear cliente"}</h2>
+                </div>
+              </div>
+
+              <div className="searchBox">
+                <Search size={18}/>
+                <input 
+                  placeholder="Buscar cliente por nombre, ID, cédula, teléfono, correo, provincia..."
+                  value={busquedaCliente}
+                  onChange={e=>setBusquedaCliente(e.target.value)}
+                />
+              </div>
+
+              {esAdmin && (
+                <>
+                  {editCliente && <p><b>ID Cliente:</b> {cliente.idCliente}</p>}
+
+                  <select value={cliente.pais} onChange={e=>setCliente({...cliente,pais:e.target.value})}>
+                    {paises.map(p=><option key={p} value={p}>{p}</option>)}
+                  </select>
+
+                  <select value={cliente.nacionalidad} onChange={e=>setCliente({...cliente,nacionalidad:e.target.value})}>
+                    {nacionalidades.map(n=><option key={n} value={n}>{n}</option>)}
+                  </select>
+
+                  <select
+                    value={cliente.provincia}
+                    onChange={e=>{
+                      const prov=e.target.value;
+                      setCliente({
+                        ...cliente,
+                        provincia:prov,
+                        municipio:(provinciasRD[prov] || [])[0] || ""
+                      });
+                    }}
+                  >
+                    {Object.keys(provinciasRD).map(p=><option key={p} value={p}>{p}</option>)}
+                  </select>
+
+                  <select value={cliente.municipio} onChange={e=>setCliente({...cliente,municipio:e.target.value})}>
+                    {municipiosDisponibles.map(m=><option key={m} value={m}>{m}</option>)}
+                  </select>
+
+                  <select value={cliente.sexo} onChange={e=>setCliente({...cliente,sexo:e.target.value})}>
+                    <option>Masculino</option>
+                    <option>Femenino</option>
+                  </select>
+
+                  <input placeholder="Nombre" value={cliente.nombre} onChange={e=>setCliente({...cliente,nombre:e.target.value})}/>
+                  <input placeholder="Cédula / Pasaporte" value={cliente.cedula} onChange={e=>setCliente({...cliente,cedula:e.target.value})}/>
+                  <input placeholder="Correo electrónico" value={cliente.correo} onChange={e=>setCliente({...cliente,correo:e.target.value})}/>
+                  <input placeholder="Teléfono móvil" value={cliente.telefono} onChange={e=>setCliente({...cliente,telefono:e.target.value})}/>
+                  <input placeholder="Teléfono residencial" value={cliente.telefonoResidencial} onChange={e=>setCliente({...cliente,telefonoResidencial:e.target.value})}/>
+                  <input placeholder="Teléfono de referencia" value={cliente.telefonoReferencia} onChange={e=>setCliente({...cliente,telefonoReferencia:e.target.value})}/>
+                  <input placeholder="Dirección" value={cliente.direccion} onChange={e=>setCliente({...cliente,direccion:e.target.value})}/>
+                  <input placeholder="Referencia personal" value={cliente.referencia} onChange={e=>setCliente({...cliente,referencia:e.target.value})}/>
+                  <input placeholder="Riesgo" value={cliente.riesgo} onChange={e=>setCliente({...cliente,riesgo:e.target.value})}/>
+
+                  <select value={cliente.cobradorId} onChange={e=>setCliente({...cliente,cobradorId:e.target.value})}>
+                    <option value="">Sin cobrador asignado</option>
+                    {usuarios.filter(u=>u.rol==="cobrador").map(u=>(
+                      <option key={u.uid || u.id} value={u.uid || u.id}>{u.nombre} · {u.correo}</option>
+                    ))}
+                  </select>
+
+                  <IconTextButton icon={MapPin} label="Capturar ubicación del cliente" onClick={capturarUbicacionCliente}/>
+
+                  {cliente.ubicacion?.lat && (
+                    <p>
+                      <a href={locationMapUrl(cliente.ubicacion)} target="_blank" rel="noreferrer">
+                        Ver ubicación capturada
+                      </a>
+                    </p>
+                  )}
+
+                  <IconTextButton icon={ShieldCheck} label={editCliente ? "Guardar cambios" : "Crear cliente"} onClick={guardarCliente}/>
+                </>
+              )}
+
+              {clientesFiltrados.map(c=>(
+                <div className="item premiumItem" key={c.id}>
+                  <b>{c.idCliente || c.id} · {c.nombre}</b>
+                  <p>{c.pais || "N/A"} · {c.nacionalidad || "N/A"} · {c.sexo || "N/A"}</p>
+                  <p>{c.provincia || "N/A"} · {c.municipio || "N/A"}</p>
+                  <p>{c.telefono} · {c.cedula}</p>
+                  <p>{c.correo}</p>
+                  <p>Cobrador: {usuarios.find(u=>(u.uid || u.id)===c.cobradorId)?.nombre || "Sin asignar"}</p>
+
+                  {c.ubicacion?.lat && (
+                    <p>
+                      <a href={locationMapUrl(c.ubicacion)} target="_blank" rel="noreferrer">
+                        Ver ubicación
+                      </a>
+                    </p>
+                  )}
+
+                  <div className="actionRow">
+                    {esAdmin && <IconTextButton icon={Edit} label="Editar" onClick={()=>editarCliente(c)}/>}
+                    <IconTextButton icon={Eye} label="Perfil" onClick={()=>setClienteVista(c)}/>
+
+                    {c.telefono && (
+                      <a href={whatsappUrl(c.telefono,`Hola ${c.nombre}, te contactamos de Pronto Moto.`)} target="_blank" rel="noreferrer">
+                        <IconTextButton icon={MessageCircle} label="WhatsApp" className="whatsappBtn"/>
+                      </a>
+                    )}
+
+                    {esAdmin && <IconTextButton icon={Trash2} label="Eliminar" className="deleteBtn" onClick={()=>eliminarCliente(c.id)}/>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
