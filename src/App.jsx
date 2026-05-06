@@ -638,3 +638,251 @@ function Dashboard({user}){
   }
 
   useEffect(()=>{ cargar(); },[]);
+  
+    const clientesVisibles = useMemo(()=>{
+    if(esAdmin) return clientes;
+    return clientes.filter(c=>c.cobradorId===usuarioActual?.uid || c.cobradorId===usuarioActual?.id);
+  },[clientes,usuarioActual,esAdmin]);
+
+  const motosVisibles = useMemo(()=>{
+    if(esAdmin) return motos;
+    const idsClientes=new Set(clientesVisibles.map(c=>c.id));
+    return motos.filter(m=>idsClientes.has(m.clienteId));
+  },[motos,clientesVisibles,esAdmin]);
+
+  const pagosVisibles = useMemo(()=>{
+    if(esAdmin) return pagos;
+    const idsClientes=new Set(clientesVisibles.map(c=>c.id));
+    return pagos.filter(p=>idsClientes.has(p.clienteId));
+  },[pagos,clientesVisibles,esAdmin]);
+
+  const totalIngresos=pagosVisibles.reduce((s,p)=>s+Number(p.monto||0),0);
+  const totalGastos=esAdmin ? gastos.reduce((s,g)=>s+Number(g.monto||0),0) : 0;
+  const neto=totalIngresos-totalGastos;
+
+  function ingresosPorMoto(motoId){
+    return pagos.filter(p=>p.motoId===motoId).reduce((s,p)=>s+Number(p.monto||0),0);
+  }
+
+  function gastosPorMoto(motoId){
+    return gastos.filter(g=>g.motoId===motoId).reduce((s,g)=>s+Number(g.monto||0),0);
+  }
+
+  function pagosPorMoto(motoId){
+    return pagos
+      .filter(p=>p.motoId===motoId)
+      .sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
+  }
+
+  function ultimoPagoMoto(motoId){
+    return pagosPorMoto(motoId)[0] || null;
+  }
+
+  function atrasoMoto(m){
+    if(!m.clienteId) return 0;
+
+    const ultimo=ultimoPagoMoto(m.id);
+    const fechaBase=ultimo?.fecha || m.fechaAsignacion || today();
+
+    return businessDaysBetween(fechaBase,today());
+  }
+
+  function deudaMoto(m){
+    const cuotasPendientes = atrasoMoto(m);
+    const montoPendiente = cuotasPendientes * Number(m.pagoDiario || 0);
+
+    let estatus = "Al día";
+    if(cuotasPendientes >= 3) estatus = "Recuperación";
+    else if(cuotasPendientes >= 2) estatus = "Riesgo alto";
+    else if(cuotasPendientes >= 1) estatus = "Pendiente";
+
+    return {
+      cuotasPendientes,
+      montoPendiente,
+      estatus
+    };
+  }
+
+  const rankingMotos=[...motosVisibles].sort((a,b)=>{
+    const netoA=ingresosPorMoto(a.id)-gastosPorMoto(a.id);
+    const netoB=ingresosPorMoto(b.id)-gastosPorMoto(b.id);
+    return netoB-netoA;
+  });
+
+  const motosMorosas=motosVisibles.filter(m=>m.clienteId && atrasoMoto(m)>=1);
+
+  const clientesFiltrados = useMemo(()=>{
+    const q = busquedaCliente.toLowerCase().trim();
+
+    if(!q) return clientesVisibles;
+
+    return clientesVisibles.filter(c=>{
+      const texto = [
+        c.idCliente,
+        c.nombre,
+        c.cedula,
+        c.telefono,
+        c.telefonoResidencial,
+        c.telefonoReferencia,
+        c.correo,
+        c.pais,
+        c.nacionalidad,
+        c.provincia,
+        c.municipio,
+        c.sexo
+      ].join(" ").toLowerCase();
+
+      return texto.includes(q);
+    });
+  },[clientesVisibles,busquedaCliente]);
+
+  const clientesPagoFiltrados = useMemo(()=>{
+    const q = busquedaClientePago.toLowerCase().trim();
+
+    if(!q) return clientesVisibles;
+
+    return clientesVisibles.filter(c=>{
+      const texto = [
+        c.idCliente,
+        c.nombre,
+        c.cedula,
+        c.telefono,
+        c.telefonoResidencial,
+        c.telefonoReferencia,
+        c.correo,
+        c.pais,
+        c.nacionalidad,
+        c.provincia,
+        c.municipio,
+        c.sexo
+      ].join(" ").toLowerCase();
+
+      return texto.includes(q);
+    });
+  },[clientesVisibles,busquedaClientePago]);
+
+  const clientePago = clientesVisibles.find(c=>c.id===clientePagoId) || null;
+  const motosClientePago = motosVisibles.filter(m=>m.clienteId===clientePagoId);
+  const motoPagoSeleccionada = motosVisibles.find(m=>m.id===pago.motoId) || null;
+  const deudaPagoSeleccionada = motoPagoSeleccionada ? deudaMoto(motoPagoSeleccionada) : null;
+
+  async function generarIdCliente(pais){
+    const code=countryCode(pais);
+    const year=currentYear();
+    const prefijo=`${code}${year}`;
+    const existentes=clientes.filter(c=>String(c.idCliente||"").startsWith(prefijo));
+    const secuencia=String(existentes.length + 1).padStart(2,"0");
+    return `${prefijo}-${secuencia}`;
+  }
+
+  async function guardarCliente(){
+    if(!esAdmin) return alert("Solo el administrador puede crear o editar clientes");
+    if(!cliente.nombre) return alert("El nombre del cliente es obligatorio");
+
+    const clienteFinal = {
+      ...cliente,
+      municipio: cliente.municipio || (provinciasRD[cliente.provincia] || [])[0] || ""
+    };
+
+    try{
+      if(editCliente){
+        await updateDoc(doc(db,"clientes",editCliente),clienteFinal);
+        alert("Cliente actualizado correctamente");
+        setEditCliente(null);
+      }else{
+        const nuevoId=await generarIdCliente(cliente.pais);
+        await addDoc(collection(db,"clientes"),{
+          ...clienteFinal,
+          idCliente:nuevoId
+        });
+        alert("Cliente creado correctamente");
+      }
+
+      setCliente({
+        idCliente:"",
+        pais:"República Dominicana",
+        nacionalidad:"Dominicana",
+        provincia:"Distrito Nacional",
+        municipio:"Santo Domingo de Guzmán",
+        sexo:"Masculino",
+        nombre:"",
+        cedula:"",
+        correo:"",
+        telefono:"",
+        telefonoResidencial:"",
+        telefonoReferencia:"",
+        direccion:"",
+        referencia:"",
+        riesgo:"Nuevo cliente",
+        cobradorId:"",
+        ubicacion:null
+      });
+
+      cargar();
+    }catch(e){
+      alert("No se pudo guardar el cliente");
+      console.log(e);
+    }
+  }
+
+  function editarCliente(c){
+    if(!esAdmin) return alert("Solo el administrador puede editar clientes");
+
+    setCliente({
+      idCliente:c.idCliente||"",
+      pais:c.pais||"República Dominicana",
+      nacionalidad:c.nacionalidad||"Dominicana",
+      provincia:c.provincia||"Distrito Nacional",
+      municipio:c.municipio||"Santo Domingo de Guzmán",
+      sexo:c.sexo||"Masculino",
+      nombre:c.nombre||"",
+      cedula:c.cedula||"",
+      correo:c.correo||"",
+      telefono:c.telefono||"",
+      telefonoResidencial:c.telefonoResidencial||"",
+      telefonoReferencia:c.telefonoReferencia||"",
+      direccion:c.direccion||"",
+      referencia:c.referencia||"",
+      riesgo:c.riesgo||"Nuevo cliente",
+      cobradorId:c.cobradorId||"",
+      ubicacion:c.ubicacion||null
+    });
+
+    setEditCliente(c.id);
+    setTab("clientes");
+  }
+
+  async function eliminarCliente(id){
+    if(!esAdmin) return alert("Solo el administrador puede eliminar clientes");
+
+    const confirmar = confirm("¿Seguro que deseas eliminar este cliente? Las motos asignadas quedarán sin cliente.");
+    if(!confirmar) return;
+
+    try{
+      await deleteDoc(doc(db,"clientes",id));
+
+      for(const m of motos.filter(x=>x.clienteId===id)){
+        await updateDoc(doc(db,"motos",m.id),{
+          ...m,
+          clienteId:"",
+          estado:"Disponible"
+        });
+      }
+
+      alert("Cliente eliminado correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo eliminar el cliente");
+      console.log(e);
+    }
+  }
+
+  async function capturarUbicacionCliente(){
+    try{
+      const ubicacion=await getLocation();
+      setCliente({...cliente,ubicacion});
+      alert("Ubicación capturada correctamente");
+    }catch(e){
+      alert("No se pudo capturar la ubicación: " + e.message);
+    }
+  }
