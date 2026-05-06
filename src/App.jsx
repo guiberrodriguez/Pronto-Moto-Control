@@ -1157,3 +1157,271 @@ function Dashboard({user}){
       console.log(e);
     }
   }
+  
+    async function subirAdjunto(){
+    if(!esAdmin) return alert("Solo el administrador puede subir adjuntos");
+    if(!clienteAdjunto) return alert("Selecciona un cliente");
+    if(!archivo) return alert("Selecciona un archivo");
+
+    const ruta=`clientes/${clienteAdjunto}/${Date.now()}-${archivo.name}`;
+    const archivoRef=ref(storage,ruta);
+
+    try{
+      await uploadBytes(archivoRef,archivo);
+      const url=await getDownloadURL(archivoRef);
+
+      await addDoc(collection(db,"adjuntos"),{
+        clienteId:clienteAdjunto,
+        nombre:archivo.name,
+        tipo:archivo.type,
+        ruta,
+        url,
+        fecha:today()
+      });
+
+      setArchivo(null);
+      setClienteAdjunto("");
+      alert("Adjunto subido correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo subir el adjunto");
+      console.log(e);
+    }
+  }
+
+  async function eliminarAdjunto(a){
+    if(!esAdmin) return alert("Solo el administrador puede eliminar adjuntos");
+
+    const confirmar = confirm("¿Seguro que deseas eliminar este adjunto?");
+    if(!confirmar) return;
+
+    try{
+      await deleteObject(ref(storage,a.ruta));
+      await deleteDoc(doc(db,"adjuntos",a.id));
+      alert("Adjunto eliminado correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo eliminar el adjunto");
+      console.log(e);
+    }
+  }
+
+  async function guardarUsuario(){
+    if(!esAdmin) return alert("Solo el administrador puede gestionar usuarios");
+    if(!usuarioForm.uid || !usuarioForm.correo){
+      return alert("Debes colocar UID y correo del usuario creado en Firebase Authentication");
+    }
+
+    try{
+      await setDoc(doc(db,"usuarios",usuarioForm.uid),usuarioForm);
+
+      setUsuarioForm({
+        uid:"",
+        nombre:"",
+        correo:"",
+        rol:"cobrador"
+      });
+
+      alert("Usuario guardado correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo guardar el usuario");
+      console.log(e);
+    }
+  }
+
+  async function cambiarPassword(){
+    if(!nuevaPassword || nuevaPassword.length < 6){
+      return alert("La contraseña debe tener al menos 6 caracteres");
+    }
+
+    try{
+      await updatePassword(auth.currentUser,nuevaPassword);
+      setNuevaPassword("");
+      alert("Contraseña actualizada");
+    }catch(e){
+      alert("No se pudo cambiar la contraseña. Vuelve a iniciar sesión e intenta otra vez.");
+      console.log(e);
+    }
+  }
+
+  async function marcarNotificacionLeida(n){
+    try{
+      await updateDoc(doc(db,"notificaciones",n.id),{...n,leida:true});
+      cargar();
+    }catch(e){
+      console.log("No se pudo marcar la notificación:", e);
+    }
+  }
+
+  function mensajeWhatsAppPago(p){
+    return `Hola ${p.cliente || ""}, su pago ha sido registrado correctamente.\n\nID: ${p.id}\nMoto: ${p.moto}\nMonto pagado: ${money(p.monto)}\nPendiente: ${money(p.montoPendienteDespues || 0)}\nComprobante: ${p.url}`;
+  }
+
+  function mensajeWhatsAppMora(m){
+    const c=clientes.find(x=>x.id===m.clienteId);
+    const d=deudaMoto(m);
+
+    return `Hola ${c?.nombre || ""}, tienes ${d.cuotasPendientes} cuota(s) pendiente(s) de pago de la motocicleta ${m.placa}. Deuda estimada: ${money(d.montoPendiente)}. Favor regularizar.`;
+  }
+
+  function imprimirContrato(m){
+    const c=clientes.find(x=>x.id===m.clienteId);
+    if(!c) return alert("Esta moto no tiene cliente asignado");
+
+    const html=`
+      <div class="centro">
+        <img class="printLogo" src="${BASE_URL}/logo.png" />
+      </div>
+
+      <h1>${empresa.nombre}</h1>
+      <p class="centro">${empresa.telefono} · ${empresa.direccion}</p>
+      <h2>CONTRATO DE ALQUILER DE MOTOCICLETA</h2>
+      <p><b>Fecha:</b> ${today()}</p>
+      <p><b>Arrendador:</b> ${empresa.nombre} · RNC/Cédula: ${empresa.rnc||"N/A"}</p>
+      <p><b>Arrendatario:</b> ${c.nombre} · ID Cliente: ${c.idCliente || c.id} · Cédula: ${c.cedula} · Teléfono: ${c.telefono}</p>
+      <p><b>Sexo:</b> ${c.sexo || ""} · <b>Correo:</b> ${c.correo || ""}</p>
+      <p><b>País:</b> ${c.pais || ""} · <b>Nacionalidad:</b> ${c.nacionalidad || ""}</p>
+      <p><b>Provincia:</b> ${c.provincia || ""} · <b>Municipio:</b> ${c.municipio || ""}</p>
+      <p><b>Dirección:</b> ${c.direccion}</p>
+
+      <table>
+        <tr>
+          <th>Placa</th>
+          <th>Marca</th>
+          <th>Modelo</th>
+          <th>Año</th>
+          <th>GPS / Tracker</th>
+          <th>Pago diario</th>
+          <th>Depósito</th>
+        </tr>
+        <tr>
+          <td>${m.placa}</td>
+          <td>${m.marca}</td>
+          <td>${m.modelo}</td>
+          <td>${m.anio}</td>
+          <td>${m.tracker||"N/A"}</td>
+          <td>${money(m.pagoDiario)}</td>
+          <td>${money(m.deposito)}</td>
+        </tr>
+      </table>
+
+      <h3>Condiciones principales</h3>
+      <ol>
+        <li>El pago es diario, exceptuando los domingos.</li>
+        <li>Al acumular tres cuotas vencidas, el contrato podrá ser cancelado.</li>
+        <li>El arrendador podrá recuperar la motocicleta por las vías legales correspondientes.</li>
+        <li>El arrendatario asume multas, accidentes, daños, uso indebido y cualquier responsabilidad derivada del uso de la motocicleta.</li>
+        <li>Queda prohibido prestar, ceder, subarrendar o usar la motocicleta en actividades ilícitas.</li>
+      </ol>
+
+      <p>${empresa.notas||""}</p>
+
+      <br/><br/>
+      <table class="firmas">
+        <tr>
+          <td>Firma Arrendador</td>
+          <td>Firma Arrendatario</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td></td>
+        </tr>
+      </table>
+    `;
+
+    abrirImpresion("Contrato "+m.placa,html,"normal");
+  }
+
+  function comprobanteHtml(p,tipo="normal"){
+    const ubicacionTexto = p.ubicacionCobro?.lat
+      ? `<p><b>Ubicación:</b> ${locationMapUrl(p.ubicacionCobro)}</p>`
+      : "";
+
+    if(tipo==="termico"){
+      return `
+        <div class="centro">
+          <img class="printLogo" src="${BASE_URL}/logo.png" />
+        </div>
+
+        <h1>${empresa.nombre}</h1>
+        <p class="centro">${empresa.telefono}</p>
+        <p class="centro">${empresa.direccion}</p>
+        <h2>COMPROBANTE</h2>
+
+        <p><b>ID:</b> ${p.id}</p>
+        <p><b>Fecha:</b> ${p.fecha}</p>
+        <p><b>ID Cliente:</b> ${p.idCliente || p.clienteId}</p>
+        <p><b>Cliente:</b> ${p.cliente}</p>
+        <p><b>Moto:</b> ${p.moto}</p>
+        <p><b>Cuota diaria:</b> ${money(p.cuotaDiaria)}</p>
+        <p><b>Cuotas pend.:</b> ${p.cuotasPendientes || 0}</p>
+        <p><b>Pendiente antes:</b> ${money(p.montoPendienteAntes || 0)}</p>
+        <p><b>Pagado:</b> ${money(p.monto)}</p>
+        <p><b>Pendiente después:</b> ${money(p.montoPendienteDespues || 0)}</p>
+        <p><b>Método:</b> ${p.metodo}</p>
+        <p><b>Pago digital:</b> ${p.estadoPagoDigital || "N/A"}</p>
+        <p><b>Cobrador:</b> ${p.cobrador || ""}</p>
+        <p><b>Estatus:</b> ${p.estatus || "N/A"}</p>
+
+        <div class="centro" style="margin-top:10px">
+          <img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(p.url)}" />
+          <p>Validar QR</p>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="centro">
+        <img class="printLogo" src="${BASE_URL}/logo.png" />
+      </div>
+
+      <h1>${empresa.nombre}</h1>
+      <p class="centro">${empresa.telefono} · ${empresa.direccion}</p>
+      <h2>COMPROBANTE DE PAGO</h2>
+
+      <table>
+        <tr><th>ID Comprobante</th><td>${p.id}</td></tr>
+        <tr><th>Fecha</th><td>${p.fecha}</td></tr>
+        <tr><th>ID Cliente</th><td>${p.idCliente || p.clienteId}</td></tr>
+        <tr><th>Cliente</th><td>${p.cliente}</td></tr>
+        <tr><th>Cédula</th><td>${p.cedula || ""}</td></tr>
+        <tr><th>Teléfono</th><td>${p.telefono || ""}</td></tr>
+        <tr><th>Moto</th><td>${p.moto}</td></tr>
+        <tr><th>Cuota diaria</th><td>${money(p.cuotaDiaria)}</td></tr>
+        <tr><th>Cuotas pendientes</th><td>${p.cuotasPendientes || 0}</td></tr>
+        <tr><th>Monto pendiente antes del pago</th><td>${money(p.montoPendienteAntes || 0)}</td></tr>
+        <tr><th>Monto pagado</th><td>${money(p.monto)}</td></tr>
+        <tr><th>Monto pendiente después del pago</th><td>${money(p.montoPendienteDespues || 0)}</td></tr>
+        <tr><th>Método</th><td>${p.metodo}</td></tr>
+        <tr><th>Link pago</th><td>${p.linkPago || ""}</td></tr>
+        <tr><th>Estado pago digital</th><td>${p.estadoPagoDigital || "N/A"}</td></tr>
+        <tr><th>Cobrador</th><td>${p.cobrador || ""}</td></tr>
+        <tr><th>Estatus</th><td>${p.estatus || "N/A"}</td></tr>
+        <tr><th>Validación</th><td>${p.url}</td></tr>
+      </table>
+
+      ${ubicacionTexto}
+
+      <div class="centro" style="margin-top:20px">
+        <img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=170x170&data=${encodeURIComponent(p.url)}" />
+        <p>Código QR de validación</p>
+      </div>
+    `;
+  }
+
+  function imprimirComprobante(p,tipo="normal"){
+    abrirImpresion("Comprobante "+p.id,comprobanteHtml(p,tipo),tipo);
+  }
+
+  useEffect(()=>{
+    if(motosMorosas.length > 0 && "Notification" in window){
+      if(Notification.permission === "granted"){
+        new Notification("Pronto Moto",{
+          body:`Tienes ${motosMorosas.length} moto(s) con atraso.`
+        });
+      }else if(Notification.permission !== "denied"){
+        Notification.requestPermission();
+      }
+    }
+  },[motosMorosas.length]);
