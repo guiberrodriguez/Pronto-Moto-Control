@@ -1512,31 +1512,6 @@ function Dashboard({user}){
         </aside>
 
         <main className="mainPanel">
-          <div className="gridStats premiumStats">
-            <div className="card stat premiumStat">
-              <span>Clientes</span>
-              <b>{clientesVisibles.length}</b>
-            </div>
-            <div className="card stat premiumStat">
-              <span>Motos</span>
-              <b>{motosVisibles.length}</b>
-            </div>
-            <div className="card stat premiumStat dangerStat">
-              <span>Morosas</span>
-              <b>{motosMorosas.length}</b>
-            </div>
-            <div className="card stat premiumStat">
-              <span>Ingresos</span>
-              <b>{money(totalIngresos)}</b>
-            </div>
-            <div className="card stat premiumStat">
-              <span>Gastos</span>
-              <b>{money(totalGastos)}</b>
-            </div>
-            <div className="card stat premiumStat successStat">
-              <span>Neto</span>
-              <b>{money(neto)}</b>
-            </div>
           </div>
 
           <div className="tabs mobileTabs">
