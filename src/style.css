@@ -1254,3 +1254,253 @@ body.darkMode .executiveMetric{
     font-size:26px;
   }
 }
+
+/* =========================================================
+   UX/UI PRO — MICRO ANIMATIONS PREMIUM
+   ========================================================= */
+
+.card,
+.heroCard,
+.executiveHero,
+.activityCard,
+.premiumItem,
+.stat,
+.sideNav,
+.dropdownMenu,
+.mobileTabs{
+  animation: premiumEntrance .34s ease both;
+}
+
+@keyframes premiumEntrance{
+  from{
+    opacity:0;
+    transform:translateY(12px) scale(.985);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
+}
+
+.card:hover,
+.premiumItem:hover,
+.stat:hover,
+.activityCard:hover{
+  transform:translateY(-2px);
+  transition:.22s ease;
+}
+
+.stat,
+.premiumItem,
+.activityItem,
+.executiveWidget{
+  transition:.22s ease;
+}
+
+.activityItem:hover{
+  background:rgba(255,102,0,.06);
+  padding-left:10px;
+  padding-right:10px;
+  border-radius:14px;
+}
+
+body.darkMode .activityItem:hover{
+  background:rgba(255,102,0,.1);
+}
+
+.executiveWidget:hover{
+  transform:translateY(-3px) scale(1.01);
+}
+
+.sideNavBtn{
+  position:relative;
+  overflow:hidden;
+}
+
+.sideNavBtn::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);
+  transform:translateX(-120%);
+  transition:.35s ease;
+}
+
+.sideNavBtn:hover::after{
+  transform:translateX(120%);
+}
+
+button,
+.iconTextBtn,
+.iconBtn,
+.tabs button,
+.mobileTabs button{
+  will-change:transform;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible{
+  outline:3px solid rgba(255,102,0,.25);
+  outline-offset:2px;
+}
+
+input,
+select{
+  transition:
+    border-color .2s ease,
+    box-shadow .2s ease,
+    transform .16s ease,
+    background .2s ease;
+}
+
+input:focus,
+select:focus{
+  transform:translateY(-1px);
+}
+
+/* Skeleton base para futuros loaders */
+.skeleton{
+  position:relative;
+  overflow:hidden;
+  background:rgba(148,163,184,.18);
+  border-radius:14px;
+}
+
+.skeleton::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
+  transform:translateX(-100%);
+  animation:skeletonMove 1.4s infinite;
+}
+
+body.darkMode .skeleton{
+  background:rgba(148,163,184,.12);
+}
+
+@keyframes skeletonMove{
+  to{
+    transform:translateX(100%);
+  }
+}
+
+/* Loading shimmer en tarjetas importantes */
+.premiumStat::before,
+.chartCard::before,
+.activityCard::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:-120%;
+  width:80%;
+  height:100%;
+  pointer-events:none;
+  background:linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,.18),
+    transparent
+  );
+  transform:skewX(-12deg);
+  animation:softSweep 4.5s infinite;
+}
+
+body.darkMode .premiumStat::before,
+body.darkMode .chartCard::before,
+body.darkMode .activityCard::before{
+  background:linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,.08),
+    transparent
+  );
+}
+
+@keyframes softSweep{
+  0%{
+    left:-120%;
+  }
+  45%{
+    left:130%;
+  }
+  100%{
+    left:130%;
+  }
+}
+
+/* Animación de números visual */
+.stat b,
+.executiveMetric b,
+.executiveWidget h2{
+  animation:numberPop .35s ease both;
+}
+
+@keyframes numberPop{
+  from{
+    opacity:0;
+    transform:scale(.94);
+  }
+  to{
+    opacity:1;
+    transform:scale(1);
+  }
+}
+
+/* Menú flotante más premium */
+.dropdownMenu{
+  transform-origin:top right;
+  animation:menuOpen .2s ease both;
+}
+
+@keyframes menuOpen{
+  from{
+    opacity:0;
+    transform:translateY(-8px) scale(.96);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
+}
+
+/* Bottom nav active pulse */
+.mobileTabs button.active{
+  position:relative;
+}
+
+.mobileTabs button.active::after{
+  content:"";
+  position:absolute;
+  inset:-3px;
+  border-radius:22px;
+  border:1px solid rgba(255,102,0,.35);
+  animation:activePulse 1.8s infinite;
+}
+
+@keyframes activePulse{
+  0%{
+    opacity:.7;
+    transform:scale(.98);
+  }
+  70%{
+    opacity:0;
+    transform:scale(1.12);
+  }
+  100%{
+    opacity:0;
+    transform:scale(1.12);
+  }
+}
+
+/* Reduce motion para dispositivos sensibles */
+@media (prefers-reduced-motion: reduce){
+  *,
+  *::before,
+  *::after{
+    animation:none!important;
+    transition:none!important;
+    scroll-behavior:auto!important;
+  }
+}
