@@ -630,3 +630,114 @@ function Dashboard({user}){
   function imprimirComprobante(p,tipo="normal"){
     abrirImpresion("Comprobante "+p.id,comprobanteHtml(p,empresa,tipo),tipo);
   }
+  
+    async function guardarGasto(){
+    if(!esAdmin) return alert("Solo el administrador puede registrar gastos");
+    if(!gasto.motoId) return alert("Selecciona una moto");
+    if(!gasto.monto) return alert("El monto es obligatorio");
+
+    try{
+      if(editGasto){
+        await updateDoc(doc(db,"gastos",editGasto),gasto);
+        alert("Gasto actualizado correctamente");
+        setEditGasto(null);
+      }else{
+        await addDoc(collection(db,"gastos"),gasto);
+        alert("Gasto registrado correctamente");
+      }
+
+      setGasto({
+        motoId:"",
+        fecha:today(),
+        categoria:"Reparación",
+        monto:"",
+        proveedor:"",
+        nota:""
+      });
+
+      cargar();
+    }catch(e){
+      alert("No se pudo guardar el gasto");
+      console.log(e);
+    }
+  }
+
+  function editarGasto(g){
+    if(!esAdmin) return alert("Solo el administrador puede editar gastos");
+
+    setGasto({
+      motoId:g.motoId||"",
+      fecha:g.fecha||today(),
+      categoria:g.categoria||"Reparación",
+      monto:g.monto||"",
+      proveedor:g.proveedor||"",
+      nota:g.nota||""
+    });
+
+    setEditGasto(g.id);
+    setTab("gastos");
+  }
+
+  async function eliminarGasto(id){
+    if(!esAdmin) return alert("Solo el administrador puede eliminar gastos");
+
+    const confirmar = confirm("¿Seguro que deseas eliminar este gasto?");
+    if(!confirmar) return;
+
+    try{
+      await deleteDoc(doc(db,"gastos",id));
+      alert("Gasto eliminado correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo eliminar el gasto");
+      console.log(e);
+    }
+  }
+
+  async function subirAdjunto(){
+    if(!esAdmin) return alert("Solo el administrador puede subir adjuntos");
+    if(!clienteAdjunto) return alert("Selecciona un cliente");
+    if(!archivo) return alert("Selecciona un archivo");
+
+    const ruta=`clientes/${clienteAdjunto}/${Date.now()}-${archivo.name}`;
+    const archivoRef=ref(storage,ruta);
+
+    try{
+      await uploadBytes(archivoRef,archivo);
+      const url=await getDownloadURL(archivoRef);
+
+      await addDoc(collection(db,"adjuntos"),{
+        clienteId:clienteAdjunto,
+        nombre:archivo.name,
+        tipo:archivo.type,
+        ruta,
+        url,
+        fecha:today()
+      });
+
+      setArchivo(null);
+      setClienteAdjunto("");
+      alert("Adjunto subido correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo subir el adjunto");
+      console.log(e);
+    }
+  }
+
+  async function eliminarAdjunto(a){
+    if(!esAdmin) return alert("Solo el administrador puede eliminar adjuntos");
+
+    const confirmar = confirm("¿Seguro que deseas eliminar este adjunto?");
+    if(!confirmar) return;
+
+    try{
+      await deleteObject(ref(storage,a.ruta));
+      await deleteDoc(doc(db,"adjuntos",a.id));
+      alert("Adjunto eliminado correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo eliminar el adjunto");
+      console.log(e);
+    }
+  }
