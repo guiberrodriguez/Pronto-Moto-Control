@@ -45,6 +45,19 @@ import {
   MessageCircle,
   ShieldCheck
 } from "lucide-react";
+
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell
+} from "recharts";
+
 import "./style.css";
 
 const BASE_URL = window.location.origin;
