@@ -931,3 +931,114 @@ canvas{
     font-size:19px;
   }
 }
+
+/* =========================================================
+   UX/UI PRO — BOTTOM NAVIGATION PREMIUM
+   ========================================================= */
+
+@media(max-width:900px){
+
+  .premiumShell{
+    padding-bottom:110px;
+  }
+
+  .mobileTabs{
+    position:fixed;
+    left:50%;
+    bottom:16px;
+    transform:translateX(-50%);
+
+    width:calc(100% - 24px);
+    max-width:520px;
+
+    display:flex;
+    justify-content:flex-start;
+    gap:8px;
+
+    padding:10px;
+    margin:0;
+
+    background:rgba(255,255,255,.78);
+    border:1px solid rgba(229,231,235,.9);
+    border-radius:28px;
+
+    box-shadow:0 18px 45px rgba(15,23,42,.18);
+    backdrop-filter:blur(18px);
+
+    overflow-x:auto;
+    overflow-y:hidden;
+
+    z-index:99998;
+  }
+
+  body.darkMode .mobileTabs{
+    background:rgba(15,23,42,.82);
+    border-color:rgba(39,52,73,.95);
+    box-shadow:0 18px 45px rgba(0,0,0,.45);
+  }
+
+  .mobileTabs button{
+    min-width:76px;
+    height:58px;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+
+    padding:8px 10px;
+    margin:0;
+
+    border-radius:20px;
+    border:1px solid transparent;
+
+    background:transparent;
+    color:var(--muted);
+
+    font-size:11px;
+    font-weight:850;
+
+    box-shadow:none;
+    transition:.22s ease;
+  }
+
+  .mobileTabs button svg{
+    width:19px;
+    height:19px;
+  }
+
+  .mobileTabs button:hover{
+    transform:translateY(-2px);
+    background:rgba(255,102,0,.1);
+    color:var(--primary);
+    box-shadow:none;
+  }
+
+  .mobileTabs button.active{
+    background:linear-gradient(135deg,var(--primary),#f59e0b);
+    color:white;
+    box-shadow:0 12px 24px rgba(255,102,0,.28)!important;
+  }
+
+  .mobileTabs::-webkit-scrollbar{
+    display:none;
+  }
+}
+
+/* Animación suave al cambiar secciones */
+.mainPanel > .card,
+.mainPanel > .heroCard{
+  animation:premiumFade .28s ease both;
+}
+
+@keyframes premiumFade{
+  from{
+    opacity:0;
+    transform:translateY(10px) scale(.99);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
+}
