@@ -12,7 +12,8 @@ import {
   Building2,
   ShieldCheck,
   BarChart3,
-  Gauge
+  Gauge,
+  Banknote
 } from "lucide-react";
 
 export const navItems = [
@@ -24,6 +25,7 @@ export const navItems = [
   {id:"morosidad", label:"Morosidad", icon:AlertTriangle, admin:false},
   {id:"reportes", label:"Reportes", icon:BarChart3, admin:true},
   {id:"kpis", label:"KPIs", icon:Gauge, admin:true},
+  {id:"caja", label:"Caja", icon:Banknote, admin:true},
   {id:"ranking", label:"Ranking", icon:Trophy, admin:false},
   {id:"adjuntos", label:"Adjuntos", icon:Paperclip, admin:true},
   {id:"pagosDigitales", label:"Pagos digitales", icon:ShieldCheck, admin:true},
