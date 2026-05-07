@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "firebase": "latest",
+    "framer-motion": "^12.38.0",
     "lucide-react": "^0.400.0",
     "qrcode.react": "latest",
     "react": "latest",
