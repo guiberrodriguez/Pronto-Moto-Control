@@ -374,3 +374,163 @@ function Dashboard({user}){
   const motosClientePago = motosVisibles.filter(m=>m.clienteId===clientePagoId);
   const motoPagoSeleccionada = motosVisibles.find(m=>m.id===pago.motoId) || null;
   const deudaPagoSeleccionada = motoPagoSeleccionada ? deudaMoto(motoPagoSeleccionada) : null;
+  
+    async function generarIdCliente(pais){
+    const code=countryCode(pais);
+    const year=currentYear();
+    const prefijo=`${code}${year}`;
+    const existentes=clientes.filter(c=>String(c.idCliente||"").startsWith(prefijo));
+    const secuencia=String(existentes.length + 1).padStart(2,"0");
+    return `${prefijo}-${secuencia}`;
+  }
+
+  async function guardarCliente(){
+    if(!esAdmin) return alert("Solo el administrador puede crear o editar clientes");
+    if(!cliente.nombre) return alert("El nombre del cliente es obligatorio");
+
+    const clienteFinal = {
+      ...cliente,
+      empresaId,
+      municipio: cliente.municipio || (provinciasRD[cliente.provincia] || [])[0] || ""
+    };
+
+    try{
+      if(editCliente){
+        await updateDoc(doc(db,"clientes",editCliente),clienteFinal);
+
+        await registrarAuditoria({
+          accion:"editar",
+          modulo:"clientes",
+          descripcion:`Cliente actualizado: ${clienteFinal.nombre}`,
+          usuario:usuarioActual,
+          extra:{
+            empresaId,
+            clienteId:editCliente,
+            clienteNombre:clienteFinal.nombre
+          }
+        });
+
+        alert("Cliente actualizado correctamente");
+        setEditCliente(null);
+      }else{
+        const nuevoId=await generarIdCliente(cliente.pais);
+
+        await addDoc(collection(db,"clientes"),{
+          ...clienteFinal,
+          idCliente:nuevoId
+        });
+
+        await registrarAuditoria({
+          accion:"crear",
+          modulo:"clientes",
+          descripcion:`Cliente creado: ${clienteFinal.nombre}`,
+          usuario:usuarioActual,
+          extra:{
+            empresaId,
+            clienteNombre:clienteFinal.nombre,
+            clientePais:clienteFinal.pais
+          }
+        });
+
+        alert("Cliente creado correctamente");
+      }
+
+      setCliente({
+        idCliente:"",
+        pais:"República Dominicana",
+        nacionalidad:"Dominicana",
+        provincia:"Distrito Nacional",
+        municipio:"Santo Domingo de Guzmán",
+        sexo:"Masculino",
+        nombre:"",
+        cedula:"",
+        correo:"",
+        telefono:"",
+        telefonoResidencial:"",
+        telefonoReferencia:"",
+        direccion:"",
+        referencia:"",
+        riesgo:"Nuevo cliente",
+        cobradorId:"",
+        ubicacion:null
+      });
+
+      cargar();
+    }catch(e){
+      alert("No se pudo guardar el cliente");
+      console.log(e);
+    }
+  }
+
+  function editarCliente(c){
+    if(!esAdmin) return alert("Solo el administrador puede editar clientes");
+
+    setCliente({
+      idCliente:c.idCliente||"",
+      pais:c.pais||"República Dominicana",
+      nacionalidad:c.nacionalidad||"Dominicana",
+      provincia:c.provincia||"Distrito Nacional",
+      municipio:c.municipio||"Santo Domingo de Guzmán",
+      sexo:c.sexo||"Masculino",
+      nombre:c.nombre||"",
+      cedula:c.cedula||"",
+      correo:c.correo||"",
+      telefono:c.telefono||"",
+      telefonoResidencial:c.telefonoResidencial||"",
+      telefonoReferencia:c.telefonoReferencia||"",
+      direccion:c.direccion||"",
+      referencia:c.referencia||"",
+      riesgo:c.riesgo||"Nuevo cliente",
+      cobradorId:c.cobradorId||"",
+      ubicacion:c.ubicacion||null
+    });
+
+    setEditCliente(c.id);
+    setTab("clientes");
+  }
+
+  async function eliminarCliente(id){
+    if(!esAdmin) return alert("Solo el administrador puede eliminar clientes");
+
+    const confirmar = confirm("¿Seguro que deseas eliminar este cliente? Las motos asignadas quedarán sin cliente.");
+    if(!confirmar) return;
+
+    try{
+      await deleteDoc(doc(db,"clientes",id));
+
+      for(const m of motos.filter(x=>x.clienteId===id)){
+        await updateDoc(doc(db,"motos",m.id),{
+          ...m,
+          clienteId:"",
+          estado:"Disponible"
+        });
+      }
+
+      await registrarAuditoria({
+        accion:"eliminar",
+        modulo:"clientes",
+        descripcion:"Cliente eliminado",
+        usuario:usuarioActual,
+        extra:{
+          empresaId,
+          clienteId:id
+        }
+      });
+
+      alert("Cliente eliminado correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo eliminar el cliente");
+      console.log(e);
+    }
+  }
+
+  async function capturarUbicacionCliente(){
+    try{
+      const ubicacion=await getLocation();
+      setCliente({...cliente,ubicacion});
+      alert("Ubicación capturada correctamente");
+    }catch(e){
+      alert("No se pudo capturar la ubicación: " + e.message);
+    }
+  }
