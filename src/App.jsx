@@ -534,3 +534,116 @@ function Dashboard({user}){
       alert("No se pudo capturar la ubicación: " + e.message);
     }
   }
+  
+    async function guardarMoto(){
+    if(!esAdmin) return alert("Solo el administrador puede crear o editar motos");
+    if(!moto.placa) return alert("La placa es obligatoria");
+
+    const datos={
+      ...moto,
+      empresaId,
+      estado:moto.clienteId ? "Alquilada" : "Disponible",
+      fechaAsignacion:moto.clienteId ? (moto.fechaAsignacion || today()) : ""
+    };
+
+    try{
+      if(editMoto){
+        await updateDoc(doc(db,"motos",editMoto),datos);
+
+        await registrarAuditoria({
+          accion:"editar",
+          modulo:"motos",
+          descripcion:`Moto actualizada: ${datos.placa}`,
+          usuario:usuarioActual,
+          extra:{
+            empresaId,
+            motoId:editMoto,
+            placa:datos.placa
+          }
+        });
+
+        alert("Moto actualizada correctamente");
+        setEditMoto(null);
+      }else{
+        await addDoc(collection(db,"motos"),datos);
+
+        await registrarAuditoria({
+          accion:"crear",
+          modulo:"motos",
+          descripcion:`Moto creada: ${datos.placa}`,
+          usuario:usuarioActual,
+          extra:{
+            empresaId,
+            placa:datos.placa,
+            clienteId:datos.clienteId || ""
+          }
+        });
+
+        alert("Moto creada correctamente");
+      }
+
+      setMoto({
+        placa:"",
+        marca:"",
+        modelo:"",
+        anio:"",
+        tracker:"",
+        clienteId:"",
+        fechaAsignacion:today(),
+        pagoDiario:"400",
+        deposito:"5000"
+      });
+
+      cargar();
+    }catch(e){
+      alert("No se pudo guardar la moto");
+      console.log(e);
+    }
+  }
+
+  function editarMoto(m){
+    if(!esAdmin) return alert("Solo el administrador puede editar motos");
+
+    setMoto({
+      placa:m.placa||"",
+      marca:m.marca||"",
+      modelo:m.modelo||"",
+      anio:m.anio||"",
+      tracker:m.tracker||"",
+      clienteId:m.clienteId||"",
+      fechaAsignacion:m.fechaAsignacion||today(),
+      pagoDiario:m.pagoDiario||"400",
+      deposito:m.deposito||"5000"
+    });
+
+    setEditMoto(m.id);
+    setTab("motos");
+  }
+
+  async function eliminarMoto(id){
+    if(!esAdmin) return alert("Solo el administrador puede eliminar motos");
+
+    const confirmar = confirm("¿Seguro que deseas eliminar esta moto?");
+    if(!confirmar) return;
+
+    try{
+      await deleteDoc(doc(db,"motos",id));
+
+      await registrarAuditoria({
+        accion:"eliminar",
+        modulo:"motos",
+        descripcion:"Moto eliminada",
+        usuario:usuarioActual,
+        extra:{
+          empresaId,
+          motoId:id
+        }
+      });
+
+      alert("Moto eliminada correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo eliminar la moto");
+      console.log(e);
+    }
+  }
