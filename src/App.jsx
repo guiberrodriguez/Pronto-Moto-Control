@@ -203,3 +203,86 @@ function Dashboard({user}){
 
   const municipiosDisponibles =
     provinciasRD[cliente.provincia] || [];
+    
+      useEffect(()=>{
+    document.body.classList.remove("darkMode","lightMode");
+
+    if(tema === "dark"){
+      document.body.classList.add("darkMode");
+    }else{
+      document.body.classList.add("lightMode");
+    }
+
+    localStorage.setItem("tema",tema);
+  },[tema]);
+
+  function toggleTema(){
+    setTema(prev => prev === "dark" ? "light" : "dark");
+  }
+
+  function filtrarPorEmpresa(lista){
+    if(!empresaId) return lista;
+
+    return lista.filter(item=>{
+      return item.empresaId === empresaId || !item.empresaId;
+    });
+  }
+
+  async function cargar(){
+    const emp = await getDocs(collection(db,"empresas"));
+    const c = await getDocs(collection(db,"clientes"));
+    const m = await getDocs(collection(db,"motos"));
+    const p = await getDocs(collection(db,"pagos"));
+    const g = await getDocs(collection(db,"gastos"));
+    const a = await getDocs(collection(db,"adjuntos"));
+    const u = await getDocs(collection(db,"usuarios"));
+    const n = await getDocs(collection(db,"notificaciones"));
+    const pd = await getDocs(collection(db,"pagosDigitales"));
+    const al = await getDocs(collection(db,"auditLogs"));
+
+    const empresasData = emp.docs.map(d=>({id:d.id,...d.data()}));
+    const usuariosData = u.docs.map(d=>({id:d.id,...d.data()}));
+
+    const perfil = usuariosData.find(x=>x.uid===user.uid || x.correo===user.email) || {
+      uid:user.uid,
+      nombre:user.email,
+      correo:user.email,
+      rol:"admin"
+    };
+
+    const clientesData = c.docs.map(d=>({id:d.id,...d.data()}));
+    const motosData = m.docs.map(d=>({id:d.id,...d.data()}));
+    const pagosData = p.docs.map(d=>({docId:d.id,...d.data()}));
+    const gastosData = g.docs.map(d=>({id:d.id,...d.data()}));
+    const adjuntosData = a.docs.map(d=>({id:d.id,...d.data()}));
+    const notificacionesData = n.docs.map(d=>({id:d.id,...d.data()}));
+    const pagosDigitalesData = pd.docs.map(d=>({id:d.id,...d.data()}));
+    const auditLogsData = al.docs.map(d=>({id:d.id,...d.data()}));
+
+    setEmpresas(empresasData);
+    setUsuarioActual(perfil);
+    setUsuarios(usuariosData);
+
+    setClientes(filtrarPorEmpresa(clientesData));
+    setMotos(filtrarPorEmpresa(motosData));
+    setPagos(filtrarPorEmpresa(pagosData));
+    setGastos(filtrarPorEmpresa(gastosData));
+    setAdjuntos(filtrarPorEmpresa(adjuntosData));
+    setNotificaciones(filtrarPorEmpresa(notificacionesData));
+    setPagosDigitales(filtrarPorEmpresa(pagosDigitalesData));
+    setAuditLogs(filtrarPorEmpresa(auditLogsData));
+
+    if(empresaActual){
+      setEmpresa({
+        nombre:empresaActual.nombre || "Pronto Moto",
+        telefono:empresaActual.telefono || "",
+        direccion:empresaActual.direccion || "",
+        rnc:empresaActual.rnc || "",
+        notas:empresaActual.notas || ""
+      });
+    }
+  }
+
+  useEffect(()=>{
+    cargar();
+  },[empresaId]);
