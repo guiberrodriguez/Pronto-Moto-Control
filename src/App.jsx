@@ -1,3 +1,4 @@
+import KPIs from "./components/KPIs";
 import Reportes from "./components/Reportes";
 import Auditoria from "./components/Auditoria";
 import React, { useEffect, useMemo, useState } from "react";
@@ -1295,6 +1296,17 @@ function Dashboard({user}){
               clientes={clientes}
               usuarios={usuarios}
               empresa={empresa}
+            />
+          )}
+          
+          {tab==="kpis" && (
+            <KPIs
+              esAdmin={esAdmin}
+              pagos={pagos}
+              gastos={gastos}
+              motos={motos}
+              clientes={clientes}
+              usuarios={usuarios}
             />
           )}
         </main>
