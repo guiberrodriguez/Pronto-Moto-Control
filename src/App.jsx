@@ -1036,3 +1036,218 @@ function Dashboard({user}){
       console.log(e);
     }
   }
+  
+    async function guardarUsuario(){
+    if(!esAdmin) return alert("Solo el administrador puede gestionar usuarios");
+
+    if(!usuarioForm.uid || !usuarioForm.correo){
+      return alert("Debes colocar UID y correo del usuario creado en Firebase Authentication");
+    }
+
+    try{
+      await setDoc(doc(db,"usuarios",usuarioForm.uid),{
+        ...usuarioForm,
+        empresaId
+      });
+
+      await registrarAuditoria({
+        accion:"crear_editar",
+        modulo:"usuarios",
+        descripcion:`Usuario guardado: ${usuarioForm.correo}`,
+        usuario:usuarioActual,
+        extra:{
+          empresaId,
+          usuarioGestionado:usuarioForm.correo,
+          rol:usuarioForm.rol
+        }
+      });
+
+      setUsuarioForm({
+        uid:"",
+        nombre:"",
+        correo:"",
+        rol:"cobrador"
+      });
+
+      alert("Usuario guardado correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo guardar el usuario");
+      console.log(e);
+    }
+  }
+
+  async function cambiarPassword(){
+    if(!nuevaPassword || nuevaPassword.length < 6){
+      return alert("La contraseña debe tener al menos 6 caracteres");
+    }
+
+    try{
+      await updatePassword(auth.currentUser,nuevaPassword);
+      setNuevaPassword("");
+      alert("Contraseña actualizada");
+    }catch(e){
+      alert("No se pudo cambiar la contraseña. Vuelve a iniciar sesión e intenta otra vez.");
+      console.log(e);
+    }
+  }
+
+  async function marcarNotificacionLeida(n){
+    try{
+      await updateDoc(doc(db,"notificaciones",n.id),{
+        ...n,
+        leida:true
+      });
+
+      cargar();
+    }catch(e){
+      console.log("No se pudo marcar la notificación:", e);
+    }
+  }
+
+  function mensajeWhatsAppPago(p){
+    return `Hola ${p.cliente || ""}, su pago ha sido registrado correctamente.\n\nID: ${p.id}\nMoto: ${p.moto}\nMonto pagado: ${money(p.monto)}\nPendiente: ${money(p.montoPendienteDespues || 0)}\nComprobante: ${p.url}`;
+  }
+
+  function mensajeWhatsAppMora(m){
+    const c=clientes.find(x=>x.id===m.clienteId);
+    const d=deudaMoto(m);
+
+    return `Hola ${c?.nombre || ""}, tienes ${d.cuotasPendientes} cuota(s) pendiente(s) de pago de la motocicleta ${m.placa}. Deuda estimada: ${money(d.montoPendiente)}. Favor regularizar.`;
+  }
+
+  function imprimirContrato(m){
+    const c=clientes.find(x=>x.id===m.clienteId);
+
+    if(!c){
+      return alert("Esta moto no tiene cliente asignado");
+    }
+
+    const html=`
+      <div class="premiumPdf">
+
+        <div class="pdfHeader">
+          <div class="pdfLogoArea">
+            <img class="printLogo" src="${BASE_URL}/logo.png" />
+          </div>
+
+          <div class="pdfCompany">
+            <h1>${empresa.nombre}</h1>
+            <p>${empresa.telefono || ""}</p>
+            <p>${empresa.direccion || ""}</p>
+            <p>RNC/Cédula: ${empresa.rnc || "N/A"}</p>
+          </div>
+        </div>
+
+        <div class="pdfTitle">
+          CONTRATO DE ALQUILER DE MOTOCICLETA
+        </div>
+
+        <div class="pdfGrid">
+          <div class="infoBlock">
+            <span class="label">Empresa</span>
+            <span class="value">${empresa.nombre}</span>
+          </div>
+
+          <div class="infoBlock">
+            <span class="label">Fecha</span>
+            <span class="value">${today()}</span>
+          </div>
+
+          <div class="infoBlock">
+            <span class="label">Cliente</span>
+            <span class="value">${c.nombre}</span>
+          </div>
+
+          <div class="infoBlock">
+            <span class="label">ID cliente</span>
+            <span class="value">${c.idCliente || c.id}</span>
+          </div>
+
+          <div class="infoBlock">
+            <span class="label">Cédula / Pasaporte</span>
+            <span class="value">${c.cedula || ""}</span>
+          </div>
+
+          <div class="infoBlock">
+            <span class="label">Teléfono</span>
+            <span class="value">${c.telefono || ""}</span>
+          </div>
+
+          <div class="infoBlock">
+            <span class="label">Dirección</span>
+            <span class="value">${c.direccion || ""}</span>
+          </div>
+
+          <div class="infoBlock">
+            <span class="label">Motocicleta</span>
+            <span class="value">${m.placa} · ${m.marca || ""} ${m.modelo || ""}</span>
+          </div>
+
+          <div class="infoBlock">
+            <span class="label">Año</span>
+            <span class="value">${m.anio || ""}</span>
+          </div>
+
+          <div class="infoBlock">
+            <span class="label">Tracker / GPS</span>
+            <span class="value">${m.tracker || "N/A"}</span>
+          </div>
+
+          <div class="infoBlock amountBlock">
+            <span class="label">Pago diario</span>
+            <span class="amount">${money(m.pagoDiario)}</span>
+          </div>
+
+          <div class="infoBlock amountBlock">
+            <span class="label">Depósito</span>
+            <span class="amount">${money(m.deposito)}</span>
+          </div>
+        </div>
+
+        <div style="margin-top:35px;font-size:15px;line-height:1.7;">
+          <h3>Condiciones principales</h3>
+
+          <ol>
+            <li>El pago es diario, exceptuando los domingos.</li>
+            <li>Al acumular tres cuotas vencidas, el contrato podrá ser cancelado.</li>
+            <li>El arrendador podrá recuperar la motocicleta por las vías legales correspondientes.</li>
+            <li>El arrendatario asume multas, accidentes, daños, uso indebido y cualquier responsabilidad derivada del uso de la motocicleta.</li>
+            <li>Queda prohibido prestar, ceder, subarrendar o usar la motocicleta en actividades ilícitas.</li>
+          </ol>
+
+          <p>${empresa.notas || ""}</p>
+        </div>
+
+        <div class="signatureArea">
+          <div class="signatureBox">
+            <div class="line"></div>
+            <p>Firma arrendador</p>
+          </div>
+
+          <div class="signatureBox">
+            <div class="line"></div>
+            <p>Firma arrendatario</p>
+          </div>
+        </div>
+
+        <div class="pdfFooter">
+          <p>Documento generado automáticamente por ${empresa.nombre}</p>
+        </div>
+      </div>
+    `;
+
+    abrirImpresion("Contrato "+m.placa,html,"normal");
+  }
+
+  if(esAdmin && !empresaActual){
+    return (
+      <div className="premiumShell">
+        <SelectorEmpresa
+          empresas={empresas}
+          empresaActual={empresaActual}
+          setEmpresaActual={setEmpresaActual}
+        />
+      </div>
+    );
+  }
