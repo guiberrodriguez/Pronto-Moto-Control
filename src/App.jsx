@@ -84,3 +84,122 @@ import {
 
 import { registrarAuditoria } from "./utils/audit";
 
+function Dashboard({user}){
+
+  const { empresaActual, setEmpresaActual } = useEmpresa();
+
+  const [tab,setTab]=useState("inicio");
+  const [menuAbierto,setMenuAbierto]=useState(false);
+
+  const [tema,setTema]=useState(
+    localStorage.getItem("tema") || "light"
+  );
+
+  const [empresas,setEmpresas]=useState([]);
+
+  const [clientes,setClientes]=useState([]);
+  const [motos,setMotos]=useState([]);
+  const [pagos,setPagos]=useState([]);
+  const [gastos,setGastos]=useState([]);
+  const [adjuntos,setAdjuntos]=useState([]);
+  const [usuarios,setUsuarios]=useState([]);
+  const [notificaciones,setNotificaciones]=useState([]);
+  const [pagosDigitales,setPagosDigitales]=useState([]);
+  const [auditLogs,setAuditLogs]=useState([]);
+
+  const [usuarioActual,setUsuarioActual]=useState(null);
+
+  const [ultimo,setUltimo]=useState(null);
+
+  const [clienteVista,setClienteVista]=useState(null);
+
+  const [busquedaCliente,setBusquedaCliente]=useState("");
+
+  const [busquedaClientePago,setBusquedaClientePago]=useState("");
+
+  const [clientePagoId,setClientePagoId]=useState("");
+
+  const [papelComprobante,setPapelComprobante]=useState("normal");
+
+  const [nuevaPassword,setNuevaPassword]=useState("");
+
+  const [usuarioForm,setUsuarioForm]=useState({
+    uid:"",
+    nombre:"",
+    correo:"",
+    rol:"cobrador"
+  });
+
+  const [empresa,setEmpresa]=useState({
+    nombre:"Pronto Moto",
+    telefono:"",
+    direccion:"",
+    rnc:"",
+    notas:""
+  });
+
+  const [cliente,setCliente]=useState({
+    idCliente:"",
+    pais:"República Dominicana",
+    nacionalidad:"Dominicana",
+    provincia:"Distrito Nacional",
+    municipio:"Santo Domingo de Guzmán",
+    sexo:"Masculino",
+    nombre:"",
+    cedula:"",
+    correo:"",
+    telefono:"",
+    telefonoResidencial:"",
+    telefonoReferencia:"",
+    direccion:"",
+    referencia:"",
+    riesgo:"Nuevo cliente",
+    cobradorId:"",
+    ubicacion:null
+  });
+
+  const [moto,setMoto]=useState({
+    placa:"",
+    marca:"",
+    modelo:"",
+    anio:"",
+    tracker:"",
+    clienteId:"",
+    fechaAsignacion:today(),
+    pagoDiario:"400",
+    deposito:"5000"
+  });
+
+  const [pago,setPago]=useState({
+    motoId:"",
+    monto:"400",
+    metodo:"Efectivo",
+    linkPago:"",
+    estadoPagoDigital:"No aplica"
+  });
+
+  const [gasto,setGasto]=useState({
+    motoId:"",
+    fecha:today(),
+    categoria:"Reparación",
+    monto:"",
+    proveedor:"",
+    nota:""
+  });
+
+  const [clienteAdjunto,setClienteAdjunto]=useState("");
+
+  const [archivo,setArchivo]=useState(null);
+
+  const [editCliente,setEditCliente]=useState(null);
+  const [editMoto,setEditMoto]=useState(null);
+  const [editGasto,setEditGasto]=useState(null);
+
+  const esAdmin =
+    !usuarioActual ||
+    usuarioActual.rol === "admin";
+
+  const empresaId = empresaActual?.id || "";
+
+  const municipiosDisponibles =
+    provinciasRD[cliente.provincia] || [];
