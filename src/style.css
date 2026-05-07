@@ -1620,3 +1620,34 @@ textarea:focus{
     grid-template-columns:1fr;
   }
 }
+
+.kpiGrid{
+  gap:14px !important;
+}
+
+.kpiCard{
+  min-height:180px !important;
+  padding:20px !important;
+  margin:0 !important;
+}
+
+.kpiCard b{
+  margin:10px 0 !important;
+}
+
+.kpiChange{
+  margin-top:8px !important;
+}
+
+@media(max-width:768px){
+
+  .kpiGrid{
+    gap:12px !important;
+  }
+
+  .kpiCard{
+    min-height:150px !important;
+    border-radius:26px !important;
+    padding:18px !important;
+  }
+}
