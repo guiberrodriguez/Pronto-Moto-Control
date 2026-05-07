@@ -1344,6 +1344,7 @@ function Dashboard({user}){
         />
       </div>
     );
+  }
   
     return (
     <div className="premiumShell">
@@ -1591,7 +1592,8 @@ function App(){
 }
 
 createRoot(document.getElementById("root")).render(
-  <EmpresaProvider>
-    <App/>
-  </EmpresaProvider>
-);
+    <EmpresaProvider>
+      <App/>
+    </EmpresaProvider>
+  );
+}
