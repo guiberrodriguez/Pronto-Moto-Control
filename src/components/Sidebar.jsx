@@ -23,6 +23,7 @@ export const navItems = [
   {id:"ranking", label:"Ranking", icon:Trophy, admin:false},
   {id:"adjuntos", label:"Adjuntos", icon:Paperclip, admin:true},
   {id:"pagosDigitales", label:"Pagos digitales", icon:ShieldCheck, admin:true},
+  {id:"auditoria", label:"Auditoría", icon:FileSearch, admin:true},
   {id:"empresa", label:"Empresa", icon:Building2, admin:true}
 ];
 
