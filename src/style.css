@@ -1651,3 +1651,88 @@ textarea:focus{
     padding:18px !important;
   }
 }
+
+/* FIX separación botones en Clientes */
+.clientActions,
+.actionRow,
+.clientFormActions,
+.formActions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px !important;
+}
+
+.clientActions button,
+.actionRow button,
+.clientFormActions button,
+.formActions button {
+  margin-bottom: 0 !important;
+}
+
+/* Botones naranjas crear/capturar */
+.captureLocationBtn,
+.createClientBtn,
+.btnCapture,
+.btnCreate {
+  width: 100%;
+  min-height: 76px;
+  border-radius: 22px;
+}
+
+/* FIX separación tarjetas Dashboard */
+.dashboardGrid,
+.statsGrid,
+.executiveGrid,
+.cardsGrid,
+.dashboardCards {
+  display: flex;
+  flex-direction: column;
+  gap: 22px !important;
+}
+
+/* Evita que las tarjetas se monten una encima de otra */
+.statCard,
+.dashboardCard,
+.executiveCard,
+.metricCard,
+.proCard {
+  margin-bottom: 0 !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Más aire interno para tarjetas */
+.statCard,
+.dashboardCard,
+.executiveCard,
+.metricCard {
+  padding: 28px 30px !important;
+  min-height: 145px;
+}
+
+/* Separación específica entre Motos en mora e Ingresos Totales */
+.statCard + .statCard,
+.dashboardCard + .dashboardCard,
+.metricCard + .metricCard {
+  margin-top: 22px !important;
+}
+
+/* FIX textos pegados dentro del dashboard */
+.fleetStats p,
+.financeStats p,
+.dashboardCard p,
+.executiveCard p {
+  line-height: 1.35;
+  margin: 6px 0 !important;
+}
+
+/* Para textos tipo Activas1, Disponibles0, IngresosRD$900 */
+.statLine,
+.fleetLine,
+.financeLine,
+.infoLine {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
