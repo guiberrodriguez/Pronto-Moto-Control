@@ -728,10 +728,34 @@ function Dashboard({user}){
     try{
       if(editGasto){
         await updateDoc(doc(db,"gastos",editGasto),gasto);
+        
+        await registrarAuditoria({
+          accion:"editar",
+          modulo:"gastos",
+          descripcion:`Gasto actualizado: ${gasto.categoria}`,
+          usuario:usuarioActual,
+          extra:{
+            gastoId:editGasto,
+            categoria:gasto.categoria,
+            monto:gasto.monto
+          }
+        });
         alert("Gasto actualizado correctamente");
         setEditGasto(null);
       }else{
         await addDoc(collection(db,"gastos"),gasto);
+        
+        await registrarAuditoria({
+          accion:"crear",
+          modulo:"gastos",
+          descripcion:`Gasto registrado: ${gasto.categoria}`,
+          usuario:usuarioActual,
+          extra:{
+            motoId:gasto.motoId,
+            categoria:gasto.categoria,
+            monto:gasto.monto
+          }
+        });
         alert("Gasto registrado correctamente");
       }
 
@@ -775,6 +799,16 @@ function Dashboard({user}){
 
     try{
       await deleteDoc(doc(db,"gastos",id));
+      
+      await registrarAuditoria({
+        accion:"eliminar",
+        modulo:"gastos",
+        descripcion:"Gasto eliminado",
+        usuario:usuarioActual,
+          extra:{
+          gastoId:id
+        }
+      });
       alert("Gasto eliminado correctamente");
       cargar();
     }catch(e){
@@ -806,6 +840,17 @@ function Dashboard({user}){
 
       setArchivo(null);
       setClienteAdjunto("");
+      
+      await registrarAuditoria({
+        accion:"crear",
+        modulo:"adjuntos",
+        descripcion:`Adjunto subido: ${archivo.name}`,
+        usuario:usuarioActual,
+        extra:{
+          clienteId:clienteAdjunto,
+          archivo:archivo.name
+        }
+      });
       alert("Adjunto subido correctamente");
       cargar();
     }catch(e){
@@ -823,6 +868,17 @@ function Dashboard({user}){
     try{
       await deleteObject(ref(storage,a.ruta));
       await deleteDoc(doc(db,"adjuntos",a.id));
+      
+      await registrarAuditoria({
+        accion:"eliminar",
+        modulo:"adjuntos",
+        descripcion:`Adjunto eliminado: ${a.nombre}`,
+        usuario:usuarioActual,
+        extra:{
+          adjuntoId:a.id,
+          archivo:a.nombre
+        }
+      });
       alert("Adjunto eliminado correctamente");
       cargar();
     }catch(e){
@@ -847,7 +903,17 @@ function Dashboard({user}){
         correo:"",
         rol:"cobrador"
       });
-
+      
+      await registrarAuditoria({
+        accion:"crear_editar",
+        modulo:"usuarios",
+        descripcion:`Usuario guardado: ${usuarioForm.correo}`,
+        usuario:usuarioActual,
+        extra:{
+          usuarioGestionado:usuarioForm.correo,
+          rol:usuarioForm.rol
+        }
+      });
       alert("Usuario guardado correctamente");
       cargar();
     }catch(e){
