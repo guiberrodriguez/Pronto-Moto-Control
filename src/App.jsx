@@ -1,3 +1,4 @@
+import { EmpresaProvider } from "./context/EmpresaContext";
 import CajaDiaria from "./components/CajaDiaria";
 import KPIs from "./components/KPIs";
 import Reportes from "./components/Reportes";
@@ -1337,4 +1338,8 @@ function App(){
   return <Dashboard user={user}/>;
 }
 
-createRoot(document.getElementById("root")).render(<App/>);
+createRoot(document.getElementById("root")).render(
+  <EmpresaProvider>
+    <App/>
+  </EmpresaProvider>
+);
