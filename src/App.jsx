@@ -1277,6 +1277,13 @@ function Dashboard({user}){
               marcarNotificacionLeida={marcarNotificacionLeida}
             />
           )}
+          
+          {tab==="auditoria" && (
+            <Auditoria
+              esAdmin={esAdmin}
+              auditLogs={auditLogs}
+            />
+          )}
         </main>
       </div>
     </div>
