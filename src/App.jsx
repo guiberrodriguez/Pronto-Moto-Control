@@ -108,17 +108,12 @@ function Dashboard({user}){
   const [auditLogs,setAuditLogs]=useState([]);
 
   const [usuarioActual,setUsuarioActual]=useState(null);
-
   const [ultimo,setUltimo]=useState(null);
-
   const [clienteVista,setClienteVista]=useState(null);
 
   const [busquedaCliente,setBusquedaCliente]=useState("");
-
   const [busquedaClientePago,setBusquedaClientePago]=useState("");
-
   const [clientePagoId,setClientePagoId]=useState("");
-
   const [papelComprobante,setPapelComprobante]=useState("normal");
 
   const [nuevaPassword,setNuevaPassword]=useState("");
@@ -140,10 +135,10 @@ function Dashboard({user}){
 
   const [cliente,setCliente]=useState({
     idCliente:"",
-    pais:"República Dominicana",
+    pais:"RepÃºblica Dominicana",
     nacionalidad:"Dominicana",
     provincia:"Distrito Nacional",
-    municipio:"Santo Domingo de Guzmán",
+    municipio:"Santo Domingo de GuzmÃ¡n",
     sexo:"Masculino",
     nombre:"",
     cedula:"",
@@ -181,30 +176,24 @@ function Dashboard({user}){
   const [gasto,setGasto]=useState({
     motoId:"",
     fecha:today(),
-    categoria:"Reparación",
+    categoria:"ReparaciÃ³n",
     monto:"",
     proveedor:"",
     nota:""
   });
 
   const [clienteAdjunto,setClienteAdjunto]=useState("");
-
   const [archivo,setArchivo]=useState(null);
 
   const [editCliente,setEditCliente]=useState(null);
   const [editMoto,setEditMoto]=useState(null);
   const [editGasto,setEditGasto]=useState(null);
 
-  const esAdmin =
-    !usuarioActual ||
-    usuarioActual.rol === "admin";
-
+  const esAdmin = !usuarioActual || usuarioActual.rol === "admin";
   const empresaId = empresaActual?.id || "";
+  const municipiosDisponibles = provinciasRD[cliente.provincia] || [];
 
-  const municipiosDisponibles =
-    provinciasRD[cliente.provincia] || [];
-    
-      useEffect(()=>{
+  useEffect(()=>{
     document.body.classList.remove("darkMode","lightMode");
 
     if(tema === "dark"){
@@ -286,8 +275,8 @@ function Dashboard({user}){
   useEffect(()=>{
     cargar();
   },[empresaId]);
-  
-    const clientesVisibles = useMemo(()=>{
+
+  const clientesVisibles = useMemo(()=>{
     if(esAdmin) return clientes;
 
     return clientes.filter(c=>
@@ -358,10 +347,10 @@ function Dashboard({user}){
     const cuotasPendientes = atrasoMoto(m);
     const montoPendiente = cuotasPendientes * Number(m.pagoDiario || 0);
 
-    let estatus = "Al día";
+    let estatus = "Al dÃ­a";
 
     if(cuotasPendientes >= 3){
-      estatus = "Recuperación";
+      estatus = "RecuperaciÃ³n";
     }else if(cuotasPendientes >= 2){
       estatus = "Riesgo alto";
     }else if(cuotasPendientes >= 1){
@@ -447,8 +436,8 @@ function Dashboard({user}){
 
   const deudaPagoSeleccionada =
     motoPagoSeleccionada ? deudaMoto(motoPagoSeleccionada) : null;
-    
-    async function generarIdCliente(pais){
+
+  async function generarIdCliente(pais){
     const code = countryCode(pais);
     const year = currentYear();
     const prefijo = `${code}${year}`;
@@ -520,10 +509,10 @@ function Dashboard({user}){
 
       setCliente({
         idCliente:"",
-        pais:"República Dominicana",
+        pais:"RepÃºblica Dominicana",
         nacionalidad:"Dominicana",
         provincia:"Distrito Nacional",
-        municipio:"Santo Domingo de Guzmán",
+        municipio:"Santo Domingo de GuzmÃ¡n",
         sexo:"Masculino",
         nombre:"",
         cedula:"",
@@ -552,10 +541,10 @@ function Dashboard({user}){
 
     setCliente({
       idCliente:c.idCliente || "",
-      pais:c.pais || "República Dominicana",
+      pais:c.pais || "RepÃºblica Dominicana",
       nacionalidad:c.nacionalidad || "Dominicana",
       provincia:c.provincia || "Distrito Nacional",
-      municipio:c.municipio || "Santo Domingo de Guzmán",
+      municipio:c.municipio || "Santo Domingo de GuzmÃ¡n",
       sexo:c.sexo || "Masculino",
       nombre:c.nombre || "",
       cedula:c.cedula || "",
@@ -580,7 +569,7 @@ function Dashboard({user}){
     }
 
     const confirmar = confirm(
-      "¿Seguro que deseas eliminar este cliente? Las motos asignadas quedarán sin cliente."
+      "Â¿Seguro que deseas eliminar este cliente? Las motos asignadas quedarÃ¡n sin cliente."
     );
 
     if(!confirmar) return;
@@ -619,13 +608,13 @@ function Dashboard({user}){
     try{
       const ubicacion = await getLocation();
       setCliente({...cliente,ubicacion});
-      alert("Ubicación capturada correctamente");
+      alert("UbicaciÃ³n capturada correctamente");
     }catch(e){
-      alert("No se pudo capturar la ubicación: " + e.message);
+      alert("No se pudo capturar la ubicaciÃ³n: " + e.message);
     }
   }
-  
-    async function guardarMoto(){
+
+  async function guardarMoto(){
     if(!esAdmin){
       return alert("Solo el administrador puede crear o editar motos");
     }
@@ -722,7 +711,7 @@ function Dashboard({user}){
       return alert("Solo el administrador puede eliminar motos");
     }
 
-    const confirmar = confirm("¿Seguro que deseas eliminar esta moto?");
+    const confirmar = confirm("Â¿Seguro que deseas eliminar esta moto?");
     if(!confirmar) return;
 
     try{
@@ -746,8 +735,8 @@ function Dashboard({user}){
       console.log(e);
     }
   }
-  
-    async function registrarPago(){
+
+  async function registrarPago(){
     const motoSeleccionada = motosVisibles.find(m=>m.id===pago.motoId);
 
     if(!clientePago){
@@ -793,7 +782,7 @@ function Dashboard({user}){
       metodo:pago.metodo,
       linkPago:pago.linkPago || "",
       estadoPagoDigital:pago.estadoPagoDigital || "No aplica",
-      estatus:pendienteDespues <= 0 ? "Al día" : deuda.estatus,
+      estatus:pendienteDespues <= 0 ? "Al dÃ­a" : deuda.estatus,
       ubicacionCobro,
       url:`${BASE_URL}/validar/${id}`
     };
@@ -820,14 +809,14 @@ function Dashboard({user}){
           empresaId,
           tipo:"admin",
           titulo:"Nuevo ingreso",
-          mensaje:`Se registró un pago de ${money(pago.monto)}`,
+          mensaje:`Se registrÃ³ un pago de ${money(pago.monto)}`,
           clienteId:clientePago.id,
           motoId:motoSeleccionada.id,
           fechaHora:nowDateTime(),
           leida:false
         });
       }catch(e){
-        console.log("No se pudo guardar notificación:", e);
+        console.log("No se pudo guardar notificaciÃ³n:", e);
       }
 
       try{
@@ -888,7 +877,7 @@ function Dashboard({user}){
       return alert("Solo el administrador puede eliminar pagos");
     }
 
-    const confirmar = confirm(`¿Seguro que deseas eliminar el pago ${p.id}?`);
+    const confirmar = confirm(`Â¿Seguro que deseas eliminar el pago ${p.id}?`);
     if(!confirmar) return;
 
     try{
@@ -922,8 +911,8 @@ function Dashboard({user}){
       tipo
     );
   }
-  
-    async function guardarGasto(){
+
+  async function guardarGasto(){
     if(!esAdmin){
       return alert("Solo el administrador puede registrar gastos");
     }
@@ -982,7 +971,7 @@ function Dashboard({user}){
       setGasto({
         motoId:"",
         fecha:today(),
-        categoria:"Reparación",
+        categoria:"ReparaciÃ³n",
         monto:"",
         proveedor:"",
         nota:""
@@ -1003,7 +992,7 @@ function Dashboard({user}){
     setGasto({
       motoId:g.motoId || "",
       fecha:g.fecha || today(),
-      categoria:g.categoria || "Reparación",
+      categoria:g.categoria || "ReparaciÃ³n",
       monto:g.monto || "",
       proveedor:g.proveedor || "",
       nota:g.nota || ""
@@ -1018,7 +1007,7 @@ function Dashboard({user}){
       return alert("Solo el administrador puede eliminar gastos");
     }
 
-    const confirmar = confirm("¿Seguro que deseas eliminar este gasto?");
+    const confirmar = confirm("Â¿Seguro que deseas eliminar este gasto?");
     if(!confirmar) return;
 
     try{
@@ -1103,7 +1092,7 @@ function Dashboard({user}){
       return alert("Solo el administrador puede eliminar adjuntos");
     }
 
-    const confirmar = confirm("¿Seguro que deseas eliminar este adjunto?");
+    const confirmar = confirm("Â¿Seguro que deseas eliminar este adjunto?");
     if(!confirmar) return;
 
     try{
@@ -1129,8 +1118,8 @@ function Dashboard({user}){
       console.log(e);
     }
   }
-  
-    async function guardarUsuario(){
+
+  async function guardarUsuario(){
     if(!esAdmin){
       return alert("Solo el administrador puede gestionar usuarios");
     }
@@ -1174,15 +1163,15 @@ function Dashboard({user}){
 
   async function cambiarPassword(){
     if(!nuevaPassword || nuevaPassword.length < 6){
-      return alert("La contraseña debe tener al menos 6 caracteres");
+      return alert("La contraseÃ±a debe tener al menos 6 caracteres");
     }
 
     try{
       await updatePassword(auth.currentUser,nuevaPassword);
       setNuevaPassword("");
-      alert("Contraseña actualizada");
+      alert("ContraseÃ±a actualizada");
     }catch(e){
-      alert("No se pudo cambiar la contraseña. Vuelve a iniciar sesión e intenta otra vez.");
+      alert("No se pudo cambiar la contraseÃ±a. Vuelve a iniciar sesiÃ³n e intenta otra vez.");
       console.log(e);
     }
   }
@@ -1196,7 +1185,7 @@ function Dashboard({user}){
 
       cargar();
     }catch(e){
-      console.log("No se pudo marcar la notificación:", e);
+      console.log("No se pudo marcar la notificaciÃ³n:", e);
     }
   }
 
@@ -1229,7 +1218,7 @@ function Dashboard({user}){
             <h1>${empresa.nombre}</h1>
             <p>${empresa.telefono || ""}</p>
             <p>${empresa.direccion || ""}</p>
-            <p>RNC/Cédula: ${empresa.rnc || "N/A"}</p>
+            <p>RNC/CÃ©dula: ${empresa.rnc || "N/A"}</p>
           </div>
         </div>
 
@@ -1259,27 +1248,27 @@ function Dashboard({user}){
           </div>
 
           <div class="infoBlock">
-            <span class="label">Cédula / Pasaporte</span>
+            <span class="label">CÃ©dula / Pasaporte</span>
             <span class="value">${c.cedula || ""}</span>
           </div>
 
           <div class="infoBlock">
-            <span class="label">Teléfono</span>
+            <span class="label">TelÃ©fono</span>
             <span class="value">${c.telefono || ""}</span>
           </div>
 
           <div class="infoBlock">
-            <span class="label">Dirección</span>
+            <span class="label">DirecciÃ³n</span>
             <span class="value">${c.direccion || ""}</span>
           </div>
 
           <div class="infoBlock">
             <span class="label">Motocicleta</span>
-            <span class="value">${m.placa} · ${m.marca || ""} ${m.modelo || ""}</span>
+            <span class="value">${m.placa} Â· ${m.marca || ""} ${m.modelo || ""}</span>
           </div>
 
           <div class="infoBlock">
-            <span class="label">Año</span>
+            <span class="label">AÃ±o</span>
             <span class="value">${m.anio || ""}</span>
           </div>
 
@@ -1294,7 +1283,7 @@ function Dashboard({user}){
           </div>
 
           <div class="infoBlock amountBlock">
-            <span class="label">Depósito</span>
+            <span class="label">DepÃ³sito</span>
             <span class="amount">${money(m.deposito)}</span>
           </div>
         </div>
@@ -1304,10 +1293,10 @@ function Dashboard({user}){
 
           <ol>
             <li>El pago es diario, exceptuando los domingos.</li>
-            <li>Al acumular tres cuotas vencidas, el contrato podrá ser cancelado.</li>
-            <li>El arrendador podrá recuperar la motocicleta por las vías legales correspondientes.</li>
-            <li>El arrendatario asume multas, accidentes, daños, uso indebido y cualquier responsabilidad derivada del uso de la motocicleta.</li>
-            <li>Queda prohibido prestar, ceder, subarrendar o usar la motocicleta en actividades ilícitas.</li>
+            <li>Al acumular tres cuotas vencidas, el contrato podrÃ¡ ser cancelado.</li>
+            <li>El arrendador podrÃ¡ recuperar la motocicleta por las vÃ­as legales correspondientes.</li>
+            <li>El arrendatario asume multas, accidentes, daÃ±os, uso indebido y cualquier responsabilidad derivada del uso de la motocicleta.</li>
+            <li>Queda prohibido prestar, ceder, subarrendar o usar la motocicleta en actividades ilÃ­citas.</li>
           </ol>
 
           <p>${empresa.notas || ""}</p>
@@ -1326,7 +1315,7 @@ function Dashboard({user}){
         </div>
 
         <div class="pdfFooter">
-          <p>Documento generado automáticamente por ${empresa.nombre}</p>
+          <p>Documento generado automÃ¡ticamente por ${empresa.nombre}</p>
         </div>
       </div>
     `;
@@ -1345,8 +1334,8 @@ function Dashboard({user}){
       </div>
     );
   }
-  
-    return (
+
+  return (
     <div className="premiumShell">
       <TopBar
         user={user}
@@ -1592,8 +1581,7 @@ function App(){
 }
 
 createRoot(document.getElementById("root")).render(
-    <EmpresaProvider>
-      <App/>
-    </EmpresaProvider>
-  );
-}
+  <EmpresaProvider>
+    <App/>
+  </EmpresaProvider>
+);
