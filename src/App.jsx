@@ -1,3 +1,4 @@
+import Reportes from "./components/Reportes";
 import Auditoria from "./components/Auditoria";
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -1282,6 +1283,18 @@ function Dashboard({user}){
             <Auditoria
               esAdmin={esAdmin}
               auditLogs={auditLogs}
+            />
+          )}
+          
+          {tab==="reportes" && (
+            <Reportes
+              esAdmin={esAdmin}
+              pagos={pagos}
+              gastos={gastos}
+              motos={motos}
+              clientes={clientes}
+              usuarios={usuarios}
+              empresa={empresa}
             />
           )}
         </main>
