@@ -295,10 +295,14 @@ textarea:focus{
 
 .actionRow{
   display:flex;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:10px;
-  margin-top:14px;
+  flex-direction:column;
+  gap:14px;
+  margin-top:18px;
+  width:100%;
+}
+
+.actionRow .iconTextBtn{
+  width:100%;
 }
 
 .topBar{
