@@ -470,10 +470,32 @@ function Dashboard({user}){
     try{
       if(editMoto){
         await updateDoc(doc(db,"motos",editMoto),datos);
+       
+        await registrarAuditoria({
+          accion:"editar",
+          modulo:"motos",
+          descripcion:`Moto actualizada: ${datos.placa}`,
+          usuario:usuarioActual,
+          extra:{
+            motoId:editMoto,
+            placa:datos.placa
+          }
+        });
         alert("Moto actualizada correctamente");
         setEditMoto(null);
       }else{
         await addDoc(collection(db,"motos"),datos);
+       
+        await registrarAuditoria({
+          accion:"crear",
+          modulo:"motos",
+          descripcion:`Moto creada: ${datos.placa}`,
+          usuario:usuarioActual,
+          extra:{
+            placa:datos.placa,
+            clienteId:datos.clienteId || ""
+          }
+        });
         alert("Moto creada correctamente");
       }
 
@@ -523,6 +545,16 @@ function Dashboard({user}){
 
     try{
       await deleteDoc(doc(db,"motos",id));
+      
+      await registrarAuditoria({
+        accion:"eliminar",
+        modulo:"motos",
+        descripcion:"Moto eliminada",
+        usuario:usuarioActual,
+        extra:{
+          motoId:id
+        }
+      });
       alert("Moto eliminada correctamente");
       cargar();
     }catch(e){
@@ -635,7 +667,19 @@ function Dashboard({user}){
         linkPago:"",
         estadoPagoDigital:"No aplica"
       });
-
+      
+      await registrarAuditoria({
+        accion:"crear",
+        modulo:"pagos",
+        descripcion:`Pago registrado: ${comprobante.id}`,
+        usuario:usuarioActual,
+        extra:{
+          comprobanteId:comprobante.id,
+          cliente:comprobante.cliente,
+          moto:comprobante.moto,
+          monto:comprobante.monto
+        }
+      });
       alert("Pago registrado correctamente");
       cargar();
     }catch(e){
@@ -652,6 +696,18 @@ function Dashboard({user}){
 
     try{
       await deleteDoc(doc(db,"pagos",p.docId));
+      
+      await registrarAuditoria({
+        accion:"eliminar",
+        modulo:"pagos",
+        descripcion:`Pago eliminado: ${p.id}`,
+        usuario:usuarioActual,
+        extra:{
+          comprobanteId:p.id,
+          monto:p.monto,
+          cliente:p.cliente
+        }
+      });
       alert("Pago eliminado correctamente");
       cargar();
     }catch(e){
