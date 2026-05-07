@@ -21,7 +21,7 @@ export const navItems = [
   {id:"pagos", label:"Pagos", icon:CreditCard, admin:false},
   {id:"gastos", label:"Gastos", icon:Wallet, admin:true},
   {id:"morosidad", label:"Morosidad", icon:AlertTriangle, admin:false},
-  {id:"reportes", label:"Reportes", icon:BarChart3, admin:false},
+  {id:"reportes", label:"Reportes", icon:BarChart3, admin:true},
   {id:"ranking", label:"Ranking", icon:Trophy, admin:false},
   {id:"adjuntos", label:"Adjuntos", icon:Paperclip, admin:true},
   {id:"pagosDigitales", label:"Pagos digitales", icon:ShieldCheck, admin:true},
