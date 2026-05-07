@@ -9,6 +9,18 @@ import {
   Users
 } from "lucide-react";
 
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid
+} from "recharts";
+
 import { money } from "../utils/helpers";
 
 export default function Inicio({
@@ -44,6 +56,48 @@ export default function Inicio({
     ? ((motosMorosas.length / motosVisibles.length) * 100).toFixed(1)
     : 0;
 
+    const resumenMensual = [
+    {
+      mes:"Ene",
+      ingresos:120000,
+      gastos:40000
+    },
+    {
+      mes:"Feb",
+      ingresos:180000,
+      gastos:70000
+    },
+    {
+      mes:"Mar",
+      ingresos:240000,
+      gastos:90000
+    },
+    {
+      mes:"Abr",
+      ingresos:210000,
+      gastos:85000
+    },
+    {
+      mes:"May",
+      ingresos:290000,
+      gastos:110000
+    },
+    {
+      mes:"Jun",
+      ingresos:340000,
+      gastos:120000
+    }
+  ];
+
+  const tendenciaPagos = [
+    {dia:"Lun", pagos:12},
+    {dia:"Mar", pagos:18},
+    {dia:"Mié", pagos:15},
+    {dia:"Jue", pagos:22},
+    {dia:"Vie", pagos:28},
+    {dia:"Sáb", pagos:20}
+  ];
+  
   return (
     <div className="mainDashboard">
 
@@ -358,6 +412,59 @@ export default function Inicio({
               </div>
             </div>
           </div>
+        </div>
+
+      </section>
+      
+            <section className="dashboardGrid">
+
+        <div className="card executiveCard">
+          <div className="sectionHeader">
+            <div>
+              <p className="muted">Finanzas</p>
+              <h2>Ingresos vs gastos</h2>
+            </div>
+
+            <TrendingUp size={26}/>
+          </div>
+
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={resumenMensual}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="mes" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="ingresos" radius={[12,12,0,0]} fill="#ff6600" />
+              <Bar dataKey="gastos" radius={[12,12,0,0]} fill="#dc2626" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="card executiveCard">
+          <div className="sectionHeader">
+            <div>
+              <p className="muted">Cobranza</p>
+              <h2>Tendencia de pagos</h2>
+            </div>
+
+            <Activity size={26}/>
+          </div>
+
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart data={tendenciaPagos}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="dia" />
+              <YAxis />
+              <Tooltip />
+              <Line
+                type="monotone"
+                dataKey="pagos"
+                stroke="#ff6600"
+                strokeWidth={4}
+                dot={{ r:5 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
 
       </section>
