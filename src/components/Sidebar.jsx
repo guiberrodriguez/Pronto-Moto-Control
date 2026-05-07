@@ -10,7 +10,7 @@ import {
   Trophy,
   Paperclip,
   Building2,
-  ShieldCheck
+  ShieldCheck,
   BarChart3
 } from "lucide-react";
 
