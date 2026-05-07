@@ -48,6 +48,8 @@ import {
   getLocation
 } from "./utils/helpers";
 
+import { registrarAuditoria } from "./utils/audit";
+
 import {
   abrirImpresion,
   comprobanteHtml
