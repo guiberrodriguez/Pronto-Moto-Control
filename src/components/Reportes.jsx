@@ -1,3 +1,4 @@
+import { exportarExcelPRO } from "../utils/excel";
 import React, { useMemo } from "react";
 import { FileText, Printer } from "lucide-react";
 import { money, today } from "../utils/helpers";
@@ -183,6 +184,21 @@ export default function Reportes({
           label="Imprimir cierre diario PDF"
           onClick={imprimirReporteDiario}
         />
+        
+          <IconTextButton
+            icon={FileText}
+            label="Exportar Excel PRO"
+            onClick={()=>
+              exportarExcelPRO({
+                pagos,
+                gastos,
+                motos,
+                clientes,
+                usuarios,
+                empresa
+              })
+            }
+          />
       </div>
 
       <h3>Resumen de hoy</h3>
