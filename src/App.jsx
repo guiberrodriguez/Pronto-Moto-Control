@@ -1,3 +1,4 @@
+import Auditoria from "./components/Auditoria";
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -64,6 +65,7 @@ function Dashboard({user}){
   const [motos,setMotos]=useState([]);
   const [pagos,setPagos]=useState([]);
   const [gastos,setGastos]=useState([]);
+  const [auditLogs,setAuditLogs]=useState([]);
   const [adjuntos,setAdjuntos]=useState([]);
   const [usuarios,setUsuarios]=useState([]);
   const [notificaciones,setNotificaciones]=useState([]);
@@ -175,6 +177,7 @@ function Dashboard({user}){
     const m=await getDocs(collection(db,"motos"));
     const p=await getDocs(collection(db,"pagos"));
     const g=await getDocs(collection(db,"gastos"));
+    const al=await getDocs(collection(db,"auditLogs"));
     const a=await getDocs(collection(db,"adjuntos"));
     const u=await getDocs(collection(db,"usuarios"));
     const n=await getDocs(collection(db,"notificaciones"));
@@ -195,6 +198,7 @@ function Dashboard({user}){
     setMotos(m.docs.map(d=>({id:d.id,...d.data()})));
     setPagos(p.docs.map(d=>({docId:d.id,...d.data()})));
     setGastos(g.docs.map(d=>({id:d.id,...d.data()})));
+    setAuditLogs(al.docs.map(d=>({id:d.id,...d.data()})));
     setAdjuntos(a.docs.map(d=>({id:d.id,...d.data()})));
     setNotificaciones(n.docs.map(d=>({id:d.id,...d.data()})));
     setPagosDigitales(pd.docs.map(d=>({id:d.id,...d.data()})));
