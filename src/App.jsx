@@ -647,3 +647,210 @@ function Dashboard({user}){
       console.log(e);
     }
   }
+  
+    async function registrarPago(){
+    const motoSeleccionada=motosVisibles.find(m=>m.id===pago.motoId);
+
+    if(!clientePago) return alert("Selecciona un cliente");
+    if(!motoSeleccionada) return alert("Selecciona una moto del cliente");
+
+    const deuda=deudaMoto(motoSeleccionada);
+    const montoPagado=Number(pago.monto || 0);
+    const pendienteDespues=Math.max(0, deuda.montoPendiente - montoPagado);
+    const id=receiptId(pagos.length);
+
+    let ubicacionCobro=null;
+
+    try{
+      ubicacionCobro=await getLocation();
+    }catch(e){
+      ubicacionCobro=null;
+    }
+
+    const comprobante={
+      empresaId,
+
+      id,
+      fecha:today(),
+      fechaHora:nowDateTime(),
+
+      clienteId:clientePago.id,
+      idCliente:clientePago.idCliente || "",
+      cliente:clientePago.nombre || "",
+      cedula:clientePago.cedula || "",
+      telefono:clientePago.telefono || "",
+
+      cobradorId:usuarioActual?.uid || usuarioActual?.id || "",
+      cobrador:usuarioActual?.nombre || user.email || "",
+
+      motoId:motoSeleccionada.id,
+
+      moto:`${motoSeleccionada.placa} ${motoSeleccionada.marca||""} ${motoSeleccionada.modelo||""}`,
+
+      cuotaDiaria:Number(motoSeleccionada.pagoDiario || 0),
+
+      cuotasPendientes:deuda.cuotasPendientes,
+      montoPendienteAntes:deuda.montoPendiente,
+
+      monto:Number(pago.monto || 0),
+
+      montoPendienteDespues:pendienteDespues,
+
+      metodo:pago.metodo,
+
+      linkPago:pago.linkPago || "",
+
+      estadoPagoDigital:pago.estadoPagoDigital || "No aplica",
+
+      estatus:pendienteDespues <= 0
+        ? "Al día"
+        : deuda.estatus,
+
+      ubicacionCobro,
+
+      url:`${BASE_URL}/validar/${id}`
+    };
+
+    try{
+      await addDoc(collection(db,"pagos"),comprobante);
+
+      try{
+        if(clientePago?.cobradorId){
+          await addDoc(collection(db,"notificaciones"),{
+            empresaId,
+
+            tipo:"cobrador",
+
+            titulo:"Cobro realizado",
+
+            mensaje:`Pago recibido de ${clientePago.nombre}`,
+
+            usuarioId:clientePago.cobradorId,
+
+            clienteId:clientePago.id,
+            motoId:motoSeleccionada.id,
+
+            fechaHora:nowDateTime(),
+
+            leida:false
+          });
+        }
+
+        await addDoc(collection(db,"notificaciones"),{
+          empresaId,
+
+          tipo:"admin",
+
+          titulo:"Nuevo ingreso",
+
+          mensaje:`Se registró un pago de ${money(pago.monto)}`,
+
+          clienteId:clientePago.id,
+          motoId:motoSeleccionada.id,
+
+          fechaHora:nowDateTime(),
+
+          leida:false
+        });
+      }catch(e){
+        console.log("No se pudo guardar notificación:", e);
+      }
+
+      try{
+        if(metodosDigitales.includes(pago.metodo)){
+          await addDoc(collection(db,"pagosDigitales"),{
+            empresaId,
+
+            comprobanteId:id,
+
+            clienteId:clientePago.id,
+            cliente:clientePago.nombre || "",
+
+            motoId:motoSeleccionada.id,
+            moto:motoSeleccionada.placa || "",
+
+            monto:Number(pago.monto || 0),
+
+            pasarela:pago.metodo,
+
+            linkPago:pago.linkPago || "",
+
+            estado:pago.estadoPagoDigital || "Pendiente",
+
+            fecha:today(),
+            fechaHora:nowDateTime()
+          });
+        }
+      }catch(e){
+        console.log("No se pudo registrar pago digital:", e);
+      }
+
+      await registrarAuditoria({
+        accion:"crear",
+        modulo:"pagos",
+        descripcion:`Pago registrado: ${comprobante.id}`,
+        usuario:usuarioActual,
+        extra:{
+          empresaId,
+          comprobanteId:comprobante.id,
+          cliente:comprobante.cliente,
+          moto:comprobante.moto,
+          monto:comprobante.monto
+        }
+      });
+
+      setUltimo(comprobante);
+
+      setPago({
+        motoId:"",
+        monto:"400",
+        metodo:"Efectivo",
+        linkPago:"",
+        estadoPagoDigital:"No aplica"
+      });
+
+      alert("Pago registrado correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo registrar el pago");
+      console.log(e);
+    }
+  }
+
+  async function eliminarPago(p){
+    if(!esAdmin) return alert("Solo el administrador puede eliminar pagos");
+
+    const confirmar = confirm(`¿Seguro que deseas eliminar el pago ${p.id}?`);
+    if(!confirmar) return;
+
+    try{
+      await deleteDoc(doc(db,"pagos",p.docId));
+
+      await registrarAuditoria({
+        accion:"eliminar",
+        modulo:"pagos",
+        descripcion:`Pago eliminado: ${p.id}`,
+        usuario:usuarioActual,
+        extra:{
+          empresaId,
+          comprobanteId:p.id,
+          monto:p.monto,
+          cliente:p.cliente
+        }
+      });
+
+      alert("Pago eliminado correctamente");
+      cargar();
+    }catch(e){
+      alert("No se pudo eliminar el pago");
+      console.log(e);
+    }
+  }
+
+  function imprimirComprobante(p,tipo="normal"){
+    abrirImpresion(
+      "Comprobante "+p.id,
+      comprobanteHtml(p,empresa,tipo),
+      tipo
+    );
+  }
