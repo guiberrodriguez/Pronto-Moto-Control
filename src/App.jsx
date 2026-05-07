@@ -326,6 +326,17 @@ function Dashboard({user}){
     try{
       if(editCliente){
         await updateDoc(doc(db,"clientes",editCliente),clienteFinal);
+       
+        await registrarAuditoria({
+          accion:"editar",
+          modulo:"clientes",
+          descripcion:`Cliente actualizado: ${clienteFinal.nombre}`,
+          usuario:usuarioActual,
+          extra:{
+            clienteId:editCliente,
+            clienteNombre:clienteFinal.nombre
+          }
+        });
         alert("Cliente actualizado correctamente");
         setEditCliente(null);
       }else{
@@ -333,6 +344,17 @@ function Dashboard({user}){
         await addDoc(collection(db,"clientes"),{
           ...clienteFinal,
           idCliente:nuevoId
+        });
+        
+        await registrarAuditoria({
+          accion:"crear",
+          modulo:"clientes",
+          descripcion:`Cliente creado: ${clienteFinal.nombre}`,
+          usuario:usuarioActual,
+          extra:{
+            clienteNombre:clienteFinal.nombre,
+            clientePais:clienteFinal.pais
+          }
         });
         alert("Cliente creado correctamente");
       }
@@ -407,7 +429,16 @@ function Dashboard({user}){
           estado:"Disponible"
         });
       }
-
+      
+      await registrarAuditoria({
+        accion:"eliminar",
+        modulo:"clientes",
+        descripcion:`Cliente eliminado`,
+        usuario:usuarioActual,
+        extra:{
+          clienteId:id
+        }
+      });
       alert("Cliente eliminado correctamente");
       cargar();
     }catch(e){
