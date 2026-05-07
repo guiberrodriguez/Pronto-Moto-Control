@@ -1444,3 +1444,27 @@ textarea:focus{
     min-height:50px;
   }
 }
+
+.actionRow{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:16px !important;
+  margin-top:20px !important;
+  width:100% !important;
+}
+
+.actionRow > *{
+  width:100% !important;
+  margin-bottom:0 !important;
+}
+
+.actionRow .iconTextBtn,
+.actionRow button{
+  width:100% !important;
+  margin:0 !important;
+}
+
+.actionRow .iconTextBtn + .iconTextBtn,
+.actionRow button + button{
+  margin-top:14px !important;
+}
