@@ -1,3 +1,5 @@
+import SelectorEmpresa from "./components/SelectorEmpresa";
+import { useEmpresa } from "./context/EmpresaContext";
 import { EmpresaProvider } from "./context/EmpresaContext";
 import CajaDiaria from "./components/CajaDiaria";
 import KPIs from "./components/KPIs";
@@ -61,6 +63,9 @@ import {
 } from "./utils/print";
 
 function Dashboard({user}){
+  
+  const { empresaActual, setEmpresaActual } = useEmpresa();
+  
   const [tab,setTab]=useState("inicio");
   const [menuAbierto,setMenuAbierto]=useState(false);
   const [tema,setTema]=useState(localStorage.getItem("tema") || "light");
@@ -69,6 +74,7 @@ function Dashboard({user}){
   const [motos,setMotos]=useState([]);
   const [pagos,setPagos]=useState([]);
   const [gastos,setGastos]=useState([]);
+  const [empresas,setEmpresas]=useState([]);
   const [auditLogs,setAuditLogs]=useState([]);
   const [adjuntos,setAdjuntos]=useState([]);
   const [usuarios,setUsuarios]=useState([]);
@@ -183,6 +189,7 @@ function Dashboard({user}){
     const g=await getDocs(collection(db,"gastos"));
     const al=await getDocs(collection(db,"auditLogs"));
     const a=await getDocs(collection(db,"adjuntos"));
+    const emp=await getDocs(collection(db,"empresas"));
     const u=await getDocs(collection(db,"usuarios"));
     const n=await getDocs(collection(db,"notificaciones"));
     const pd=await getDocs(collection(db,"pagosDigitales"));
@@ -202,6 +209,7 @@ function Dashboard({user}){
     setMotos(m.docs.map(d=>({id:d.id,...d.data()})));
     setPagos(p.docs.map(d=>({docId:d.id,...d.data()})));
     setGastos(g.docs.map(d=>({id:d.id,...d.data()})));
+    setEmpresas(emp.docs.map(d=>({id:d.id,...d.data()})));
     setAuditLogs(al.docs.map(d=>({id:d.id,...d.data()})));
     setAdjuntos(a.docs.map(d=>({id:d.id,...d.data()})));
     setNotificaciones(n.docs.map(d=>({id:d.id,...d.data()})));
@@ -1092,7 +1100,19 @@ function Dashboard({user}){
 
     abrirImpresion("Contrato "+m.placa,html,"normal");
   }
-  
+    
+    if(esAdmin && !empresaActual){
+  return (
+    <div className="premiumShell">
+      <SelectorEmpresa
+        empresas={empresas}
+        empresaActual={empresaActual}
+        setEmpresaActual={setEmpresaActual}
+      />
+    </div>
+  );
+}
+    
     return (
     <div className="premiumShell">
       <TopBar
