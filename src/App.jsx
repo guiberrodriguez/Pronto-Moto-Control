@@ -1251,3 +1251,254 @@ function Dashboard({user}){
       </div>
     );
   }
+  
+    return (
+    <div className="premiumShell">
+      <TopBar
+        user={user}
+        usuarioActual={usuarioActual}
+        tema={tema}
+        toggleTema={toggleTema}
+        cargar={cargar}
+        setTab={setTab}
+        menuAbierto={menuAbierto}
+        setMenuAbierto={setMenuAbierto}
+        esAdmin={esAdmin}
+      />
+
+      <div className="premiumLayout">
+        <Sidebar tab={tab} setTab={setTab} esAdmin={esAdmin}/>
+
+        <main className="mainPanel">
+          <MobileTabs tab={tab} setTab={setTab} esAdmin={esAdmin}/>
+
+          {tab==="inicio" && (
+            <Inicio
+              esAdmin={esAdmin}
+              totalIngresos={totalIngresos}
+              totalGastos={totalGastos}
+              neto={neto}
+              motosVisibles={motosVisibles}
+              clientesVisibles={clientesVisibles}
+              motosMorosas={motosMorosas}
+              pagosVisibles={pagosVisibles}
+              clientes={clientes}
+              deudaMoto={deudaMoto}
+            />
+          )}
+
+          {tab==="clientes" && (
+            <>
+              <Clientes
+                esAdmin={esAdmin}
+                cliente={cliente}
+                setCliente={setCliente}
+                editCliente={editCliente}
+                usuarios={usuarios}
+                clientesFiltrados={clientesFiltrados}
+                busquedaCliente={busquedaCliente}
+                setBusquedaCliente={setBusquedaCliente}
+                municipiosDisponibles={municipiosDisponibles}
+                guardarCliente={guardarCliente}
+                capturarUbicacionCliente={capturarUbicacionCliente}
+                editarCliente={editarCliente}
+                eliminarCliente={eliminarCliente}
+                setClienteVista={setClienteVista}
+              />
+
+              <ClientePerfil
+                clienteVista={clienteVista}
+                setClienteVista={setClienteVista}
+                motos={motos}
+                pagos={pagos}
+                adjuntos={adjuntos}
+              />
+            </>
+          )}
+
+          {tab==="motos" && (
+            <Motos
+              esAdmin={esAdmin}
+              moto={moto}
+              setMoto={setMoto}
+              editMoto={editMoto}
+              clientes={clientes}
+              motosVisibles={motosVisibles}
+              guardarMoto={guardarMoto}
+              editarMoto={editarMoto}
+              eliminarMoto={eliminarMoto}
+              imprimirContrato={imprimirContrato}
+              deudaMoto={deudaMoto}
+              ingresosPorMoto={ingresosPorMoto}
+              gastosPorMoto={gastosPorMoto}
+            />
+          )}
+
+          {tab==="pagos" && (
+            <Pagos
+              esAdmin={esAdmin}
+              pago={pago}
+              setPago={setPago}
+              clientePagoId={clientePagoId}
+              setClientePagoId={setClientePagoId}
+              busquedaClientePago={busquedaClientePago}
+              setBusquedaClientePago={setBusquedaClientePago}
+              clientesPagoFiltrados={clientesPagoFiltrados}
+              clientePago={clientePago}
+              motosClientePago={motosClientePago}
+              motoPagoSeleccionada={motoPagoSeleccionada}
+              deudaPagoSeleccionada={deudaPagoSeleccionada}
+              papelComprobante={papelComprobante}
+              setPapelComprobante={setPapelComprobante}
+              registrarPago={registrarPago}
+              ultimo={ultimo}
+              clientes={clientes}
+              pagosVisibles={pagosVisibles}
+              imprimirComprobante={imprimirComprobante}
+              eliminarPago={eliminarPago}
+              mensajeWhatsAppPago={mensajeWhatsAppPago}
+            />
+          )}
+
+          {tab==="gastos" && (
+            <Gastos
+              esAdmin={esAdmin}
+              gasto={gasto}
+              setGasto={setGasto}
+              editGasto={editGasto}
+              motos={motos}
+              gastos={gastos}
+              guardarGasto={guardarGasto}
+              editarGasto={editarGasto}
+              eliminarGasto={eliminarGasto}
+            />
+          )}
+
+          {tab==="morosidad" && (
+            <Morosidad
+              motosMorosas={motosMorosas}
+              clientes={clientes}
+              deudaMoto={deudaMoto}
+              mensajeWhatsAppMora={mensajeWhatsAppMora}
+            />
+          )}
+
+          {tab==="ranking" && (
+            <Ranking
+              rankingMotos={rankingMotos}
+              ingresosPorMoto={ingresosPorMoto}
+              gastosPorMoto={gastosPorMoto}
+            />
+          )}
+
+          {tab==="adjuntos" && (
+            <Adjuntos
+              esAdmin={esAdmin}
+              clienteAdjunto={clienteAdjunto}
+              setClienteAdjunto={setClienteAdjunto}
+              archivo={archivo}
+              setArchivo={setArchivo}
+              clientes={clientes}
+              adjuntos={adjuntos}
+              subirAdjunto={subirAdjunto}
+              eliminarAdjunto={eliminarAdjunto}
+            />
+          )}
+
+          {tab==="configuracion" && (
+            <Configuracion
+              esAdmin={esAdmin}
+              nuevaPassword={nuevaPassword}
+              setNuevaPassword={setNuevaPassword}
+              cambiarPassword={cambiarPassword}
+              usuarioForm={usuarioForm}
+              setUsuarioForm={setUsuarioForm}
+              guardarUsuario={guardarUsuario}
+              usuarios={usuarios}
+            />
+          )}
+
+          {tab==="empresa" && (
+            <Empresa
+              esAdmin={esAdmin}
+              empresa={empresa}
+              setEmpresa={setEmpresa}
+            />
+          )}
+
+          {tab==="pagosDigitales" && (
+            <PagosDigitales
+              esAdmin={esAdmin}
+              pagosDigitales={pagosDigitales}
+            />
+          )}
+
+          {tab==="notificaciones" && (
+            <Notificaciones
+              esAdmin={esAdmin}
+              notificaciones={notificaciones}
+              marcarNotificacionLeida={marcarNotificacionLeida}
+            />
+          )}
+
+          {tab==="auditoria" && (
+            <Auditoria
+              esAdmin={esAdmin}
+              auditLogs={auditLogs}
+            />
+          )}
+
+          {tab==="reportes" && (
+            <Reportes
+              esAdmin={esAdmin}
+              pagos={pagos}
+              gastos={gastos}
+              motos={motos}
+              clientes={clientes}
+              usuarios={usuarios}
+              empresa={empresa}
+            />
+          )}
+
+          {tab==="kpis" && (
+            <KPIs
+              esAdmin={esAdmin}
+              pagos={pagos}
+              gastos={gastos}
+              motos={motos}
+              clientes={clientes}
+              usuarios={usuarios}
+            />
+          )}
+
+          {tab==="caja" && (
+            <CajaDiaria
+              esAdmin={esAdmin}
+              pagos={pagos}
+              gastos={gastos}
+              empresa={empresa}
+            />
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function App(){
+  const [user,setUser]=useState(null);
+  const path=window.location.pathname;
+
+  useEffect(()=>onAuthStateChanged(auth,setUser),[]);
+
+  if(path.startsWith("/validar/")) return <ValidarComprobante/>;
+  if(!user) return <Login/>;
+
+  return <Dashboard user={user}/>;
+}
+
+createRoot(document.getElementById("root")).render(
+  <EmpresaProvider>
+    <App/>
+  </EmpresaProvider>
+);
