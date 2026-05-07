@@ -1468,3 +1468,155 @@ textarea:focus{
 .actionRow button + button{
   margin-top:14px !important;
 }
+
+.mainDashboard{
+  display:flex;
+  flex-direction:column;
+  gap:22px;
+}
+
+.dashboardGrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:22px;
+}
+
+.executiveCard{
+  min-height:260px;
+}
+
+.fleetStats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+
+.fleetStats div,
+.summaryTile{
+  background:var(--cardSoft);
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:18px;
+}
+
+.fleetStats span,
+.summaryTile span{
+  display:block;
+  color:var(--textSoft);
+  font-size:13px;
+  font-weight:850;
+  margin-bottom:8px;
+}
+
+.fleetStats b,
+.summaryTile b{
+  font-size:28px;
+  letter-spacing:-.04em;
+}
+
+.progressWrap{
+  margin-top:24px;
+}
+
+.progressInfo,
+.financeLabel{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:10px;
+  font-weight:850;
+}
+
+.progressBar,
+.financeTrack{
+  height:12px;
+  background:var(--border);
+  border-radius:999px;
+  overflow:hidden;
+}
+
+.progressFill,
+.financeFill{
+  height:100%;
+  border-radius:999px;
+}
+
+.progressFill{
+  background:linear-gradient(135deg,var(--primary),#ff8c2f);
+}
+
+.incomeFill{
+  background:var(--success);
+}
+
+.expenseFill{
+  background:var(--danger);
+}
+
+.netFill{
+  background:var(--primary);
+}
+
+.financeBars{
+  display:flex;
+  flex-direction:column;
+  gap:22px;
+}
+
+.riskItem{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  padding:14px 0;
+  border-bottom:1px solid var(--border);
+}
+
+.riskItem:last-child{
+  border-bottom:0;
+}
+
+.riskItem p{
+  margin:4px 0 0;
+  color:var(--textSoft);
+  font-weight:700;
+}
+
+.riskItem span{
+  display:block;
+  color:var(--danger);
+  font-size:12px;
+  font-weight:900;
+  text-align:right;
+}
+
+.riskItem strong{
+  display:block;
+  margin-top:4px;
+  font-size:15px;
+  text-align:right;
+}
+
+.executiveSummaryGrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+}
+
+.dangerTile b{
+  color:var(--danger);
+}
+
+.successTile b{
+  color:var(--success);
+}
+
+@media(max-width:900px){
+  .dashboardGrid,
+  .executiveSummaryGrid{
+    grid-template-columns:1fr;
+  }
+
+  .fleetStats{
+    grid-template-columns:1fr;
+  }
+}
