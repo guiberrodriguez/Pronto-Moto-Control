@@ -1,3 +1,4 @@
+import CajaDiaria from "./components/CajaDiaria";
 import KPIs from "./components/KPIs";
 import Reportes from "./components/Reportes";
 import Auditoria from "./components/Auditoria";
@@ -1307,6 +1308,15 @@ function Dashboard({user}){
               motos={motos}
               clientes={clientes}
               usuarios={usuarios}
+            />
+          )}
+          
+          {tab==="caja" && (
+            <CajaDiaria
+              esAdmin={esAdmin}
+              pagos={pagos}
+              gastos={gastos}
+              empresa={empresa}
             />
           )}
         </main>
