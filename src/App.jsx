@@ -1344,7 +1344,6 @@ function Dashboard({user}){
         />
       </div>
     );
-  }
   
     return (
     <div className="premiumShell">
