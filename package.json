@@ -5,13 +5,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "vite": "latest",
+    "firebase": "latest",
+    "lucide-react": "^0.400.0",
+    "qrcode.react": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "firebase": "latest",
-    "qrcode.react": "latest",
-    "lucide-react": "^0.400.0",
-    "recharts": "latest"
-  },
-  "devDependencies": {}
+    "recharts": "latest",
+    "vite": "latest",
+    "xlsx": "^0.18.5"
+  }
 }
