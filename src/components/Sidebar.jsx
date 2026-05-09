@@ -1,73 +1,104 @@
-import { FileSearch } from "lucide-react";
-import React from "react";
 import {
   Home,
   Users,
   Bike,
-  CreditCard,
   Wallet,
+  Receipt,
   AlertTriangle,
   Trophy,
   Paperclip,
+  CreditCard,
+  Bell,
+  ClipboardList,
   Building2,
-  ShieldCheck,
   BarChart3,
-  Gauge,
-  Banknote
+  Activity,
+  CalendarDays,
+  Settings,
 } from "lucide-react";
 
-export const navItems = [
-  {id:"inicio", label:"Inicio", icon:Home, admin:false},
-  {id:"clientes", label:"Clientes", icon:Users, admin:false},
-  {id:"motos", label:"Motos", icon:Bike, admin:false},
-  {id:"pagos", label:"Pagos", icon:CreditCard, admin:false},
-  {id:"gastos", label:"Gastos", icon:Wallet, admin:true},
-  {id:"morosidad", label:"Morosidad", icon:AlertTriangle, admin:false},
-  {id:"reportes", label:"Reportes", icon:BarChart3, admin:true},
-  {id:"kpis", label:"KPIs", icon:Gauge, admin:true},
-  {id:"caja", label:"Caja", icon:Banknote, admin:true},
-  {id:"ranking", label:"Ranking", icon:Trophy, admin:false},
-  {id:"adjuntos", label:"Adjuntos", icon:Paperclip, admin:true},
-  {id:"pagosDigitales", label:"Pagos digitales", icon:ShieldCheck, admin:true},
-  {id:"auditoria", label:"Auditoría", icon:FileSearch, admin:true},
-  {id:"empresa", label:"Empresa", icon:Building2, admin:true}
+const menuAdmin = [
+  { id: "inicio", label: "Inicio", icon: Home },
+  { id: "clientes", label: "Clientes", icon: Users },
+  { id: "motos", label: "Motos", icon: Bike },
+  { id: "pagos", label: "Pagos", icon: Wallet },
+  { id: "gastos", label: "Gastos", icon: Receipt },
+  { id: "morosidad", label: "Morosidad", icon: AlertTriangle },
+  { id: "reportes", label: "Reportes", icon: BarChart3 },
+  { id: "kpis", label: "KPIs", icon: Activity },
+  { id: "caja", label: "Caja", icon: CalendarDays },
+  { id: "ranking", label: "Ranking", icon: Trophy },
+  { id: "adjuntos", label: "Adjuntos", icon: Paperclip },
+  { id: "pagosDigitales", label: "Pagos digitales", icon: CreditCard },
+  { id: "notificaciones", label: "Notificaciones", icon: Bell },
+  { id: "auditoria", label: "Auditoría", icon: ClipboardList },
+  { id: "empresa", label: "Empresa", icon: Building2 },
+  { id: "configuracion", label: "Configuración", icon: Settings },
 ];
 
-export default function Sidebar({tab,setTab,esAdmin}){
-  return (
-    <aside className="sideNav">
-      {navItems.filter(item=>!item.admin || esAdmin).map(item=>{
-        const Icon=item.icon;
+const menuCobrador = [
+  { id: "inicio", label: "Inicio", icon: Home },
+  { id: "clientes", label: "Clientes", icon: Users },
+  { id: "pagos", label: "Pagos", icon: Wallet },
+  { id: "morosidad", label: "Morosidad", icon: AlertTriangle },
+  { id: "notificaciones", label: "Notificaciones", icon: Bell },
+];
 
-        return (
-          <button
-            key={item.id}
-            className={tab===item.id ? "sideNavBtn active" : "sideNavBtn"}
-            onClick={()=>setTab(item.id)}
-          >
-            <Icon size={18}/>
-            <span>{item.label}</span>
-          </button>
-        );
-      })}
+export default function Sidebar({
+  tab,
+  setTab,
+  esAdmin,
+}) {
+  const items = esAdmin ? menuAdmin : menuCobrador;
+
+  return (
+    <aside className="sidebarPro">
+      <div className="sidebarBrand">
+        <img src="/logo.png" alt="Pronto Moto" />
+      </div>
+
+      <nav className="sidebarMenu">
+        {items.map((item) => {
+          const Icon = item.icon;
+          const active = tab === item.id;
+
+          return (
+            <button
+              key={item.id}
+              className={`sidebarItem ${active ? "active" : ""}`}
+              onClick={() => setTab(item.id)}
+            >
+              <Icon size={19} />
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
     </aside>
   );
 }
 
-export function MobileTabs({tab,setTab,esAdmin}){
+export function MobileTabs({
+  tab,
+  setTab,
+  esAdmin,
+}) {
+  const items = esAdmin ? menuAdmin : menuCobrador;
+
   return (
-    <div className="tabs mobileTabs">
-      {navItems.filter(item=>!item.admin || esAdmin).map(item=>{
-        const Icon=item.icon;
+    <div className="mobileTabsPro">
+      {items.map((item) => {
+        const Icon = item.icon;
+        const active = tab === item.id;
 
         return (
           <button
             key={item.id}
-            className={tab===item.id ? "active" : ""}
-            onClick={()=>setTab(item.id)}
+            className={`mobileTabItem ${active ? "active" : ""}`}
+            onClick={() => setTab(item.id)}
           >
-            <Icon size={15}/>
-            {item.label}
+            <Icon size={18} />
+            <span>{item.label}</span>
           </button>
         );
       })}
