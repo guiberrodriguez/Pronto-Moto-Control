@@ -129,3 +129,47 @@ function SidebarContenido({ items, tab, seleccionar }) {
 export function MobileTabs() {
   return null;
 }
+
+/* FIX SIDEBAR DESKTOP CONTRASTE + LOGO */
+
+.sidebarPro {
+  padding-top: 24px !important;
+}
+
+.sidebarBrand {
+  display: block !important;
+  padding: 10px 14px 24px !important;
+  margin-bottom: 18px !important;
+  border-bottom: 1px solid rgba(255,255,255,.08) !important;
+}
+
+.sidebarBrand img {
+  display: block !important;
+  width: 170px !important;
+  height: auto !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.sidebarItem {
+  color: #e5e7eb !important;
+  opacity: 1 !important;
+}
+
+.sidebarItem span {
+  color: inherit !important;
+  opacity: 1 !important;
+}
+
+.sidebarItem svg {
+  color: #ff6b00 !important;
+  opacity: 1 !important;
+}
+
+.sidebarItem.active {
+  color: #ffffff !important;
+}
+
+.sidebarItem.active svg {
+  color: #ffffff !important;
+}
