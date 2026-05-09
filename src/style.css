@@ -6526,3 +6526,90 @@ textarea:focus{
     width:120px;
   }
 }
+
+/* =========================
+   MOBILE MENU PRO
+========================= */
+
+.mobileMenuOverlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.62);
+  backdrop-filter:blur(4px);
+  z-index:9998;
+}
+
+.mobileSidebar{
+  position:fixed;
+  top:0;
+  left:0;
+  width:88%;
+  max-width:340px;
+  height:100vh;
+
+  background:
+    radial-gradient(circle at top right,
+      rgba(255,107,0,.14),
+      transparent 38%),
+    rgba(10,18,40,.98);
+
+  border-right:1px solid rgba(255,255,255,.08);
+
+  z-index:9999;
+
+  padding:22px;
+
+  overflow-y:auto;
+
+  animation:slideMenu .22s ease;
+}
+
+@keyframes slideMenu{
+  from{
+    transform:translateX(-100%);
+  }
+  to{
+    transform:translateX(0);
+  }
+}
+
+.mobileSidebarTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+
+  margin-bottom:18px;
+}
+
+.mobileSidebarTop img{
+  width:145px;
+}
+
+.mobileCloseBtn{
+  width:50px;
+  height:50px;
+
+  border:none;
+  border-radius:16px;
+
+  background:rgba(255,255,255,.07);
+
+  color:#ff6b00;
+
+  display:grid;
+  place-items:center;
+
+  cursor:pointer;
+}
+
+.mobileCloseBtn:hover{
+  background:rgba(255,107,0,.16);
+}
+
+@media(min-width:901px){
+  .mobileSidebar,
+  .mobileMenuOverlay{
+    display:none;
+  }
+}
