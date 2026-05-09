@@ -72,30 +72,34 @@ export default function Sidebar({
 
       {menuAbierto && (
         <>
-          <div
-            className="mobileMenuOverlay"
-            onClick={()=>setMenuAbierto(false)}
+        
+        <>
+        <div
+          className="mobileMenuOverlay"
+          onClick={()=>setMenuAbierto(false)}
+        />
+      
+        <aside className="mobileSidebar">
+      
+          <div className="mobileSidebarTop">
+            <img src="/logo.png" alt="Pronto Moto" />
+      
+            <button
+              className="mobileCloseBtn"
+              onClick={() => setMenuAbierto(false)}
+            >
+              <X size={26} />
+            </button>
+          </div>
+      
+          <SidebarContenido
+            items={items}
+            tab={tab}
+            seleccionar={seleccionar}
           />
-
-          <aside className="mobileSidebar">
-            <div className="mobileSidebarTop">
-
-              <button
-                className="mobileCloseBtn"
-                onClick={()=>setMenuAbierto(false)}
-              >
-                <X size={26}/>
-              </button>
-              
-            </div>
-
-            <SidebarContenido
-              items={items}
-              tab={tab}
-              seleccionar={seleccionar}
-            />
-          </aside>
-        </>
+      
+        </aside>
+      </>
       )}
     </>
   );
