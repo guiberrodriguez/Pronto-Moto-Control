@@ -5989,3 +5989,31 @@ textarea:focus{
     font-size:2.5rem;
   }
 }
+
+/* FIX LOGIN LOGO REAL */
+
+.loginLogoBox{
+  width:190px;
+  max-width:100%;
+  margin-bottom:28px;
+}
+
+.loginLogoBox img{
+  width:100%;
+  height:auto;
+  display:block;
+}
+
+.loginFeatureGrid{
+  display:none !important;
+}
+
+.loginLogoCircle{
+  display:none !important;
+}
+
+@media(max-width:520px){
+  .loginLogoBox{
+    width:170px;
+  }
+}
