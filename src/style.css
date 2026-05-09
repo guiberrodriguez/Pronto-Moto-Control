@@ -3292,3 +3292,269 @@ textarea:focus{
     grid-column:span 1;
   }
 }
+
+/* =========================
+   REPORTES PRO
+========================= */
+
+.reportesPage{
+  display:flex;
+  flex-direction:column;
+  gap:26px;
+}
+
+.reportesHero,
+.reporteCard,
+.analisisCard,
+.empresaResumen{
+  background:
+    radial-gradient(circle at top right,
+      rgba(255,107,0,.12),
+      transparent 40%),
+    rgba(10,18,40,.78);
+
+  border:1px solid rgba(255,255,255,.08);
+
+  border-radius:28px;
+
+  padding:26px;
+
+  box-shadow:
+    0 18px 45px rgba(0,0,0,.28);
+}
+
+.reportesHero{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+}
+
+.reportesHero span{
+  color:#9ca3af;
+  font-weight:800;
+}
+
+.reportesHero h1{
+  color:white;
+  font-size:2.2rem;
+  font-weight:900;
+  margin:6px 0;
+}
+
+.reportesHero p{
+  color:#a8b0c3;
+  max-width:650px;
+}
+
+.reportesHeroIcon{
+  width:82px;
+  height:82px;
+
+  border-radius:26px;
+
+  display:grid;
+  place-items:center;
+
+  background:rgba(255,107,0,.16);
+
+  color:#ff6b00;
+}
+
+.reportesGrid{
+  display:grid;
+  grid-template-columns:
+    repeat(auto-fit,minmax(260px,1fr));
+
+  gap:22px;
+}
+
+.reporteTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.reporteIcon{
+  width:58px;
+  height:58px;
+
+  border-radius:18px;
+
+  display:grid;
+  place-items:center;
+
+  background:rgba(255,255,255,.07);
+
+  color:white;
+}
+
+.reporteCard span{
+  color:#9ca3af;
+  font-weight:800;
+}
+
+.reporteCard h2{
+  color:white;
+  font-size:2rem;
+  font-weight:900;
+  margin-top:18px;
+}
+
+.reporteCard p{
+  color:#a8b0c3;
+  margin-top:10px;
+}
+
+.reporteCard.ingresos{
+  border-color:rgba(34,197,94,.18);
+}
+
+.reporteCard.gastos{
+  border-color:rgba(239,68,68,.18);
+}
+
+.reporteCard.neto{
+  border-color:rgba(255,107,0,.18);
+}
+
+.reporteCard.morosidad{
+  border-color:rgba(245,158,11,.18);
+}
+
+.analisisGrid{
+  display:grid;
+  grid-template-columns:
+    repeat(auto-fit,minmax(320px,1fr));
+
+  gap:22px;
+}
+
+.analisisHeader{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.analisisHeader svg{
+  color:#ff6b00;
+}
+
+.analisisHeader h2{
+  color:white;
+}
+
+.analisisItems{
+  display:grid;
+  gap:16px;
+  margin-top:22px;
+}
+
+.analisisItem{
+  background:rgba(255,255,255,.05);
+
+  border-radius:18px;
+
+  padding:18px;
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.analisisItem small{
+  color:#9ca3af;
+}
+
+.analisisItem strong{
+  color:white;
+  font-size:1.1rem;
+}
+
+.riesgoPanel{
+  margin-top:24px;
+}
+
+.riesgoBar{
+  width:100%;
+  height:18px;
+
+  border-radius:999px;
+
+  overflow:hidden;
+
+  background:rgba(255,255,255,.08);
+}
+
+.riesgoFill{
+  height:100%;
+
+  background:
+    linear-gradient(
+      90deg,
+      #ff6b00,
+      #ef4444
+    );
+}
+
+.riesgoPanel p{
+  margin-top:16px;
+  color:#a8b0c3;
+}
+
+.empresaResumen h2{
+  color:white;
+}
+
+.empresaResumen p{
+  color:#9ca3af;
+  margin-top:10px;
+}
+
+.empresaResumenGrid{
+  display:grid;
+  grid-template-columns:
+    repeat(3,1fr);
+
+  gap:18px;
+
+  margin-top:24px;
+}
+
+.empresaResumenGrid div{
+  background:rgba(255,255,255,.05);
+
+  border-radius:18px;
+
+  padding:18px;
+}
+
+.empresaResumenGrid small{
+  color:#9ca3af;
+}
+
+.empresaResumenGrid strong{
+  display:block;
+  margin-top:8px;
+  font-size:1.2rem;
+}
+
+@media(max-width:768px){
+
+  .reportesHero{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .reportesGrid,
+  .analisisGrid,
+  .empresaResumenGrid{
+    grid-template-columns:1fr;
+  }
+
+  .reportesHeroIcon{
+    width:100%;
+    height:70px;
+  }
+
+}
