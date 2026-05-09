@@ -3558,3 +3558,206 @@ textarea:focus{
   }
 
 }
+
+/* =========================
+   KPIs PRO
+========================= */
+
+.kpisPage{
+  display:flex;
+  flex-direction:column;
+  gap:26px;
+}
+
+.kpisHero,
+.kpiCard,
+.kpiAnalysisCard{
+  background:
+    radial-gradient(circle at top right,
+      rgba(255,107,0,.12),
+      transparent 40%),
+    rgba(10,18,40,.78);
+
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:28px;
+  padding:26px;
+  box-shadow:0 18px 45px rgba(0,0,0,.28);
+}
+
+.kpisHero{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+}
+
+.kpisHero span{
+  color:#9ca3af;
+  font-weight:800;
+}
+
+.kpisHero h1{
+  color:white;
+  font-size:2.2rem;
+  font-weight:900;
+  margin:6px 0;
+}
+
+.kpisHero p{
+  color:#a8b0c3;
+  max-width:650px;
+}
+
+.kpisHeroIcon{
+  width:82px;
+  height:82px;
+  border-radius:26px;
+  display:grid;
+  place-items:center;
+  background:rgba(255,107,0,.16);
+  color:#ff6b00;
+  flex-shrink:0;
+}
+
+.kpisGrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:22px;
+}
+
+.kpiCard{
+  position:relative;
+  overflow:hidden;
+}
+
+.kpiCard.positivo{
+  border-color:rgba(34,197,94,.18);
+}
+
+.kpiCard.negativo{
+  border-color:rgba(239,68,68,.18);
+}
+
+.kpiCard.alerta{
+  border-color:rgba(245,158,11,.18);
+}
+
+.kpiCard.neutral{
+  border-color:rgba(59,130,246,.18);
+}
+
+.kpiCardTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:14px;
+}
+
+.kpiIcon{
+  width:58px;
+  height:58px;
+  border-radius:18px;
+  display:grid;
+  place-items:center;
+  background:rgba(255,255,255,.07);
+  color:#ff6b00;
+  flex-shrink:0;
+}
+
+.kpiCardTop span{
+  color:#9ca3af;
+  font-weight:900;
+  text-align:right;
+}
+
+.kpiCard h2{
+  color:white;
+  font-size:2rem;
+  font-weight:900;
+  margin-top:20px;
+}
+
+.kpiCard p{
+  color:#a8b0c3;
+  margin-top:10px;
+  font-weight:650;
+}
+
+.kpisAnalysisGrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:22px;
+}
+
+.kpiAnalysisCard h2{
+  color:white;
+  font-weight:900;
+}
+
+.kpiAnalysisCard p{
+  color:#a8b0c3;
+  margin-top:18px;
+  line-height:1.5;
+  font-weight:650;
+}
+
+.kpiProgressBox{
+  margin-top:24px;
+}
+
+.kpiProgressHeader{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  color:white;
+  font-weight:800;
+  margin-bottom:12px;
+}
+
+.kpiProgressTrack{
+  width:100%;
+  height:18px;
+  border-radius:999px;
+  overflow:hidden;
+  background:rgba(255,255,255,.08);
+}
+
+.kpiProgressFill{
+  height:100%;
+  border-radius:999px;
+  background:linear-gradient(90deg,#22c55e,#16a34a);
+}
+
+.kpiProgressFill.orange{
+  background:linear-gradient(90deg,#ff6b00,#f59e0b);
+}
+
+.kpiTodayNumber{
+  width:100%;
+  height:120px;
+  border-radius:24px;
+  background:rgba(255,107,0,.16);
+  color:#ff6b00;
+  display:grid;
+  place-items:center;
+  font-size:3rem;
+  font-weight:900;
+  margin-top:24px;
+}
+
+@media(max-width:768px){
+  .kpisHero{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .kpisHeroIcon{
+    width:100%;
+    height:70px;
+  }
+
+  .kpisGrid,
+  .kpisAnalysisGrid{
+    grid-template-columns:1fr;
+  }
+}
