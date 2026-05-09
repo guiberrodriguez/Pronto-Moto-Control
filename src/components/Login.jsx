@@ -38,8 +38,8 @@ export default function Login() {
   return (
     <div className="loginProPage">
       <section className="loginBrandPanel">
-        <div className="loginLogoCircle">
-          <Bike size={42} />
+        <div className="loginLogoBox">
+          <img src="/logo.png" alt="Pronto Moto" />
         </div>
 
         <span>Plataforma empresarial</span>
@@ -53,25 +53,6 @@ export default function Login() {
           reportes y operación financiera en tiempo real.
         </p>
 
-        <div className="loginFeatureGrid">
-          <div>
-            <ShieldCheck size={22} />
-            <strong>Seguridad</strong>
-            <small>Firebase Auth</small>
-          </div>
-
-          <div>
-            <Bike size={22} />
-            <strong>Flota</strong>
-            <small>Control operativo</small>
-          </div>
-
-          <div>
-            <Lock size={22} />
-            <strong>Acceso</strong>
-            <small>Roles protegidos</small>
-          </div>
-        </div>
       </section>
 
       <section className="loginFormPanel">
