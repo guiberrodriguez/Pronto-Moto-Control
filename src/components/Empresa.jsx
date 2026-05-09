@@ -11,6 +11,7 @@ export default function Empresa({
   esAdmin,
   empresa,
   setEmpresa,
+  guardarEmpresa,
 }) {
   return (
     <div className="empresaPage">
@@ -106,7 +107,11 @@ export default function Empresa({
           />
         </div>
 
-        <button className="empresaSaveBtn" disabled={!esAdmin}>
+        <button
+          className="empresaSaveBtn"
+          disabled={!esAdmin}
+          onClick={guardarEmpresa}
+        >
           <Save size={20} />
           Guardar datos corporativos
         </button>
