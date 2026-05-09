@@ -2106,3 +2106,312 @@ textarea:focus{
     width: 100%;
   }
 }
+
+/* =========================
+   MOTOS PRO
+========================= */
+
+.motosPage{
+  display:flex;
+  flex-direction:column;
+  gap:26px;
+}
+
+.motosHero,
+.motoFormCard,
+.motoCard{
+  background:
+    radial-gradient(circle at top right,
+      rgba(255,107,0,.12),
+      transparent 40%),
+    rgba(10,18,40,.78);
+
+  border:1px solid rgba(255,255,255,.08);
+
+  border-radius:28px;
+
+  padding:26px;
+
+  box-shadow:
+    0 18px 45px rgba(0,0,0,.28);
+}
+
+.motosHero{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+}
+
+.motosHero span{
+  color:#9ca3af;
+  font-weight:800;
+}
+
+.motosHero h1{
+  color:white;
+  font-size:2.2rem;
+  font-weight:900;
+  margin:6px 0;
+}
+
+.motosHero p{
+  color:#a8b0c3;
+  max-width:650px;
+}
+
+.saveMotoBtn{
+  min-width:220px;
+  min-height:58px;
+
+  border:none;
+  border-radius:18px;
+
+  background:
+    linear-gradient(135deg,#ff6b00,#ff8c1f);
+
+  color:white;
+
+  font-weight:900;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+
+  cursor:pointer;
+
+  box-shadow:
+    0 12px 30px rgba(255,107,0,.35);
+}
+
+.motoFormCard h2{
+  color:white;
+  margin-bottom:20px;
+}
+
+.motoFormGrid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px;
+}
+
+.motoFormGrid input,
+.motoFormGrid select{
+  width:100%;
+  height:56px;
+
+  border-radius:18px;
+
+  border:1px solid rgba(255,255,255,.08);
+
+  background:rgba(255,255,255,.06);
+
+  color:white;
+
+  padding:0 18px;
+
+  font-weight:700;
+
+  outline:none;
+}
+
+.motoFormGrid input::placeholder{
+  color:rgba(255,255,255,.45);
+}
+
+.motoFormGrid select option{
+  color:black;
+}
+
+.motosGrid{
+  display:grid;
+  grid-template-columns:
+    repeat(auto-fit,minmax(340px,1fr));
+
+  gap:22px;
+}
+
+.motoCard{
+  position:relative;
+  overflow:hidden;
+}
+
+.motoCardTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:18px;
+}
+
+.motoIcon{
+  width:58px;
+  height:58px;
+
+  border-radius:18px;
+
+  background:rgba(255,107,0,.15);
+
+  color:#ff6b00;
+
+  display:grid;
+  place-items:center;
+}
+
+.estadoMoto{
+  padding:8px 14px;
+  border-radius:999px;
+  font-size:.82rem;
+  font-weight:900;
+}
+
+.estadoMoto.disponible{
+  background:rgba(34,197,94,.15);
+  color:#22c55e;
+}
+
+.estadoMoto.alquilada{
+  background:rgba(59,130,246,.15);
+  color:#60a5fa;
+}
+
+.estadoMoto.mora{
+  background:rgba(239,68,68,.15);
+  color:#ef4444;
+}
+
+.motoCard h2{
+  color:white;
+  font-size:1.7rem;
+  font-weight:900;
+}
+
+.motoModelo{
+  color:#9ca3af;
+  margin-top:4px;
+}
+
+.motoInfoGrid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:16px;
+
+  margin-top:22px;
+}
+
+.motoInfoItem{
+  background:rgba(255,255,255,.05);
+
+  border:1px solid rgba(255,255,255,.05);
+
+  border-radius:18px;
+
+  padding:16px;
+
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.motoInfoItem small{
+  color:#9ca3af;
+  font-weight:700;
+}
+
+.motoInfoItem strong{
+  color:white;
+}
+
+.greenText{
+  color:#22c55e !important;
+}
+
+.redText{
+  color:#ef4444 !important;
+}
+
+.orangeText{
+  color:#ff6b00 !important;
+}
+
+.moraAlert{
+  margin-top:20px;
+
+  background:rgba(239,68,68,.12);
+
+  border:1px solid rgba(239,68,68,.2);
+
+  color:#ef4444;
+
+  border-radius:18px;
+
+  padding:14px;
+
+  display:flex;
+  align-items:center;
+  gap:10px;
+
+  font-weight:800;
+}
+
+.motoActions{
+  display:flex;
+  gap:12px;
+
+  margin-top:24px;
+}
+
+.motoBtn{
+  flex:1;
+
+  height:52px;
+
+  border:none;
+  border-radius:16px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  cursor:pointer;
+}
+
+.motoBtn.blue{
+  background:rgba(59,130,246,.16);
+  color:#60a5fa;
+}
+
+.motoBtn.red{
+  background:rgba(239,68,68,.16);
+  color:#ef4444;
+}
+
+.motoBtn.orange{
+  background:rgba(255,107,0,.16);
+  color:#ff6b00;
+}
+
+@media(max-width:768px){
+
+  .motosHero{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .saveMotoBtn{
+    width:100%;
+  }
+
+  .motoFormGrid{
+    grid-template-columns:1fr;
+  }
+
+  .motosGrid{
+    grid-template-columns:1fr;
+  }
+
+  .motoInfoGrid{
+    grid-template-columns:1fr;
+  }
+
+}
