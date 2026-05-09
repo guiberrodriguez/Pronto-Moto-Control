@@ -35,9 +35,7 @@ import Sidebar, { MobileTabs } from "./components/Sidebar";
 
 import Inicio from "./components/Inicio";
 
-import Clientes, {
-  ClientePerfil
-} from "./components/Clientes";
+import Clientes from "./components/Clientes";
 
 import Motos from "./components/Motos";
 import Pagos from "./components/Pagos";
