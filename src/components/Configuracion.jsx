@@ -1,6 +1,13 @@
-import React from "react";
-import { Settings, ShieldCheck } from "lucide-react";
-import IconTextButton from "./IconTextButton";
+import {
+  ShieldCheck,
+  KeyRound,
+  UserPlus,
+  Users,
+  Mail,
+  BadgeCheck,
+  Lock,
+  Save,
+} from "lucide-react";
 
 export default function Configuracion({
   esAdmin,
@@ -10,84 +17,157 @@ export default function Configuracion({
   usuarioForm,
   setUsuarioForm,
   guardarUsuario,
-  usuarios
-}){
+  usuarios,
+}) {
   return (
-    <div className="card">
-      <div className="sectionHeader">
+    <div className="configPage">
+      <section className="configHero">
         <div>
-          <p className="muted">Seguridad y usuarios</p>
-          <h2>Configuración</h2>
+          <span>Seguridad empresarial</span>
+          <h1>Configuración</h1>
+          <p>
+            Gestiona usuarios, roles, accesos y seguridad de la plataforma.
+          </p>
         </div>
-      </div>
 
-      <h3>Cambiar contraseña</h3>
+        <div className="configHeroIcon">
+          <ShieldCheck size={42} />
+        </div>
+      </section>
 
-      <input
-        type="password"
-        placeholder="Nueva contraseña"
-        value={nuevaPassword}
-        onChange={e=>setNuevaPassword(e.target.value)}
-      />
+      <section className="configGrid">
+        <div className="configCard">
+          <div className="configCardHeader">
+            <KeyRound size={26} />
+            <h2>Cambiar contraseña</h2>
+          </div>
 
-      <IconTextButton
-        icon={Settings}
-        label="Cambiar contraseña"
-        onClick={cambiarPassword}
-      />
-
-      {esAdmin && (
-        <>
-          <h3>Gestión de usuarios / cobradores</h3>
-
-          <p className="muted">
-            Primero crea el usuario en Firebase Authentication. Luego copia su UID y regístralo aquí.
+          <p>
+            Actualiza la contraseña del usuario actualmente autenticado.
           </p>
 
-          <input
-            placeholder="UID de Firebase Auth"
-            value={usuarioForm.uid}
-            onChange={e=>setUsuarioForm({...usuarioForm,uid:e.target.value})}
-          />
+          <div className="configInputBox">
+            <Lock size={18} />
 
-          <input
-            placeholder="Nombre"
-            value={usuarioForm.nombre}
-            onChange={e=>setUsuarioForm({...usuarioForm,nombre:e.target.value})}
-          />
+            <input
+              type="password"
+              placeholder="Nueva contraseña"
+              value={nuevaPassword}
+              onChange={(e) => setNuevaPassword(e.target.value)}
+            />
+          </div>
 
-          <input
-            placeholder="Correo"
-            value={usuarioForm.correo}
-            onChange={e=>setUsuarioForm({...usuarioForm,correo:e.target.value})}
-          />
+          <button className="configPrimaryBtn" onClick={cambiarPassword}>
+            <Save size={18} />
+            Actualizar contraseña
+          </button>
+        </div>
 
-          <select
-            value={usuarioForm.rol}
-            onChange={e=>setUsuarioForm({...usuarioForm,rol:e.target.value})}
-          >
-            <option value="admin">Admin</option>
-            <option value="cobrador">Cobrador</option>
-          </select>
+        {esAdmin && (
+          <div className="configCard">
+            <div className="configCardHeader">
+              <UserPlus size={26} />
+              <h2>Crear / editar usuario</h2>
+            </div>
 
-          <IconTextButton
-            icon={ShieldCheck}
-            label="Guardar usuario"
-            onClick={guardarUsuario}
-          />
+            <p>
+              Registra usuarios autorizados creados previamente en Firebase Authentication.
+            </p>
 
-          <h3>Usuarios registrados</h3>
+            <div className="configFormGrid">
+              <input
+                placeholder="UID del usuario"
+                value={usuarioForm.uid}
+                onChange={(e) =>
+                  setUsuarioForm({ ...usuarioForm, uid: e.target.value })
+                }
+              />
 
-          {usuarios.map(u=>(
-            <div className="item premiumItem" key={u.id}>
-              <b>{u.nombre}</b>
-              <p>{u.correo}</p>
-              <p>Rol: {u.rol}</p>
-              <p>UID: {u.uid}</p>
+              <input
+                placeholder="Nombre"
+                value={usuarioForm.nombre}
+                onChange={(e) =>
+                  setUsuarioForm({ ...usuarioForm, nombre: e.target.value })
+                }
+              />
+
+              <input
+                placeholder="Correo"
+                value={usuarioForm.correo}
+                onChange={(e) =>
+                  setUsuarioForm({ ...usuarioForm, correo: e.target.value })
+                }
+              />
+
+              <select
+                value={usuarioForm.rol}
+                onChange={(e) =>
+                  setUsuarioForm({ ...usuarioForm, rol: e.target.value })
+                }
+              >
+                <option value="admin">Administrador</option>
+                <option value="cobrador">Cobrador</option>
+              </select>
+            </div>
+
+            <button className="configPrimaryBtn" onClick={guardarUsuario}>
+              <Save size={18} />
+              Guardar usuario
+            </button>
+          </div>
+        )}
+      </section>
+
+      <section className="usuariosPanel">
+        <div className="usuariosPanelHeader">
+          <div>
+            <span>Usuarios registrados</span>
+            <h2>Equipo operativo</h2>
+          </div>
+
+          <Users size={32} />
+        </div>
+
+        <div className="usuariosGrid">
+          {usuarios.map((u) => (
+            <div key={u.id || u.uid || u.correo} className="usuarioCard">
+              <div className="usuarioAvatar">
+                <Users size={24} />
+              </div>
+
+              <div className="usuarioInfo">
+                <h3>{u.nombre || "Usuario sin nombre"}</h3>
+
+                <p>
+                  <Mail size={15} />
+                  {u.correo || "Sin correo"}
+                </p>
+
+                <span
+                  className={
+                    u.rol === "admin"
+                      ? "rolBadge admin"
+                      : "rolBadge cobrador"
+                  }
+                >
+                  <BadgeCheck size={14} />
+                  {u.rol === "admin" ? "Administrador" : "Cobrador"}
+                </span>
+              </div>
             </div>
           ))}
-        </>
-      )}
+
+          {usuarios.length === 0 && (
+            <div className="usuariosEmpty">
+              <Users size={46} />
+              <h2>No hay usuarios registrados</h2>
+              <p>
+                Los usuarios aparecerán aquí cuando los guardes en Firebase.
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
