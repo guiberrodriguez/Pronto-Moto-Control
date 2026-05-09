@@ -4064,13 +4064,43 @@ textarea:focus{
 .gastoFormGrid select{
   width:100%;
   height:56px;
+
   border-radius:18px;
   border:1px solid rgba(255,255,255,.08);
+
   background:rgba(255,255,255,.06);
+
   color:white;
+
   padding:0 18px;
+
   font-weight:700;
+
   outline:none;
+
+  appearance:none;
+  -webkit-appearance:none;
+
+  display:flex;
+  align-items:center;
+
+  line-height:56px;
+
+  box-sizing:border-box;
+}
+
+.gastoFormGrid input[type="date"]{
+  position:relative;
+  padding-right:18px;
+}
+
+.gastoFormGrid input[type="date"]::-webkit-date-and-time-value{
+  text-align:left;
+}
+
+.gastoFormGrid input[type="date"]::-webkit-calendar-picker-indicator{
+  filter:invert(1);
+  opacity:.8;
 }
 
 .gastoFormGrid input::placeholder{
