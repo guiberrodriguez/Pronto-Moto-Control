@@ -7,10 +7,12 @@ import {
   UserRound,
   MapPin,
   Plus,
+  X,
 } from "lucide-react";
 
 export default function Clientes() {
   const [busqueda, setBusqueda] = useState("");
+  const [clienteActivo, setClienteActivo] = useState(null);
 
   const clientes = [
     {
@@ -21,6 +23,7 @@ export default function Clientes() {
       direccion: "Santo Domingo",
       moto: "Honda Dio",
       estado: "Al día",
+      contrato: "RD$ 3,500 semanal",
     },
     {
       id: 2,
@@ -30,6 +33,7 @@ export default function Clientes() {
       direccion: "Santiago",
       moto: "Yamaha Gear",
       estado: "En mora",
+      contrato: "RD$ 4,200 semanal",
     },
   ];
 
@@ -42,11 +46,14 @@ export default function Clientes() {
   return (
     <div className="clientesPage">
 
+      {/* HEADER */}
       <section className="clientesHero">
         <div>
           <span>Gestión de clientes</span>
           <h1>Clientes</h1>
-          <p>Administra clientes, contratos, motos asignadas y estados de pago.</p>
+          <p>
+            Administra clientes, contratos, motos asignadas y estados de pago.
+          </p>
         </div>
 
         <button className="createClientBtn">
@@ -55,6 +62,7 @@ export default function Clientes() {
         </button>
       </section>
 
+      {/* FORM */}
       <section className="clienteFormCard">
         <h2>Registrar cliente</h2>
 
@@ -80,7 +88,9 @@ export default function Clientes() {
         </div>
       </section>
 
+      {/* TABLA */}
       <section className="clientesTablePro">
+
         <div className="clientesTableHeader">
           <div>
             <span>CRM de clientes</span>
@@ -89,6 +99,7 @@ export default function Clientes() {
 
           <div className="clientesSearchBox">
             <Search size={19} />
+
             <input
               placeholder="Buscar cliente..."
               value={busqueda}
@@ -98,7 +109,9 @@ export default function Clientes() {
         </div>
 
         <div className="clientesTableWrapper">
+
           <table className="clientesTable">
+
             <thead>
               <tr>
                 <th>Cliente</th>
@@ -112,15 +125,20 @@ export default function Clientes() {
             </thead>
 
             <tbody>
+
               {clientesFiltrados.map((cliente) => (
+
                 <tr key={cliente.id}>
+
                   <td>
                     <div className="clienteCell">
+
                       <div className="clienteAvatar">
                         <UserRound size={20} />
                       </div>
 
                       <strong>{cliente.nombre}</strong>
+
                     </div>
                   </td>
 
@@ -142,8 +160,13 @@ export default function Clientes() {
                   </td>
 
                   <td>
+
                     <div className="clientesActions">
-                      <button className="actionBtn view">
+
+                      <button
+                        className="actionBtn view"
+                        onClick={() => setClienteActivo(cliente)}
+                      >
                         <Eye size={17} />
                       </button>
 
@@ -154,22 +177,98 @@ export default function Clientes() {
                       <button className="actionBtn delete">
                         <Trash2 size={17} />
                       </button>
+
                     </div>
+
                   </td>
+
                 </tr>
+
               ))}
 
-              {clientesFiltrados.length === 0 && (
-                <tr>
-                  <td colSpan="7" className="emptyClientes">
-                    No se encontraron clientes.
-                  </td>
-                </tr>
-              )}
             </tbody>
+
           </table>
+
         </div>
+
       </section>
+
+      {/* MODAL */}
+      {clienteActivo && (
+
+        <div className="clienteModalOverlay">
+
+          <div className="clienteModal">
+
+            <button
+              className="closeModalBtn"
+              onClick={() => setClienteActivo(null)}
+            >
+              <X size={22} />
+            </button>
+
+            <div className="modalHeader">
+
+              <div className="modalAvatar">
+                <UserRound size={30} />
+              </div>
+
+              <div>
+                <span>Cliente registrado</span>
+                <h2>{clienteActivo.nombre}</h2>
+              </div>
+
+            </div>
+
+            <div className="modalGrid">
+
+              <div className="modalInfoCard">
+                <small>Teléfono</small>
+                <strong>{clienteActivo.telefono}</strong>
+              </div>
+
+              <div className="modalInfoCard">
+                <small>Cédula</small>
+                <strong>{clienteActivo.cedula}</strong>
+              </div>
+
+              <div className="modalInfoCard">
+                <small>Dirección</small>
+                <strong>{clienteActivo.direccion}</strong>
+              </div>
+
+              <div className="modalInfoCard">
+                <small>Moto asignada</small>
+                <strong>{clienteActivo.moto}</strong>
+              </div>
+
+              <div className="modalInfoCard">
+                <small>Contrato</small>
+                <strong>{clienteActivo.contrato}</strong>
+              </div>
+
+              <div className="modalInfoCard">
+                <small>Estado</small>
+
+                <span
+                  className={
+                    clienteActivo.estado === "Al día"
+                      ? "estadoBadge alDia"
+                      : "estadoBadge enMora"
+                  }
+                >
+                  {clienteActivo.estado}
+                </span>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      )}
 
     </div>
   );
