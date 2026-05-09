@@ -4815,3 +4815,219 @@ textarea:focus{
     grid-template-columns:1fr;
   }
 }
+
+/* =========================
+   EMPRESA PRO
+========================= */
+
+.empresaPage{
+  display:flex;
+  flex-direction:column;
+  gap:26px;
+}
+
+.empresaHero,
+.empresaFormCard,
+.empresaPreviewCard{
+  background:
+    radial-gradient(circle at top right,
+      rgba(255,107,0,.12),
+      transparent 40%),
+    rgba(10,18,40,.78);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:28px;
+  padding:26px;
+  box-shadow:0 18px 45px rgba(0,0,0,.28);
+}
+
+.empresaHero{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+}
+
+.empresaHero span,
+.empresaPreviewHeader span{
+  color:#9ca3af;
+  font-weight:800;
+}
+
+.empresaHero h1,
+.empresaPreviewHeader h2{
+  color:white;
+  font-size:2.2rem;
+  font-weight:900;
+  margin:6px 0;
+}
+
+.empresaHero p{
+  color:#a8b0c3;
+  max-width:650px;
+}
+
+.empresaHeroIcon{
+  width:82px;
+  height:82px;
+  border-radius:26px;
+  display:grid;
+  place-items:center;
+  background:rgba(255,107,0,.16);
+  color:#ff6b00;
+  flex-shrink:0;
+}
+
+.empresaFormCard h2{
+  color:white;
+  margin-bottom:20px;
+}
+
+.empresaFormGrid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px;
+}
+
+.empresaField{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.empresaField label,
+.empresaNotasBox label{
+  color:#9ca3af;
+  font-weight:800;
+}
+
+.empresaField div{
+  height:58px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.06);
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:0 18px;
+}
+
+.empresaField svg{
+  color:#ff6b00;
+  flex-shrink:0;
+}
+
+.empresaField input{
+  width:100%;
+  border:none;
+  outline:none;
+  background:transparent;
+  color:white;
+  font-weight:800;
+}
+
+.empresaField input::placeholder,
+.empresaNotasBox textarea::placeholder{
+  color:rgba(255,255,255,.45);
+}
+
+.empresaNotasBox{
+  margin-top:18px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.empresaNotasBox textarea{
+  width:100%;
+  min-height:150px;
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.06);
+  color:white;
+  padding:18px;
+  font-weight:700;
+  outline:none;
+  resize:vertical;
+}
+
+.empresaSaveBtn{
+  width:100%;
+  height:58px;
+  margin-top:18px;
+  border:none;
+  border-radius:18px;
+  background:linear-gradient(135deg,#ff6b00,#ff8c1f);
+  color:white;
+  font-weight:900;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  cursor:pointer;
+  box-shadow:0 12px 30px rgba(255,107,0,.35);
+}
+
+.empresaPreviewHeader{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:18px;
+}
+
+.empresaPreviewHeader svg{
+  color:#ff6b00;
+}
+
+.empresaPreviewGrid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px;
+  margin-top:22px;
+}
+
+.empresaPreviewGrid div,
+.empresaLegalPreview{
+  background:rgba(255,255,255,.05);
+  border-radius:18px;
+  padding:18px;
+}
+
+.empresaPreviewGrid small,
+.empresaLegalPreview small{
+  color:#9ca3af;
+  font-weight:800;
+}
+
+.empresaPreviewGrid strong{
+  color:white;
+  display:block;
+  margin-top:8px;
+}
+
+.empresaLegalPreview{
+  margin-top:16px;
+}
+
+.empresaLegalPreview p{
+  color:#d1d5db;
+  line-height:1.5;
+  margin-top:10px;
+}
+
+@media(max-width:768px){
+  .empresaHero,
+  .empresaPreviewHeader{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .empresaHeroIcon{
+    width:100%;
+    height:70px;
+  }
+
+  .empresaFormGrid,
+  .empresaPreviewGrid{
+    grid-template-columns:1fr;
+  }
+}
