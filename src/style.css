@@ -6737,3 +6737,50 @@ textarea:focus{
 .lightMode .mobileSidebar .sidebarItem.active svg{
   color:#ffffff !important;
 }
+
+/* FIX DEFINITIVO TEXTO SIDEBAR MOBILE */
+
+.mobileSidebar .sidebarItem{
+  color:#f8fafc !important;
+}
+
+.mobileSidebar .sidebarItem span{
+  color:#f8fafc !important;
+  opacity:1 !important;
+  font-weight:800 !important;
+}
+
+.mobileSidebar .sidebarItem svg{
+  color:#ff6b00 !important;
+}
+
+.mobileSidebar .sidebarItem.active{
+  color:white !important;
+}
+
+.mobileSidebar .sidebarItem.active span{
+  color:white !important;
+}
+
+.mobileSidebar .sidebarItem.active svg{
+  color:white !important;
+}
+
+/* fuerza sobre modo claro */
+
+.lightMode .mobileSidebar .sidebarItem{
+  color:#f8fafc !important;
+}
+
+.lightMode .mobileSidebar .sidebarItem span{
+  color:#f8fafc !important;
+}
+
+.lightMode .mobileSidebar .sidebarItem svg{
+  color:#ff6b00 !important;
+}
+
+.lightMode .mobileSidebar .sidebarItem.active span,
+.lightMode .mobileSidebar .sidebarItem.active svg{
+  color:white !important;
+}
