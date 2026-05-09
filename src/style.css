@@ -3076,3 +3076,219 @@ textarea:focus{
   }
 
 }
+
+/* =========================
+   RANKING PRO
+========================= */
+
+.rankingPage{
+  display:flex;
+  flex-direction:column;
+  gap:26px;
+}
+
+.rankingHero,
+.rankingCard,
+.rankingEmpty{
+  background:
+    radial-gradient(circle at top right,
+      rgba(255,107,0,.12),
+      transparent 40%),
+    rgba(10,18,40,.78);
+
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:28px;
+  padding:26px;
+
+  box-shadow:0 18px 45px rgba(0,0,0,.28);
+}
+
+.rankingHero{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+}
+
+.rankingHero span{
+  color:#9ca3af;
+  font-weight:800;
+}
+
+.rankingHero h1{
+  color:white;
+  font-size:2.2rem;
+  font-weight:900;
+  margin:6px 0;
+}
+
+.rankingHero p{
+  color:#a8b0c3;
+  max-width:650px;
+}
+
+.rankingHeroIcon{
+  width:78px;
+  height:78px;
+  border-radius:26px;
+  display:grid;
+  place-items:center;
+  background:rgba(255,107,0,.16);
+  color:#ff6b00;
+  flex-shrink:0;
+}
+
+.rankingGrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:22px;
+}
+
+.rankingCard{
+  position:relative;
+  overflow:hidden;
+}
+
+.rankingCard.positivo{
+  border-color:rgba(34,197,94,.16);
+}
+
+.rankingCard.negativo{
+  border-color:rgba(239,68,68,.18);
+}
+
+.rankingTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.rankingPosition{
+  min-width:54px;
+  height:54px;
+  border-radius:18px;
+  display:grid;
+  place-items:center;
+  background:rgba(255,107,0,.16);
+  color:#ff6b00;
+  font-size:1.15rem;
+  font-weight:900;
+}
+
+.rankingBikeIcon{
+  width:54px;
+  height:54px;
+  border-radius:18px;
+  display:grid;
+  place-items:center;
+  background:rgba(255,255,255,.07);
+  color:#fff;
+}
+
+.rankingCard h2{
+  color:white;
+  font-size:1.7rem;
+  font-weight:900;
+  margin-top:18px;
+}
+
+.rankingModelo{
+  color:#9ca3af;
+  margin-top:6px;
+  font-weight:700;
+}
+
+.rankingStats{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:14px;
+  margin-top:22px;
+}
+
+.rankingStat{
+  background:rgba(255,255,255,.05);
+  border-radius:18px;
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.rankingStat.full{
+  grid-column:span 2;
+}
+
+.rankingStat small{
+  color:#9ca3af;
+  font-weight:700;
+}
+
+.rankingStat strong{
+  color:white;
+  font-size:1.08rem;
+}
+
+.rankingResult{
+  margin-top:22px;
+  height:54px;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  font-weight:900;
+}
+
+.rankingResult.rentable{
+  background:rgba(34,197,94,.14);
+  color:#22c55e;
+}
+
+.rankingResult.perdida{
+  background:rgba(239,68,68,.14);
+  color:#ef4444;
+}
+
+.rankingEmpty{
+  text-align:center;
+  padding:60px 20px;
+  grid-column:1 / -1;
+}
+
+.rankingEmpty svg{
+  color:#ff6b00;
+  margin-bottom:18px;
+}
+
+.rankingEmpty h2{
+  color:white;
+}
+
+.rankingEmpty p{
+  color:#9ca3af;
+  margin-top:10px;
+}
+
+@media(max-width:768px){
+  .rankingHero{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .rankingHeroIcon{
+    width:100%;
+    height:70px;
+  }
+
+  .rankingGrid{
+    grid-template-columns:1fr;
+  }
+
+  .rankingStats{
+    grid-template-columns:1fr;
+  }
+
+  .rankingStat.full{
+    grid-column:span 1;
+  }
+}
