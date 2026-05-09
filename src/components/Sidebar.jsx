@@ -173,3 +173,64 @@ export function MobileTabs() {
 .sidebarItem.active svg {
   color: #ffffff !important;
 }
+
+/* FIX MENÚ MÓVIL: LOGO + TEXTO VISIBLE */
+
+.mobileSidebar .mobileSidebarTop{
+  display:flex !important;
+  justify-content:space-between !important;
+  align-items:center !important;
+  margin-bottom:28px !important;
+}
+
+.mobileSidebar .mobileSidebarTop img{
+  display:block !important;
+  width:170px !important;
+  height:auto !important;
+  opacity:1 !important;
+  visibility:visible !important;
+}
+
+.mobileSidebar .sidebarMenu{
+  gap:12px !important;
+}
+
+.mobileSidebar .sidebarItem{
+  color:#e5e7eb !important;
+  opacity:1 !important;
+}
+
+.mobileSidebar .sidebarItem span{
+  color:#e5e7eb !important;
+  opacity:1 !important;
+  font-weight:900 !important;
+}
+
+.mobileSidebar .sidebarItem svg{
+  color:#ff6b00 !important;
+  opacity:1 !important;
+}
+
+.mobileSidebar .sidebarItem.active{
+  color:#ffffff !important;
+}
+
+.mobileSidebar .sidebarItem.active span,
+.mobileSidebar .sidebarItem.active svg{
+  color:#ffffff !important;
+}
+
+/* evita que modo claro oscurezca el menú móvil */
+.lightMode .mobileSidebar .sidebarItem,
+.lightMode .mobileSidebar .sidebarItem span{
+  color:#e5e7eb !important;
+}
+
+.lightMode .mobileSidebar .sidebarItem svg{
+  color:#ff6b00 !important;
+}
+
+.lightMode .mobileSidebar .sidebarItem.active span,
+.lightMode .mobileSidebar .sidebarItem.active svg{
+  color:#ffffff !important;
+}
