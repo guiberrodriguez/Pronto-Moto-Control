@@ -5784,6 +5784,7 @@ textarea:focus{
   display:flex;
   flex-direction:column;
   justify-content:center;
+  align-items:center;
 }
 
 .loginLogoCircle{
@@ -5993,9 +5994,9 @@ textarea:focus{
 /* FIX LOGIN LOGO REAL */
 
 .loginLogoBox{
-  width:190px;
+  width:260px;
   max-width:100%;
-  margin-bottom:28px;
+  margin:0 auto 10px auto;
 }
 
 .loginLogoBox img{
@@ -6016,4 +6017,20 @@ textarea:focus{
   .loginLogoBox{
     width:170px;
   }
+}
+
+/* LOGIN LIMPIO */
+
+.loginBrandPanel > span,
+.loginBrandPanel h1,
+.loginBrandPanel p{
+  display:none !important;
+}
+
+@media(max-width:520px){
+
+  .loginLogoBox{
+    width:240px;
+  }
+
 }
