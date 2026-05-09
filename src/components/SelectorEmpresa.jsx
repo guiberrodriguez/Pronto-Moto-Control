@@ -1,42 +1,82 @@
-import React from "react";
-import { Building2 } from "lucide-react";
+import {
+  Building2,
+  CheckCircle2,
+  Plus,
+  ShieldCheck,
+} from "lucide-react";
 
 export default function SelectorEmpresa({
   empresas,
   empresaActual,
-  setEmpresaActual
-}){
+  setEmpresaActual,
+}) {
   return (
-    <div className="card">
-      <div className="sectionHeader">
+    <div className="selectorEmpresaPage">
+      <section className="selectorEmpresaHero">
         <div>
-          <p className="muted">Entorno de trabajo</p>
-          <h2>Seleccionar empresa</h2>
+          <span>Multiempresa</span>
+          <h1>Seleccionar empresa</h1>
+          <p>
+            Elige la empresa que deseas administrar dentro del panel Pronto Moto.
+          </p>
         </div>
-      </div>
 
-      {empresas.length===0 && (
-        <p>No tienes empresas asignadas todavía.</p>
-      )}
+        <div className="selectorEmpresaIcon">
+          <Building2 size={42} />
+        </div>
+      </section>
 
-      {empresas.map(e=>(
-        <button
-          key={e.id}
-          className={
-            empresaActual?.id===e.id
-              ? "empresaSelectCard activeEmpresa"
-              : "empresaSelectCard"
-          }
-          onClick={()=>setEmpresaActual(e)}
-        >
-          <Building2 size={24}/>
+      <section className="empresasGrid">
+        {empresas.map((empresa) => {
+          const activa = empresaActual?.id === empresa.id;
 
-          <div>
-            <b>{e.nombre}</b>
-            <p>{e.rnc || "Sin RNC"} · {e.telefono || "Sin teléfono"}</p>
+          return (
+            <button
+              key={empresa.id}
+              className={`empresaSelectCard ${activa ? "activa" : ""}`}
+              onClick={() => setEmpresaActual(empresa)}
+            >
+              <div className="empresaSelectTop">
+                <div className="empresaSelectIcon">
+                  <Building2 size={28} />
+                </div>
+
+                {activa && (
+                  <span className="empresaActivaBadge">
+                    <CheckCircle2 size={16} />
+                    Activa
+                  </span>
+                )}
+              </div>
+
+              <h2>{empresa.nombre || "Empresa sin nombre"}</h2>
+
+              <p>{empresa.direccion || "Sin dirección registrada"}</p>
+
+              <div className="empresaSelectMeta">
+                <span>
+                  <ShieldCheck size={15} />
+                  Panel seguro
+                </span>
+
+                <span>
+                  RNC: {empresa.rnc || "N/A"}
+                </span>
+              </div>
+            </button>
+          );
+        })}
+
+        {empresas.length === 0 && (
+          <div className="empresaEmptyCard">
+            <Plus size={48} />
+            <h2>No hay empresas registradas</h2>
+            <p>
+              Crea una empresa en Firestore para comenzar a usar el sistema multiempresa.
+            </p>
           </div>
-        </button>
-      ))}
+        )}
+      </section>
     </div>
   );
 }
