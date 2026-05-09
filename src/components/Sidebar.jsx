@@ -79,7 +79,6 @@ export default function Sidebar({
 
           <aside className="mobileSidebar">
             <div className="mobileSidebarTop">
-              <img src="/logo.png" alt="Pronto Moto"/>
 
               <button
                 className="mobileCloseBtn"
@@ -87,6 +86,7 @@ export default function Sidebar({
               >
                 <X size={26}/>
               </button>
+              
             </div>
 
             <SidebarContenido
@@ -108,9 +108,6 @@ function SidebarContenido({
 }) {
   return (
     <>
-      <div className="sidebarBrand">
-        <img src="/logo.png" alt="Pronto Moto"/>
-      </div>
 
       <nav className="sidebarMenu">
         {items.map((item)=>{
