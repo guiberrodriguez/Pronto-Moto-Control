@@ -5750,3 +5750,242 @@ textarea:focus{
     height:64px;
   }
 }
+
+/* =========================
+   LOGIN PRO
+========================= */
+
+.loginProPage{
+  min-height:100vh;
+  width:100%;
+  display:grid;
+  grid-template-columns:1.1fr .9fr;
+  background:
+    radial-gradient(circle at top left, rgba(255,107,0,.22), transparent 36%),
+    radial-gradient(circle at bottom right, rgba(59,130,246,.16), transparent 34%),
+    #050816;
+  padding:28px;
+  gap:28px;
+}
+
+.loginBrandPanel,
+.loginFormPanel{
+  border-radius:34px;
+  background:
+    radial-gradient(circle at top right, rgba(255,107,0,.14), transparent 42%),
+    rgba(10,18,40,.72);
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 24px 70px rgba(0,0,0,.42);
+  backdrop-filter:blur(22px);
+}
+
+.loginBrandPanel{
+  padding:44px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.loginLogoCircle{
+  width:86px;
+  height:86px;
+  border-radius:28px;
+  background:rgba(255,107,0,.18);
+  color:#ff6b00;
+  display:grid;
+  place-items:center;
+  margin-bottom:24px;
+}
+
+.loginBrandPanel > span{
+  color:#9ca3af;
+  font-weight:900;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  font-size:.82rem;
+}
+
+.loginBrandPanel h1{
+  color:white;
+  font-size:4rem;
+  font-weight:950;
+  margin:10px 0 18px;
+}
+
+.loginBrandPanel h1 span{
+  color:#ff6b00;
+}
+
+.loginBrandPanel p{
+  color:#a8b0c3;
+  max-width:620px;
+  font-size:1.05rem;
+  line-height:1.65;
+  font-weight:650;
+}
+
+.loginFeatureGrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  margin-top:34px;
+}
+
+.loginFeatureGrid div{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:22px;
+  padding:18px;
+}
+
+.loginFeatureGrid svg{
+  color:#ff6b00;
+  margin-bottom:12px;
+}
+
+.loginFeatureGrid strong{
+  display:block;
+  color:white;
+  font-weight:900;
+}
+
+.loginFeatureGrid small{
+  display:block;
+  color:#9ca3af;
+  margin-top:5px;
+}
+
+.loginFormPanel{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:32px;
+}
+
+.loginFormCard{
+  width:100%;
+  max-width:460px;
+}
+
+.loginFormHeader span{
+  color:#9ca3af;
+  font-weight:900;
+  text-transform:uppercase;
+  font-size:.82rem;
+}
+
+.loginFormHeader h2{
+  color:white;
+  font-size:2.3rem;
+  font-weight:950;
+  margin:8px 0;
+}
+
+.loginFormHeader p{
+  color:#a8b0c3;
+  line-height:1.5;
+  margin-bottom:28px;
+}
+
+.loginFormCard label{
+  color:#9ca3af;
+  font-weight:850;
+  display:block;
+  margin:18px 0 10px;
+}
+
+.loginInputBox{
+  height:60px;
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.07);
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:0 18px;
+}
+
+.loginInputBox svg{
+  color:#ff6b00;
+  flex-shrink:0;
+}
+
+.loginInputBox input{
+  width:100%;
+  border:none;
+  outline:none;
+  background:transparent;
+  color:white;
+  font-weight:800;
+  font-size:.96rem;
+}
+
+.loginInputBox input::placeholder{
+  color:rgba(255,255,255,.42);
+}
+
+.showPasswordBtn{
+  border:none;
+  background:transparent;
+  color:#ff6b00;
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+}
+
+.loginSubmitBtn{
+  width:100%;
+  height:60px;
+  margin-top:26px;
+  border:none;
+  border-radius:20px;
+  background:linear-gradient(135deg,#ff6b00,#ff8c1f);
+  color:white;
+  font-weight:950;
+  font-size:1rem;
+  cursor:pointer;
+  box-shadow:0 16px 36px rgba(255,107,0,.35);
+}
+
+.loginSubmitBtn:disabled{
+  opacity:.65;
+  cursor:not-allowed;
+}
+
+@media(max-width:900px){
+  .loginProPage{
+    grid-template-columns:1fr;
+    padding:18px;
+  }
+
+  .loginBrandPanel{
+    padding:30px;
+  }
+
+  .loginBrandPanel h1{
+    font-size:3rem;
+  }
+
+  .loginFeatureGrid{
+    grid-template-columns:1fr;
+  }
+
+  .loginFormPanel{
+    padding:26px;
+  }
+}
+
+@media(max-width:520px){
+  .loginProPage{
+    padding:12px;
+  }
+
+  .loginBrandPanel,
+  .loginFormPanel{
+    border-radius:26px;
+  }
+
+  .loginBrandPanel h1{
+    font-size:2.5rem;
+  }
+}
