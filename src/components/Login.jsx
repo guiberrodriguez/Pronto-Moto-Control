@@ -42,17 +42,6 @@ export default function Login() {
           <img src="/logo.png" alt="Pronto Moto" />
         </div>
 
-        <span>Plataforma empresarial</span>
-
-        <h1>
-          Pronto<span>Moto</span>
-        </h1>
-
-        <p>
-          Control de motos, clientes, pagos, morosidad, contratos,
-          reportes y operación financiera en tiempo real.
-        </p>
-
       </section>
 
       <section className="loginFormPanel">
