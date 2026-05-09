@@ -449,6 +449,44 @@ function Dashboard({user}){
     return `${prefijo}-${secuencia}`;
   }
 
+async function guardarEmpresa(){
+  if(!esAdmin){
+    return alert("Solo el administrador puede editar la empresa");
+  }
+
+  if(!empresaActual?.id){
+    return alert("No hay empresa seleccionada");
+  }
+
+  try{
+    await updateDoc(doc(db,"empresas",empresaActual.id),{
+      nombre:empresa.nombre || "",
+      telefono:empresa.telefono || "",
+      direccion:empresa.direccion || "",
+      rnc:empresa.rnc || "",
+      notas:empresa.notas || ""
+    });
+
+    await registrarAuditoria({
+      accion:"editar",
+      modulo:"empresa",
+      descripcion:`Empresa actualizada: ${empresa.nombre}`,
+      usuario:usuarioActual,
+      extra:{
+        empresaId:empresaActual.id,
+        empresaNombre:empresa.nombre
+      }
+    });
+
+    alert("Datos de la empresa guardados correctamente");
+
+    cargar();
+  }catch(e){
+    alert("No se pudo guardar la empresa");
+    console.log(e);
+  }
+}
+
   async function guardarCliente(){
     if(!esAdmin){
       return alert("Solo el administrador puede crear o editar clientes");
@@ -1498,11 +1536,12 @@ function Dashboard({user}){
             />
           )}
 
-          {tab==="empresa" && (
+         {tab==="empresa" && (
             <Empresa
               esAdmin={esAdmin}
               empresa={empresa}
               setEmpresa={setEmpresa}
+              guardarEmpresa={guardarEmpresa}
             />
           )}
 
