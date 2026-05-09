@@ -1,7 +1,14 @@
-import React from "react";
-import { Bike, Edit, FileText, Trash2 } from "lucide-react";
-import { money } from "../utils/helpers";
-import IconTextButton from "./IconTextButton";
+import {
+  Bike,
+  Plus,
+  Pencil,
+  Trash2,
+  Printer,
+  MapPinned,
+  BadgeDollarSign,
+  AlertTriangle,
+  ShieldCheck,
+} from "lucide-react";
 
 export default function Motos({
   esAdmin,
@@ -16,155 +23,276 @@ export default function Motos({
   imprimirContrato,
   deudaMoto,
   ingresosPorMoto,
-  gastosPorMoto
-}){
-  return (
-    <div className="card">
-      <div className="sectionHeader">
-        <div>
-          <p className="muted">Inventario y asignaciones</p>
-          <h2>{editMoto ? "Editar moto" : "Crear moto"}</h2>
-        </div>
-      </div>
+  gastosPorMoto,
+}) {
 
-      {esAdmin && (
-        <>
+  function clienteMoto(id){
+    return clientes.find(c=>c.id===id);
+  }
+
+  return (
+    <div className="motosPage">
+
+      {/* HERO */}
+      <section className="motosHero">
+
+        <div>
+          <span>Gestión de flota</span>
+          <h1>Motos</h1>
+
+          <p>
+            Control operativo de motocicletas, contratos,
+            cobranzas y estado financiero.
+          </p>
+        </div>
+
+        <button
+          className="saveMotoBtn"
+          onClick={guardarMoto}
+          disabled={!esAdmin}
+        >
+          <Plus size={20}/>
+          {editMoto ? "Actualizar moto" : "Registrar moto"}
+        </button>
+
+      </section>
+
+      {/* FORM */}
+      <section className="motoFormCard">
+
+        <h2>
+          {editMoto ? "Editar motocicleta" : "Registrar motocicleta"}
+        </h2>
+
+        <div className="motoFormGrid">
+
           <input
             placeholder="Placa"
             value={moto.placa}
-            onChange={e=>setMoto({...moto,placa:e.target.value})}
+            onChange={(e)=>
+              setMoto({...moto,placa:e.target.value})
+            }
           />
 
           <input
             placeholder="Marca"
             value={moto.marca}
-            onChange={e=>setMoto({...moto,marca:e.target.value})}
+            onChange={(e)=>
+              setMoto({...moto,marca:e.target.value})
+            }
           />
 
           <input
             placeholder="Modelo"
             value={moto.modelo}
-            onChange={e=>setMoto({...moto,modelo:e.target.value})}
+            onChange={(e)=>
+              setMoto({...moto,modelo:e.target.value})
+            }
           />
 
           <input
             placeholder="Año"
             value={moto.anio}
-            onChange={e=>setMoto({...moto,anio:e.target.value})}
+            onChange={(e)=>
+              setMoto({...moto,anio:e.target.value})
+            }
           />
 
           <input
-            placeholder="Tracker / GPS"
+            placeholder="Tracker GPS"
             value={moto.tracker}
-            onChange={e=>setMoto({...moto,tracker:e.target.value})}
+            onChange={(e)=>
+              setMoto({...moto,tracker:e.target.value})
+            }
           />
 
           <select
             value={moto.clienteId}
-            onChange={e=>setMoto({...moto,clienteId:e.target.value})}
+            onChange={(e)=>
+              setMoto({...moto,clienteId:e.target.value})
+            }
           >
-            <option value="">Sin cliente asignado</option>
+            <option value="">Seleccionar cliente</option>
 
             {clientes.map(c=>(
               <option key={c.id} value={c.id}>
-                {c.idCliente || c.id} · {c.nombre}
+                {c.nombre}
               </option>
             ))}
           </select>
 
           <input
-            className="dateInput"
-            type="date"
-            value={moto.fechaAsignacion}
-            onChange={e=>setMoto({...moto,fechaAsignacion:e.target.value})}
-          />
-
-          <input
             placeholder="Pago diario"
             value={moto.pagoDiario}
-            onChange={e=>setMoto({...moto,pagoDiario:e.target.value})}
+            onChange={(e)=>
+              setMoto({...moto,pagoDiario:e.target.value})
+            }
           />
 
           <input
             placeholder="Depósito"
             value={moto.deposito}
-            onChange={e=>setMoto({...moto,deposito:e.target.value})}
+            onChange={(e)=>
+              setMoto({...moto,deposito:e.target.value})
+            }
           />
 
-          <IconTextButton
-            icon={Bike}
-            label={editMoto ? "Guardar cambios" : "Crear moto"}
-            onClick={guardarMoto}
-          />
-        </>
-      )}
+        </div>
 
-      {motosVisibles.map(m=>{
-        const d=deudaMoto(m);
+      </section>
 
-        return (
-          <div className="item premiumItem" key={m.id}>
-            <b>{m.placa}</b>
+      {/* GRID */}
+      <section className="motosGrid">
 
-            <p>{m.marca} {m.modelo} · {m.anio}</p>
+        {motosVisibles.map((m)=>{
 
-            <p>Pago diario: {money(m.pagoDiario)}</p>
+          const cliente = clienteMoto(m.clienteId);
 
-            <p>Estado: {m.estado || "Disponible"}</p>
+          const deuda = deudaMoto(m);
 
-            <p>
-              Cliente: {
-                clientes.find(c=>c.id===m.clienteId)?.nombre || "Sin asignar"
-              }
-            </p>
+          const ingresos = ingresosPorMoto(m.id);
 
-            <p>Cuotas pendientes: {d.cuotasPendientes}</p>
+          const gastos = gastosPorMoto(m.id);
 
-            <p>Monto pendiente: {money(d.montoPendiente)}</p>
+          const neto = ingresos - gastos;
 
-            <p>Estatus: {d.estatus}</p>
+          return (
 
-            <p>Ingresos: {money(ingresosPorMoto(m.id))}</p>
+            <div
+              key={m.id}
+              className="motoCard"
+            >
 
-            <p>Gastos: {money(gastosPorMoto(m.id))}</p>
+              <div className="motoCardTop">
 
-            <p>
-              Neto moto: {
-                money(
-                  ingresosPorMoto(m.id)-gastosPorMoto(m.id)
-                )
-              }
-            </p>
+                <div className="motoIcon">
+                  <Bike size={28}/>
+                </div>
 
-            <div className="actionRow">
-              {esAdmin && (
-                <IconTextButton
-                  icon={Edit}
-                  label="Editar"
+                <span
+                  className={
+                    m.clienteId
+                      ? deuda.cuotasPendientes >= 1
+                        ? "estadoMoto mora"
+                        : "estadoMoto alquilada"
+                      : "estadoMoto disponible"
+                  }
+                >
+                  {
+                    m.clienteId
+                      ? deuda.cuotasPendientes >= 1
+                        ? "En mora"
+                        : "Alquilada"
+                      : "Disponible"
+                  }
+                </span>
+
+              </div>
+
+              <h2>
+                {m.placa}
+              </h2>
+
+              <p className="motoModelo">
+                {m.marca} {m.modelo}
+              </p>
+
+              <div className="motoInfoGrid">
+
+                <div className="motoInfoItem">
+                  <small>Cliente</small>
+
+                  <strong>
+                    {cliente?.nombre || "Sin asignar"}
+                  </strong>
+                </div>
+
+                <div className="motoInfoItem">
+                  <small>Pago diario</small>
+
+                  <strong>
+                    RD${m.pagoDiario}
+                  </strong>
+                </div>
+
+                <div className="motoInfoItem">
+                  <small>Ingresos</small>
+
+                  <strong className="greenText">
+                    RD${ingresos}
+                  </strong>
+                </div>
+
+                <div className="motoInfoItem">
+                  <small>Gastos</small>
+
+                  <strong className="redText">
+                    RD${gastos}
+                  </strong>
+                </div>
+
+                <div className="motoInfoItem">
+                  <small>Neto</small>
+
+                  <strong className="orangeText">
+                    RD${neto}
+                  </strong>
+                </div>
+
+                <div className="motoInfoItem">
+                  <small>GPS</small>
+
+                  <strong>
+                    {m.tracker || "No asignado"}
+                  </strong>
+                </div>
+
+              </div>
+
+              {deuda.cuotasPendientes >= 1 && (
+                <div className="moraAlert">
+
+                  <AlertTriangle size={18}/>
+
+                  <span>
+                    {deuda.cuotasPendientes} cuota(s) pendiente(s)
+                  </span>
+
+                </div>
+              )}
+
+              <div className="motoActions">
+
+                <button
+                  className="motoBtn blue"
                   onClick={()=>editarMoto(m)}
-                />
-              )}
+                >
+                  <Pencil size={18}/>
+                </button>
 
-              {esAdmin && (
-                <IconTextButton
-                  icon={FileText}
-                  label="Contrato"
-                  onClick={()=>imprimirContrato(m)}
-                />
-              )}
-
-              {esAdmin && (
-                <IconTextButton
-                  icon={Trash2}
-                  label="Eliminar"
-                  className="deleteBtn"
+                <button
+                  className="motoBtn red"
                   onClick={()=>eliminarMoto(m.id)}
-                />
-              )}
+                >
+                  <Trash2 size={18}/>
+                </button>
+
+                <button
+                  className="motoBtn orange"
+                  onClick={()=>imprimirContrato(m)}
+                >
+                  <Printer size={18}/>
+                </button>
+
+              </div>
+
             </div>
-          </div>
-        );
-      })}
+
+          );
+        })}
+
+      </section>
+
     </div>
   );
 }
