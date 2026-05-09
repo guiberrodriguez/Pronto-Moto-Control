@@ -6613,3 +6613,66 @@ textarea:focus{
     display:none;
   }
 }
+
+/* =========================
+   FIX CONTRASTE MODO CLARO
+========================= */
+
+.lightMode .mobileTabItem{
+  background:#ffffff !important;
+  color:#1e293b !important;
+
+  border:1px solid rgba(15,23,42,.08);
+
+  box-shadow:
+    0 8px 24px rgba(15,23,42,.06);
+}
+
+.lightMode .mobileTabItem svg{
+  color:#ff6b00 !important;
+}
+
+.lightMode .mobileTabItem.active{
+  background:linear-gradient(
+    135deg,
+    #ff6b00,
+    #ff8c1f
+  ) !important;
+
+  color:white !important;
+
+  box-shadow:
+    0 14px 30px rgba(255,107,0,.22);
+}
+
+.lightMode .mobileTabItem.active svg{
+  color:white !important;
+}
+
+/* sidebar desktop */
+
+.lightMode .sidebarItem{
+  color:#334155 !important;
+}
+
+.lightMode .sidebarItem svg{
+  color:#ff6b00 !important;
+}
+
+.lightMode .sidebarItem:hover{
+  background:rgba(255,255,255,.85) !important;
+}
+
+.lightMode .sidebarItem.active{
+  background:linear-gradient(
+    135deg,
+    #ff6b00,
+    #ff8c1f
+  ) !important;
+
+  color:white !important;
+}
+
+.lightMode .sidebarItem.active svg{
+  color:white !important;
+}
