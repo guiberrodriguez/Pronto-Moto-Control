@@ -1,17 +1,15 @@
-import React from "react";
-import { signOut } from "firebase/auth";
 import {
   Menu,
+  RefreshCcw,
   Sun,
   Moon,
-  RefreshCw,
-  Settings,
-  Bell,
-  LogOut
+  LogOut,
+  Building2,
+  UserRound,
 } from "lucide-react";
 
+import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
-import { getNombreUsuario } from "../utils/helpers";
 
 export default function TopBar({
   user,
@@ -22,66 +20,79 @@ export default function TopBar({
   setTab,
   menuAbierto,
   setMenuAbierto,
-  esAdmin
-}){
+  esAdmin,
+}) {
+  async function salir() {
+    await signOut(auth);
+  }
+
   return (
-    <div className="topBar premiumTopBar">
-      <div className="brandArea premiumBrand">
-        <img
-          src="/logo.png"
-          alt="Pronto Moto"
-          className="logoMain premiumLogo"
-          onError={e=>{e.currentTarget.style.display="none"}}
-        />
+    <header className="topBarPro">
+      <div className="topBarBrand">
+        <img src="/logo.png" alt="Pronto Moto" />
 
         <div>
-          <p className="muted">Panel empresarial</p>
-          <h2 className="saludo">
-            Hola {getNombreUsuario(usuarioActual,user)}!
-          </h2>
+          <span>Panel empresarial</span>
+          <h1>Hola Guiber!</h1>
         </div>
       </div>
 
-      <div className="menuArea">
+      <div className="topBarActions">
+        {esAdmin && (
+          <button
+            className="topIconBtn"
+            onClick={() => setTab("empresa")}
+            title="Empresa"
+          >
+            <Building2 size={20} />
+          </button>
+        )}
+
         <button
-          className="iconBtn"
-          onClick={()=>setMenuAbierto(!menuAbierto)}
-          title="Menú"
+          className="topIconBtn"
+          onClick={cargar}
+          title="Actualizar"
         >
-          <Menu size={24}/>
+          <RefreshCcw size={20} />
         </button>
 
-        {menuAbierto && (
-          <div className="dropdownMenu premiumDropdown">
-            <button onClick={()=>{toggleTema(); setMenuAbierto(false);}}>
-              {tema === "dark" ? <Sun size={18}/> : <Moon size={18}/>}
-              <span>{tema === "dark" ? "Modo claro" : "Modo oscuro"}</span>
-            </button>
+        <button
+          className="topIconBtn"
+          onClick={toggleTema}
+          title="Cambiar tema"
+        >
+          {tema === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
 
-            <button onClick={()=>{cargar(); setMenuAbierto(false);}}>
-              <RefreshCw size={18}/>
-              <span>Actualizar</span>
-            </button>
+        <div className="topUserBox">
+          <UserRound size={18} />
 
-            <button onClick={()=>{setTab("configuracion"); setMenuAbierto(false);}}>
-              <Settings size={18}/>
-              <span>Configuración</span>
-            </button>
+          <div>
+            <strong>
+              {usuarioActual?.nombre || user?.email || "Usuario"}
+            </strong>
 
-            {esAdmin && (
-              <button onClick={()=>{setTab("notificaciones"); setMenuAbierto(false);}}>
-                <Bell size={18}/>
-                <span>Notificaciones</span>
-              </button>
-            )}
-
-            <button onClick={()=>signOut(auth)}>
-              <LogOut size={18}/>
-              <span>Salir</span>
-            </button>
+            <small>
+              {usuarioActual?.rol || "admin"}
+            </small>
           </div>
-        )}
+        </div>
+
+        <button
+          className="topLogoutBtn"
+          onClick={salir}
+          title="Salir"
+        >
+          <LogOut size={20} />
+        </button>
+
+        <button
+          className="topMenuBtn"
+          onClick={() => setMenuAbierto(!menuAbierto)}
+        >
+          <Menu size={28} />
+        </button>
       </div>
-    </div>
+    </header>
   );
 }
