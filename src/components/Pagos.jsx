@@ -211,18 +211,22 @@ export default function Pagos({
               Papel comprobante
             </label>
 
-            <select
+           <select
               value={papelComprobante}
               onChange={(e)=>
                 setPapelComprobante(e.target.value)
               }
             >
               <option value="normal">
-                Normal
+                Comprobante normal
               </option>
-
+            
               <option value="ticket">
-                Ticket
+                Ticket térmico + QR
+              </option>
+            
+              <option value="ticketPremium">
+                Ticket premium completo
               </option>
             </select>
 
