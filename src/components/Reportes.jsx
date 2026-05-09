@@ -1,229 +1,403 @@
-import { exportarExcelPRO } from "../utils/excel";
-import React, { useMemo } from "react";
-import { FileText, Printer } from "lucide-react";
-import { money, today } from "../utils/helpers";
-import IconTextButton from "./IconTextButton";
-import { abrirImpresion } from "../utils/print";
+import {
+  BarChart3,
+  Wallet,
+  TrendingUp,
+  TrendingDown,
+  AlertTriangle,
+  Users,
+  Bike,
+  ShieldAlert,
+} from "lucide-react";
 
 export default function Reportes({
-  esAdmin,
   pagos,
   gastos,
   motos,
   clientes,
   usuarios,
-  empresa
-}){
-  if(!esAdmin) return null;
+  empresa,
+}) {
 
-  const fechaHoy = today();
+  const ingresos = pagos.reduce(
+    (s,p)=>s+Number(p.monto || 0),
+    0
+  );
 
-  const pagosHoy = useMemo(()=>{
-    return pagos.filter(p=>p.fecha===fechaHoy);
-  },[pagos,fechaHoy]);
+  const egresos = gastos.reduce(
+    (s,g)=>s+Number(g.monto || 0),
+    0
+  );
 
-  const gastosHoy = useMemo(()=>{
-    return gastos.filter(g=>g.fecha===fechaHoy);
-  },[gastos,fechaHoy]);
+  const neto = ingresos-egresos;
 
-  const totalPagosHoy = pagosHoy.reduce((s,p)=>s+Number(p.monto||0),0);
-  const totalGastosHoy = gastosHoy.reduce((s,g)=>s+Number(g.monto||0),0);
-  const netoHoy = totalPagosHoy-totalGastosHoy;
+  const motosAlquiladas =
+    motos.filter(m=>m.clienteId).length;
 
-  const totalGeneralPagos = pagos.reduce((s,p)=>s+Number(p.monto||0),0);
-  const totalGeneralGastos = gastos.reduce((s,g)=>s+Number(g.monto||0),0);
-  const netoGeneral = totalGeneralPagos-totalGeneralGastos;
+  const motosDisponibles =
+    motos.filter(m=>!m.clienteId).length;
 
-  const pagosPorCobrador = usuarios.map(u=>{
-    const lista = pagos.filter(p=>p.cobradorId===u.uid || p.cobradorId===u.id);
-    const total = lista.reduce((s,p)=>s+Number(p.monto||0),0);
+  const pagosHoy =
+    pagos.filter(
+      p=>p.fecha === new Date().toISOString().slice(0,10)
+    ).length;
 
-    return {
-      nombre:u.nombre || u.correo,
-      correo:u.correo,
-      cantidad:lista.length,
-      total
-    };
-  }).filter(x=>x.cantidad>0);
+  const cobradores =
+    usuarios.filter(
+      u=>u.rol === "cobrador"
+    ).length;
 
-  function imprimirReporteDiario(){
-    const html = `
-      <div class="premiumPdf">
-        <div class="pdfHeader">
-          <div class="pdfLogoArea">
-            <img class="printLogo" src="/logo.png" />
-          </div>
+  const clientesActivos =
+    clientes.length;
 
-          <div class="pdfCompany">
-            <h1>${empresa.nombre}</h1>
-            <p>${empresa.telefono || ""}</p>
-            <p>${empresa.direccion || ""}</p>
-            <p>RNC/Cédula: ${empresa.rnc || "N/A"}</p>
-          </div>
-        </div>
-
-        <div class="pdfTitle">CIERRE DIARIO</div>
-
-        <div class="pdfGrid">
-          <div class="infoBlock">
-            <span class="label">Fecha</span>
-            <span class="value">${fechaHoy}</span>
-          </div>
-
-          <div class="infoBlock amountBlock">
-            <span class="label">Ingresos del día</span>
-            <span class="amount">${money(totalPagosHoy)}</span>
-          </div>
-
-          <div class="infoBlock amountBlock">
-            <span class="label">Gastos del día</span>
-            <span class="amount dangerAmount">${money(totalGastosHoy)}</span>
-          </div>
-
-          <div class="infoBlock amountBlock">
-            <span class="label">Neto del día</span>
-            <span class="amount">${money(netoHoy)}</span>
-          </div>
-        </div>
-
-        <h3 style="margin-top:35px;">Pagos del día</h3>
-
-        <table style="width:100%;border-collapse:collapse;margin-top:15px;">
-          <tr>
-            <th>ID</th>
-            <th>Cliente</th>
-            <th>Moto</th>
-            <th>Monto</th>
-            <th>Cobrador</th>
-          </tr>
-
-          ${pagosHoy.map(p=>`
-            <tr>
-              <td>${p.id}</td>
-              <td>${p.cliente}</td>
-              <td>${p.moto}</td>
-              <td>${money(p.monto)}</td>
-              <td>${p.cobrador || ""}</td>
-            </tr>
-          `).join("")}
-        </table>
-
-        <h3 style="margin-top:35px;">Gastos del día</h3>
-
-        <table style="width:100%;border-collapse:collapse;margin-top:15px;">
-          <tr>
-            <th>Categoría</th>
-            <th>Moto</th>
-            <th>Monto</th>
-            <th>Proveedor</th>
-          </tr>
-
-          ${gastosHoy.map(g=>`
-            <tr>
-              <td>${g.categoria}</td>
-              <td>${motos.find(m=>m.id===g.motoId)?.placa || "N/A"}</td>
-              <td>${money(g.monto)}</td>
-              <td>${g.proveedor || ""}</td>
-            </tr>
-          `).join("")}
-        </table>
-
-        <div class="pdfFooter">
-          <p>Reporte generado automáticamente por ${empresa.nombre}</p>
-        </div>
-      </div>
-    `;
-
-    abrirImpresion("Cierre diario",html,"normal");
-  }
+  const morosos =
+    motos.filter(m=>m.estado === "En mora").length;
 
   return (
-    <div className="card">
-      <div className="sectionHeader">
+
+    <div className="reportesPage">
+
+      {/* HERO */}
+      <section className="reportesHero">
+
         <div>
-          <p className="muted">Finanzas y operación</p>
-          <h2>Reportes empresariales PRO</h2>
-        </div>
-      </div>
 
-      <div className="gridStats premiumStats">
-        <div className="card stat premiumStat">
-          <span>Ingresos hoy</span>
-          <b>{money(totalPagosHoy)}</b>
-        </div>
+          <span>
+            Inteligencia empresarial
+          </span>
 
-        <div className="card stat premiumStat dangerStat">
-          <span>Gastos hoy</span>
-          <b>{money(totalGastosHoy)}</b>
-        </div>
+          <h1>
+            Reportes Ejecutivos
+          </h1>
 
-        <div className="card stat premiumStat successStat">
-          <span>Neto hoy</span>
-          <b>{money(netoHoy)}</b>
+          <p>
+            Análisis financiero, operativo
+            y estratégico de la empresa.
+          </p>
+
         </div>
 
-        <div className="card stat premiumStat">
-          <span>Ingresos total</span>
-          <b>{money(totalGeneralPagos)}</b>
+        <div className="reportesHeroIcon">
+
+          <BarChart3 size={42}/>
+
         </div>
 
-        <div className="card stat premiumStat dangerStat">
-          <span>Gastos total</span>
-          <b>{money(totalGeneralGastos)}</b>
+      </section>
+
+      {/* KPIS */}
+      <section className="reportesGrid">
+
+        <div className="reporteCard ingresos">
+
+          <div className="reporteTop">
+
+            <div className="reporteIcon">
+              <Wallet size={24}/>
+            </div>
+
+            <span>
+              Ingresos
+            </span>
+
+          </div>
+
+          <h2>
+            RD$
+            {Number(ingresos).toLocaleString()}
+          </h2>
+
+          <p>
+            Total cobrado
+          </p>
+
         </div>
 
-        <div className="card stat premiumStat successStat">
-          <span>Neto total</span>
-          <b>{money(netoGeneral)}</b>
+        <div className="reporteCard gastos">
+
+          <div className="reporteTop">
+
+            <div className="reporteIcon">
+              <TrendingDown size={24}/>
+            </div>
+
+            <span>
+              Gastos
+            </span>
+
+          </div>
+
+          <h2>
+            RD$
+            {Number(egresos).toLocaleString()}
+          </h2>
+
+          <p>
+            Egresos registrados
+          </p>
+
         </div>
-      </div>
 
-      <div className="actionRow">
-        <IconTextButton
-          icon={Printer}
-          label="Imprimir cierre diario PDF"
-          onClick={imprimirReporteDiario}
-        />
-        
-          <IconTextButton
-            icon={FileText}
-            label="Exportar Excel PRO"
-            onClick={()=>
-              exportarExcelPRO({
-                pagos,
-                gastos,
-                motos,
-                clientes,
-                usuarios,
-                empresa
-              })
-            }
-          />
-      </div>
+        <div className="reporteCard neto">
 
-      <h3>Resumen de hoy</h3>
+          <div className="reporteTop">
 
-      <div className="item premiumItem">
-        <p>Pagos registrados hoy: <b>{pagosHoy.length}</b></p>
-        <p>Gastos registrados hoy: <b>{gastosHoy.length}</b></p>
-        <p>Clientes registrados: <b>{clientes.length}</b></p>
-        <p>Motos registradas: <b>{motos.length}</b></p>
-      </div>
+            <div className="reporteIcon">
+              <TrendingUp size={24}/>
+            </div>
 
-      <h3>Reporte por cobrador</h3>
+            <span>
+              Ganancia neta
+            </span>
 
-      {pagosPorCobrador.length===0 && (
-        <p>No hay pagos asociados a cobradores todavía.</p>
-      )}
+          </div>
 
-      {pagosPorCobrador.map(c=>(
-        <div className="item premiumItem" key={c.correo}>
-          <b>{c.nombre}</b>
-          <p>{c.correo}</p>
-          <p>Cantidad de pagos: {c.cantidad}</p>
-          <p>Total cobrado: {money(c.total)}</p>
+          <h2>
+            RD$
+            {Number(neto).toLocaleString()}
+          </h2>
+
+          <p>
+            Resultado operativo
+          </p>
+
         </div>
-      ))}
+
+        <div className="reporteCard morosidad">
+
+          <div className="reporteTop">
+
+            <div className="reporteIcon">
+              <AlertTriangle size={24}/>
+            </div>
+
+            <span>
+              Morosidad
+            </span>
+
+          </div>
+
+          <h2>
+            {morosos}
+          </h2>
+
+          <p>
+            Motos en atraso
+          </p>
+
+        </div>
+
+      </section>
+
+      {/* ANALISIS */}
+      <section className="analisisGrid">
+
+        <div className="analisisCard">
+
+          <div className="analisisHeader">
+
+            <Bike size={24}/>
+
+            <h2>
+              Estado de flota
+            </h2>
+
+          </div>
+
+          <div className="analisisItems">
+
+            <div className="analisisItem">
+
+              <small>
+                Motos totales
+              </small>
+
+              <strong>
+                {motos.length}
+              </strong>
+
+            </div>
+
+            <div className="analisisItem">
+
+              <small>
+                Alquiladas
+              </small>
+
+              <strong className="greenText">
+                {motosAlquiladas}
+              </strong>
+
+            </div>
+
+            <div className="analisisItem">
+
+              <small>
+                Disponibles
+              </small>
+
+              <strong className="orangeText">
+                {motosDisponibles}
+              </strong>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div className="analisisCard">
+
+          <div className="analisisHeader">
+
+            <Users size={24}/>
+
+            <h2>
+              Operación
+            </h2>
+
+          </div>
+
+          <div className="analisisItems">
+
+            <div className="analisisItem">
+
+              <small>
+                Clientes activos
+              </small>
+
+              <strong>
+                {clientesActivos}
+              </strong>
+
+            </div>
+
+            <div className="analisisItem">
+
+              <small>
+                Cobradores
+              </small>
+
+              <strong className="greenText">
+                {cobradores}
+              </strong>
+
+            </div>
+
+            <div className="analisisItem">
+
+              <small>
+                Pagos hoy
+              </small>
+
+              <strong className="orangeText">
+                {pagosHoy}
+              </strong>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div className="analisisCard">
+
+          <div className="analisisHeader">
+
+            <ShieldAlert size={24}/>
+
+            <h2>
+              Riesgo financiero
+            </h2>
+
+          </div>
+
+          <div className="riesgoPanel">
+
+            <div className="riesgoBar">
+
+              <div
+                className="riesgoFill"
+                style={{
+                  width: `${
+                    motos.length
+                      ? (morosos/motos.length)*100
+                      : 0
+                  }%`
+                }}
+              />
+
+            </div>
+
+            <p>
+
+              {
+                motos.length
+                  ? Math.round(
+                      (morosos/motos.length)*100
+                    )
+                  : 0
+              }%
+
+              de la flota presenta riesgo operativo.
+
+            </p>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* RESUMEN */}
+      <section className="empresaResumen">
+
+        <h2>
+          Resumen Ejecutivo
+        </h2>
+
+        <p>
+          {empresa?.nombre || "Pronto Moto"}
+        </p>
+
+        <div className="empresaResumenGrid">
+
+          <div>
+            <small>
+              Ingresos
+            </small>
+
+            <strong className="greenText">
+              RD$
+              {Number(ingresos).toLocaleString()}
+            </strong>
+          </div>
+
+          <div>
+            <small>
+              Gastos
+            </small>
+
+            <strong className="redText">
+              RD$
+              {Number(egresos).toLocaleString()}
+            </strong>
+          </div>
+
+          <div>
+            <small>
+              Neto
+            </small>
+
+            <strong className="orangeText">
+              RD$
+              {Number(neto).toLocaleString()}
+            </strong>
+          </div>
+
+        </div>
+
+      </section>
+
     </div>
   );
 }
