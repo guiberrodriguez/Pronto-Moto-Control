@@ -1862,3 +1862,247 @@ textarea:focus{
     grid-template-columns:1fr;
   }
 }
+
+/* FIX CLIENTES PRO ADAPTADO A PRONTO MOTO */
+
+.clientesPage {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.clientesHero,
+.clienteFormCard,
+.clientesTablePro {
+  background: rgba(10, 18, 40, 0.72);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 28px;
+  padding: 26px;
+  box-shadow: 0 18px 45px rgba(0,0,0,.28);
+}
+
+.clientesHero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 22px;
+}
+
+.clientesHero span,
+.clientesTableHeader span {
+  color: #9ca3af;
+  font-weight: 800;
+}
+
+.clientesHero h1,
+.clienteFormCard h2,
+.clientesTableHeader h2 {
+  color: #fff;
+  font-weight: 900;
+  margin: 6px 0;
+}
+
+.clientesHero p {
+  color: #a8b0c3;
+  font-weight: 600;
+}
+
+.clienteFormGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.clienteFormGrid input,
+.clientesSearchBox input {
+  width: 100%;
+  height: 56px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.06);
+  color: #fff;
+  padding: 0 18px;
+  font-weight: 700;
+  outline: none;
+}
+
+.clienteFormGrid input::placeholder,
+.clientesSearchBox input::placeholder {
+  color: rgba(255,255,255,.52);
+}
+
+.clientFormActions {
+  display: flex;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.createClientBtn,
+.captureLocationBtn {
+  width: 100%;
+  min-height: 58px;
+  border: none;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #ff6b00, #ff8a1f);
+  color: #fff;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 14px 28px rgba(255,107,0,.25);
+}
+
+.clientesTableHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.clientesSearchBox {
+  min-width: 280px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.clientesSearchBox svg {
+  color: #ff6b00;
+}
+
+.clientesTableWrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.clientesTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 12px;
+  min-width: 850px;
+}
+
+.clientesTable th {
+  color: #9ca3af;
+  font-size: .82rem;
+  font-weight: 900;
+  text-align: left;
+  padding: 0 16px 8px;
+}
+
+.clientesTable td {
+  background: rgba(255,255,255,.055);
+  color: #e5e7eb;
+  font-weight: 700;
+  padding: 16px;
+  white-space: nowrap;
+}
+
+.clientesTable tbody tr td:first-child {
+  border-radius: 18px 0 0 18px;
+}
+
+.clientesTable tbody tr td:last-child {
+  border-radius: 0 18px 18px 0;
+}
+
+.clienteCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.clienteAvatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 15px;
+  background: rgba(255,107,0,.18);
+  color: #ff6b00;
+  display: grid;
+  place-items: center;
+}
+
+.estadoBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: .8rem;
+  font-weight: 900;
+}
+
+.estadoBadge.alDia {
+  color: #22c55e;
+  background: rgba(34,197,94,.15);
+}
+
+.estadoBadge.enMora {
+  color: #ef4444;
+  background: rgba(239,68,68,.15);
+}
+
+.clientesActions {
+  display: flex;
+  gap: 10px;
+}
+
+.actionBtn {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.actionBtn.view {
+  background: rgba(59,130,246,.18);
+  color: #60a5fa;
+}
+
+.actionBtn.edit {
+  background: rgba(245,158,11,.18);
+  color: #f59e0b;
+}
+
+.actionBtn.delete {
+  background: rgba(239,68,68,.18);
+  color: #ef4444;
+}
+
+.emptyClientes {
+  text-align: center;
+  color: #9ca3af !important;
+}
+
+@media (max-width: 768px) {
+  .clientesHero,
+  .clienteFormCard,
+  .clientesTablePro {
+    padding: 22px;
+    border-radius: 24px;
+  }
+
+  .clientesHero,
+  .clientesTableHeader,
+  .clientFormActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .clienteFormGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .clientesSearchBox {
+    min-width: 0;
+    width: 100%;
+  }
+}
