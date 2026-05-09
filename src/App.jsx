@@ -35,7 +35,7 @@ import Sidebar, { MobileTabs } from "./components/Sidebar";
 
 import Inicio from "./components/Inicio";
 
-import Clientes from "./components/Clientes";
+import Clientes, { ClientePerfil } from "./components/Clientes";
 
 import Motos from "./components/Motos";
 import Pagos from "./components/Pagos";
@@ -1387,13 +1387,12 @@ function Dashboard({user}){
                 setClienteVista={setClienteVista}
               />
 
-              <ClientePerfil
-                clienteVista={clienteVista}
-                setClienteVista={setClienteVista}
-                motos={motos}
-                pagos={pagos}
-                adjuntos={adjuntos}
-              />
+              {clienteVista && (
+                <ClientePerfil
+                  cliente={clienteVista}
+                  onClose={() => setClienteVista(null)}
+                />
+              )}
             </>
           )}
 
