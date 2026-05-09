@@ -3761,3 +3761,219 @@ textarea:focus{
     grid-template-columns:1fr;
   }
 }
+
+/* =========================
+   CAJA DIARIA PRO
+========================= */
+
+.cajaPage{
+  display:flex;
+  flex-direction:column;
+  gap:26px;
+}
+
+.cajaHero,
+.cajaCard,
+.cajaPanel,
+.cajaCierre{
+  background:
+    radial-gradient(circle at top right,
+      rgba(255,107,0,.12),
+      transparent 40%),
+    rgba(10,18,40,.78);
+
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:28px;
+  padding:26px;
+  box-shadow:0 18px 45px rgba(0,0,0,.28);
+}
+
+.cajaHero{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+}
+
+.cajaHero span{
+  color:#9ca3af;
+  font-weight:800;
+}
+
+.cajaHero h1{
+  color:white;
+  font-size:2.2rem;
+  font-weight:900;
+  margin:6px 0;
+}
+
+.cajaHero p{
+  color:#a8b0c3;
+  max-width:650px;
+}
+
+.cajaHeroIcon{
+  width:82px;
+  height:82px;
+  border-radius:26px;
+  display:grid;
+  place-items:center;
+  background:rgba(255,107,0,.16);
+  color:#ff6b00;
+  flex-shrink:0;
+}
+
+.cajaResumenGrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:22px;
+}
+
+.cajaCard{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.cajaCard svg{
+  color:#ff6b00;
+}
+
+.cajaCard span{
+  color:#9ca3af;
+  font-weight:900;
+}
+
+.cajaCard h2{
+  color:white;
+  font-size:2rem;
+  font-weight:900;
+}
+
+.cajaCard.ingresos{
+  border-color:rgba(34,197,94,.18);
+}
+
+.cajaCard.gastos{
+  border-color:rgba(239,68,68,.18);
+}
+
+.cajaCard.balance{
+  border-color:rgba(255,107,0,.18);
+}
+
+.cajaMovimientosGrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:22px;
+}
+
+.cajaPanelHeader{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:20px;
+}
+
+.cajaPanelHeader svg{
+  color:#ff6b00;
+}
+
+.cajaPanelHeader h2{
+  color:white;
+}
+
+.cajaLista{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.cajaItem{
+  background:rgba(255,255,255,.05);
+  border-radius:18px;
+  padding:16px;
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  align-items:center;
+}
+
+.cajaItem strong{
+  color:white;
+  display:block;
+}
+
+.cajaItem small{
+  color:#9ca3af;
+  display:block;
+  margin-top:5px;
+}
+
+.cajaItem span{
+  font-weight:900;
+}
+
+.cajaItem.pago span{
+  color:#22c55e;
+}
+
+.cajaItem.gasto span{
+  color:#ef4444;
+}
+
+.cajaEmpty{
+  color:#9ca3af;
+  font-weight:700;
+}
+
+.cajaCierre h2{
+  color:white;
+}
+
+.cajaCierre p{
+  color:#9ca3af;
+  margin-top:10px;
+}
+
+.cajaCierreGrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:18px;
+  margin-top:24px;
+}
+
+.cajaCierreGrid div{
+  background:rgba(255,255,255,.05);
+  border-radius:18px;
+  padding:18px;
+}
+
+.cajaCierreGrid small{
+  color:#9ca3af;
+}
+
+.cajaCierreGrid strong{
+  color:white;
+  display:block;
+  margin-top:8px;
+  font-size:1.1rem;
+}
+
+@media(max-width:768px){
+  .cajaHero{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .cajaHeroIcon{
+    width:100%;
+    height:70px;
+  }
+
+  .cajaResumenGrid,
+  .cajaMovimientosGrid,
+  .cajaCierreGrid{
+    grid-template-columns:1fr;
+  }
+}
