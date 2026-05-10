@@ -6676,3 +6676,30 @@ textarea:focus{
 .lightMode .sidebarItem.active svg{
   color:white !important;
 }
+
+/* FIX MENÚ MÓVIL SIN DAÑAR EL DISEÑO */
+
+.mobileSidebarTop img {
+  display: block !important;
+  width: 170px !important;
+  height: auto !important;
+  opacity: 1 !important;
+}
+
+.mobileSidebar .sidebarItem,
+.mobileSidebar .sidebarItem span {
+  color: #ffffff !important;
+  opacity: 1 !important;
+  font-weight: 900 !important;
+}
+
+.mobileSidebar .sidebarItem svg {
+  color: #ff6b00 !important;
+  opacity: 1 !important;
+}
+
+.mobileSidebar .sidebarItem.active,
+.mobileSidebar .sidebarItem.active span,
+.mobileSidebar .sidebarItem.active svg {
+  color: #ffffff !important;
+}
