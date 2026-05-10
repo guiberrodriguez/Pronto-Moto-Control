@@ -520,18 +520,18 @@ export default function Inicio({
       {!esAdmin && (
         <section className="card executiveCard">
           <p className="muted">
-            Vista limitada a clientes, pagos y motos asignadas al cobrador.
+            Vista limitada a clientes, pagos y morosidad.
           </p>
         </section>
       )}
-      
+
       <AnalyticsCharts
         pagos={pagosVisibles}
         gastos={[]}
         motos={motosVisibles}
         clientes={clientesVisibles}
       />
-      
+
     </div>
   );
 }
