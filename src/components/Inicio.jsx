@@ -1,3 +1,4 @@
+import AnalyticsCharts from "./AnalyticsCharts";
 import {
   TrendingUp,
   Wallet,
@@ -523,7 +524,14 @@ export default function Inicio({
           </p>
         </section>
       )}
-
+      
+      <AnalyticsCharts
+        pagos={pagosVisibles}
+        gastos={[]}
+        motos={motosVisibles}
+        clientes={clientesVisibles}
+      />
+      
     </div>
   );
 }
