@@ -6703,3 +6703,72 @@ textarea:focus{
 .mobileSidebar .sidebarItem.active svg {
   color: #ffffff !important;
 }
+
+/* =========================
+   ANALYTICS CHARTS PRO
+========================= */
+
+.analyticsGrid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:24px;
+  margin-top:28px;
+}
+
+.chartCard{
+  background:
+    radial-gradient(circle at top right,
+      rgba(255,107,0,.13),
+      transparent 42%),
+    rgba(10,18,40,.82);
+
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:30px;
+  padding:26px;
+
+  box-shadow:
+    0 18px 45px rgba(0,0,0,.28);
+
+  overflow:hidden;
+}
+
+.chartCard.fullWidth{
+  grid-column:span 2;
+}
+
+.chartHeader{
+  margin-bottom:22px;
+}
+
+.chartHeader span{
+  color:#9ca3af;
+  font-weight:900;
+  font-size:.82rem;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+
+.chartHeader h3{
+  color:white;
+  font-size:1.35rem;
+  font-weight:950;
+  margin-top:6px;
+}
+
+.lightMode .chartCard{
+  background:
+    radial-gradient(circle at top right,
+      rgba(255,107,0,.14),
+      transparent 42%),
+    rgba(10,18,40,.84);
+}
+
+@media(max-width:900px){
+  .analyticsGrid{
+    grid-template-columns:1fr;
+  }
+
+  .chartCard.fullWidth{
+    grid-column:span 1;
+  }
+}
