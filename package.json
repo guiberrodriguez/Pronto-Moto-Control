@@ -4,15 +4,17 @@
     "build": "vite build",
     "preview": "vite preview"
   },
-  "dependencies": {
-    "firebase": "latest",
-    "framer-motion": "^12.38.0",
-    "lucide-react": "^0.400.0",
-    "qrcode.react": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "recharts": "latest",
-    "vite": "latest",
-    "xlsx": "^0.18.5"
-  }
+     "dependencies": {
+      "@vitejs/plugin-react": "latest",
+      "firebase": "latest",
+      "framer-motion": "^12.38.0",
+      "lucide-react": "^0.400.0",
+      "qrcode.react": "latest",
+      "react": "latest",
+      "react-dom": "latest",
+      "recharts": "latest",
+      "vite": "latest",
+      "vite-plugin-pwa": "latest",
+      "xlsx": "^0.18.5"
+    }
 }
