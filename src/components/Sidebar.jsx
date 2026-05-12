@@ -1,3 +1,5 @@
+import { signOut } from "firebase/auth";
+import { auth } from "../firebase";
 import {
   Home,
   Users,
@@ -59,6 +61,10 @@ export default function Sidebar({
     setMenuAbierto(false);
   }
 
+async function salir(){
+  await signOut(auth);
+}
+
   return (
     <>
       <aside className="sidebarPro">
@@ -97,6 +103,11 @@ export default function Sidebar({
               tab={tab}
               seleccionar={seleccionar}
             />
+            
+            <button className="mobileLogoutBtn" onClick={salir}>
+              Cerrar sesión
+            </button>
+            
           </aside>
         </>
       )}
