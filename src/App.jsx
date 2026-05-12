@@ -51,7 +51,6 @@ import Auditoria from "./components/Auditoria";
 import Reportes from "./components/Reportes";
 import KPIs from "./components/KPIs";
 import CajaDiaria from "./components/CajaDiaria";
-import SelectorEmpresa from "./components/SelectorEmpresa";
 
 import {
   EmpresaProvider,
@@ -1357,18 +1356,6 @@ async function guardarEmpresa(){
     `;
 
     abrirImpresion("Contrato "+m.placa,html,"normal");
-  }
-
-  if(esAdmin && !empresaActual){
-    return (
-      <div className="premiumShell">
-        <SelectorEmpresa
-          empresas={empresas}
-          empresaActual={empresaActual}
-          setEmpresaActual={setEmpresaActual}
-        />
-      </div>
-    );
   }
 
   return (
