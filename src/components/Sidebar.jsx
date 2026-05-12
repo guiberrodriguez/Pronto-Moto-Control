@@ -53,6 +53,8 @@ export default function Sidebar({
   esAdmin,
   menuAbierto,
   setMenuAbierto,
+  toggleTema,
+  tema,
 }) {
   const items = esAdmin ? menuAdmin : menuCobrador;
 
@@ -103,6 +105,10 @@ async function salir(){
               tab={tab}
               seleccionar={seleccionar}
             />
+            
+            <button className="mobileThemeBtn" onClick={toggleTema}>
+              {tema === "dark" ? "Modo claro" : "Modo oscuro"}
+            </button>
             
             <button className="mobileLogoutBtn" onClick={salir}>
               Cerrar sesión
