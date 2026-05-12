@@ -1373,14 +1373,16 @@ async function guardarEmpresa(){
       />
 
       <div className="premiumLayout">
-        <Sidebar
-          tab={tab}
-          setTab={setTab}
-          esAdmin={esAdmin}
-          menuAbierto={menuAbierto}
-          setMenuAbierto={setMenuAbierto}
-        />
-
+      <Sidebar
+        tab={tab}
+        setTab={setTab}
+        esAdmin={esAdmin}
+        menuAbierto={menuAbierto}
+        setMenuAbierto={setMenuAbierto}
+        toggleTema={toggleTema}
+        tema={tema}
+      />
+      
         <main className="mainPanel">
           <MobileTabs tab={tab} setTab={setTab} esAdmin={esAdmin}/>
 
