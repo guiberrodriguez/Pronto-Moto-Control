@@ -7084,20 +7084,22 @@ textarea:focus{
   font-weight:950;
 }
 
-.inicioStatCard.orange{
-  background:linear-gradient(135deg,#ff6b00,#ff8c1f);
+.inicioStatCard{
+  background:
+    radial-gradient(circle at top right, rgba(255,107,0,.12), transparent 42%),
+    rgba(10,18,40,.82);
+
+  border:1px solid rgba(255,255,255,.08);
+  backdrop-filter:blur(12px);
 }
 
-.inicioStatCard.blue{
-  background:linear-gradient(135deg,#2563eb,#60a5fa);
+.lightMode .inicioStatCard{
+  background:white;
+  border:1px solid #e5e7eb;
 }
 
-.inicioStatCard.red{
-  background:linear-gradient(135deg,#dc2626,#fb7185);
-}
-
-.inicioStatCard.green{
-  background:linear-gradient(135deg,#16a34a,#4ade80);
+.inicioStatCard svg{
+  color:#ff6b00;
 }
 
 .inicioPanelsGrid{
