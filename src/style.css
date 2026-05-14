@@ -6974,3 +6974,263 @@ textarea:focus{
   font-weight:900;
   cursor:pointer;
 }
+
+/* =========================
+   INICIO PRO LIMPIO
+========================= */
+
+.inicioCleanPage{
+  display:flex;
+  flex-direction:column;
+  gap:26px;
+}
+
+.inicioHeroClean,
+.inicioPanelCard,
+.inicioFleetCard{
+  background:
+    radial-gradient(circle at top right, rgba(255,107,0,.12), transparent 42%),
+    rgba(10,18,40,.82);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:30px;
+  padding:28px;
+  box-shadow:0 18px 45px rgba(0,0,0,.28);
+}
+
+.lightMode .inicioHeroClean,
+.lightMode .inicioPanelCard,
+.lightMode .inicioFleetCard{
+  background:white;
+  color:#111827;
+}
+
+.inicioHeroClean{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:22px;
+}
+
+.inicioHeroClean span,
+.inicioPanelHeader span{
+  color:#9ca3af;
+  font-weight:900;
+  text-transform:uppercase;
+  font-size:.82rem;
+}
+
+.inicioHeroClean h1,
+.inicioPanelHeader h2{
+  color:white;
+  font-weight:950;
+  margin-top:6px;
+}
+
+.lightMode .inicioHeroClean h1,
+.lightMode .inicioPanelHeader h2{
+  color:#111827;
+}
+
+.inicioHeroClean h1{
+  font-size:2.2rem;
+}
+
+.inicioHeroClean p{
+  color:#a8b0c3;
+  margin-top:10px;
+  max-width:680px;
+  font-weight:650;
+  line-height:1.5;
+}
+
+.inicioHeroIcon{
+  width:78px;
+  height:78px;
+  border-radius:26px;
+  display:grid;
+  place-items:center;
+  background:rgba(255,107,0,.16);
+  color:#ff6b00;
+  flex-shrink:0;
+}
+
+.inicioStatsGrid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:18px;
+}
+
+.inicioStatCard{
+  min-height:150px;
+  border-radius:28px;
+  padding:24px;
+  color:white;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:16px;
+  box-shadow:0 18px 38px rgba(0,0,0,.22);
+  overflow:hidden;
+}
+
+.inicioStatCard span{
+  font-weight:850;
+  opacity:.9;
+}
+
+.inicioStatCard h2{
+  margin-top:14px;
+  font-size:2rem;
+  font-weight:950;
+}
+
+.inicioStatCard.orange{
+  background:linear-gradient(135deg,#ff6b00,#ff8c1f);
+}
+
+.inicioStatCard.blue{
+  background:linear-gradient(135deg,#2563eb,#60a5fa);
+}
+
+.inicioStatCard.red{
+  background:linear-gradient(135deg,#dc2626,#fb7185);
+}
+
+.inicioStatCard.green{
+  background:linear-gradient(135deg,#16a34a,#4ade80);
+}
+
+.inicioPanelsGrid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:22px;
+}
+
+.inicioPanelHeader{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:18px;
+  margin-bottom:24px;
+}
+
+.inicioPanelHeader svg{
+  color:#ff6b00;
+}
+
+.inicioList{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.inicioListItem{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:20px;
+  padding:18px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:18px;
+}
+
+.lightMode .inicioListItem{
+  background:#f8fafc;
+  border-color:#e5e7eb;
+}
+
+.inicioListItem strong{
+  color:white;
+  display:block;
+  font-weight:950;
+}
+
+.lightMode .inicioListItem strong{
+  color:#111827;
+}
+
+.inicioListItem small{
+  color:#9ca3af;
+  display:block;
+  margin-top:6px;
+  font-weight:800;
+}
+
+.inicioDebt{
+  text-align:right;
+}
+
+.inicioDebt span{
+  display:block;
+  color:#ef4444;
+  font-weight:950;
+}
+
+.inicioDebt b{
+  display:block;
+  color:white;
+  margin-top:6px;
+}
+
+.lightMode .inicioDebt b{
+  color:#111827;
+}
+
+.inicioEmpty{
+  color:#9ca3af;
+  font-weight:800;
+}
+
+.inicioFleetGrid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:16px;
+}
+
+.inicioFleetGrid div{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:22px;
+  padding:22px;
+}
+
+.lightMode .inicioFleetGrid div{
+  background:#f8fafc;
+  border-color:#e5e7eb;
+}
+
+.inicioFleetGrid small{
+  color:#9ca3af;
+  font-weight:850;
+}
+
+.inicioFleetGrid strong{
+  color:white;
+  display:block;
+  font-size:1.7rem;
+  font-weight:950;
+  margin-top:10px;
+}
+
+.lightMode .inicioFleetGrid strong{
+  color:#111827;
+}
+
+@media(max-width:900px){
+  .inicioHeroClean{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .inicioHeroIcon{
+    width:100%;
+    height:70px;
+  }
+
+  .inicioStatsGrid,
+  .inicioPanelsGrid,
+  .inicioFleetGrid{
+    grid-template-columns:1fr;
+  }
+}
