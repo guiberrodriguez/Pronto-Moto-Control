@@ -7236,3 +7236,33 @@ textarea:focus{
     grid-template-columns:1fr;
   }
 }
+
+/* FIX INICIO: TARJETAS ESTILO KPI */
+
+.inicioStatsGrid .inicioStatCard{
+  background:
+    radial-gradient(circle at top right, rgba(255,107,0,.12), transparent 42%),
+    rgba(10,18,40,.82) !important;
+
+  border:1px solid rgba(255,255,255,.08) !important;
+  color:white !important;
+  backdrop-filter:blur(12px);
+}
+
+.lightMode .inicioStatsGrid .inicioStatCard{
+  background:white !important;
+  border:1px solid #e5e7eb !important;
+  color:#111827 !important;
+}
+
+.inicioStatsGrid .inicioStatCard svg{
+  color:#ff6b00 !important;
+}
+
+.inicioStatsGrid .inicioStatCard span{
+  color:#9ca3af !important;
+}
+
+.inicioStatsGrid .inicioStatCard h2{
+  color:inherit !important;
+}
