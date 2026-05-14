@@ -1,28 +1,15 @@
-import AnalyticsCharts from "./AnalyticsCharts";
 import {
-  TrendingUp,
-  Wallet,
+  Users,
   Bike,
   AlertTriangle,
-  ShieldAlert,
-  DollarSign,
-  Activity,
-  Users
+  Wallet,
+  TrendingUp,
+  ReceiptText,
 } from "lucide-react";
 
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid
-} from "recharts";
-
-import { money } from "../utils/helpers";
+function money(value) {
+  return `RD$${Number(value || 0).toLocaleString()}`;
+}
 
 export default function Inicio({
   esAdmin,
@@ -34,504 +21,169 @@ export default function Inicio({
   motosMorosas,
   pagosVisibles,
   clientes,
-  deudaMoto
-}){
+  deudaMoto,
+}) {
+  const ultimosPagos = [...pagosVisibles]
+    .sort((a, b) => String(b.fechaHora || b.fecha).localeCompare(String(a.fechaHora || a.fecha)))
+    .slice(0, 4);
 
-  const ingresosHoy = pagosVisibles
-    .filter(p=>p.fecha===new Date().toISOString().slice(0,10))
-    .reduce((s,p)=>s+Number(p.monto||0),0);
+  const moraCritica = [...motosMorosas]
+    .map((m) => {
+      const deuda = deudaMoto(m);
+      const cliente = clientes.find((c) => c.id === m.clienteId);
 
-  const totalMorosidad = motosMorosas.reduce((s,m)=>{
-    return s + Number(deudaMoto(m).montoPendiente || 0);
-  },0);
+      return {
+        moto: m,
+        cliente,
+        deuda,
+      };
+    })
+    .sort((a, b) => b.deuda.montoPendiente - a.deuda.montoPendiente)
+    .slice(0, 3);
 
-  const motosActivas = motosVisibles.filter(
-    m=>m.estado==="Alquilada"
-  ).length;
-
-  const motosDisponibles = motosVisibles.filter(
-    m=>m.estado!=="Alquilada"
-  ).length;
-
-  const porcentajeMora = motosVisibles.length
-    ? ((motosMorosas.length / motosVisibles.length) * 100).toFixed(1)
-    : 0;
-
-    const resumenMensual = [
-    {
-      mes:"Ene",
-      ingresos:120000,
-      gastos:40000
-    },
-    {
-      mes:"Feb",
-      ingresos:180000,
-      gastos:70000
-    },
-    {
-      mes:"Mar",
-      ingresos:240000,
-      gastos:90000
-    },
-    {
-      mes:"Abr",
-      ingresos:210000,
-      gastos:85000
-    },
-    {
-      mes:"May",
-      ingresos:290000,
-      gastos:110000
-    },
-    {
-      mes:"Jun",
-      ingresos:340000,
-      gastos:120000
-    }
-  ];
-
-  const tendenciaPagos = [
-    {dia:"Lun", pagos:12},
-    {dia:"Mar", pagos:18},
-    {dia:"Mié", pagos:15},
-    {dia:"Jue", pagos:22},
-    {dia:"Vie", pagos:28},
-    {dia:"Sáb", pagos:20}
-  ];
-  
   return (
-    <div className="mainDashboard">
+    <div className="inicioCleanPage">
+      <section className="inicioHeroClean">
+        <div>
+          <span>Panel ejecutivo</span>
+          <h1>Bienvenido a Pronto Moto</h1>
+          <p>
+            Resumen rápido de ingresos, clientes, flota, morosidad y últimos movimientos.
+          </p>
+        </div>
 
-      <section className="executiveHero">
+        <div className="inicioHeroIcon">
+          <TrendingUp size={42} />
+        </div>
+      </section>
 
-        <div className="executiveMain">
-
+      <section className="inicioStatsGrid">
+        <div className="inicioStatCard orange">
           <div>
-            <p className="muted">
-              PANEL EJECUTIVO
-            </p>
-
-            <h1>
-              Bienvenido a
-              <br/>
-              Pronto Moto
-            </h1>
-
-            <p>
-              Visualiza ingresos, rentabilidad,
-              morosidad, desempeño operativo y
-              métricas empresariales en tiempo real.
-            </p>
+            <span>Ingresos acumulados</span>
+            <h2>{money(totalIngresos)}</h2>
           </div>
-
-          <div className="executiveMetrics">
-
-            <div className="executiveMetric">
-              <span>Ingresos del día</span>
-              <b>{money(ingresosHoy)}</b>
-            </div>
-
-            <div className="executiveMetric successMetric">
-              <span>Resultado neto</span>
-              <b>{money(neto)}</b>
-            </div>
-
-            <div className="executiveMetric">
-              <span>Motos activas</span>
-              <b>{motosActivas}</b>
-            </div>
-
-          </div>
-
+          <Wallet size={34} />
         </div>
 
-        <div className="executiveWidgets">
-
-          <div className="executiveWidget orangeWidget">
-            <div>
-              <p>Ingresos acumulados</p>
-              <h2>{money(totalIngresos)}</h2>
-            </div>
-
-            <DollarSign/>
+        <div className="inicioStatCard blue">
+          <div>
+            <span>Clientes activos</span>
+            <h2>{clientesVisibles.length}</h2>
           </div>
-
-          <div className="executiveWidget blueWidget">
-            <div>
-              <p>Clientes activos</p>
-              <h2>{clientesVisibles.length}</h2>
-            </div>
-
-            <Users/>
-          </div>
-
-          <div className="executiveWidget redWidget">
-            <div>
-              <p>Motos en mora</p>
-              <h2>{motosMorosas.length}</h2>
-            </div>
-
-            <AlertTriangle/>
-          </div>
-
+          <Users size={34} />
         </div>
 
+        <div className="inicioStatCard red">
+          <div>
+            <span>Motos en mora</span>
+            <h2>{motosMorosas.length}</h2>
+          </div>
+          <AlertTriangle size={34} />
+        </div>
+
+        <div className="inicioStatCard green">
+          <div>
+            <span>Ganancia neta</span>
+            <h2>{money(neto)}</h2>
+          </div>
+          <TrendingUp size={34} />
+        </div>
       </section>
 
-      <section className="kpiGrid">
-
-        <div className="kpiCard primaryKpi">
-          <span>Ingresos Totales</span>
-
-          <b>{money(totalIngresos)}</b>
-
-          <div className="kpiChange">
-            <TrendingUp size={16}/>
-            Flujo positivo
-          </div>
-        </div>
-
-        <div className="kpiCard successKpi">
-          <span>Ganancia Neta</span>
-
-          <b>{money(neto)}</b>
-
-          <div className="kpiChange">
-            <Wallet size={16}/>
-            Resultado operativo
-          </div>
-        </div>
-
-        <div className="kpiCard warningKpi">
-          <span>Morosidad Total</span>
-
-          <b>{money(totalMorosidad)}</b>
-
-          <div className="kpiChange">
-            <ShieldAlert size={16}/>
-            {porcentajeMora}% de riesgo
-          </div>
-        </div>
-
-        <div className="kpiCard dangerKpi">
-          <span>Gastos Totales</span>
-
-          <b>{money(totalGastos)}</b>
-
-          <div className="kpiChange">
-            <Activity size={16}/>
-            Costos operativos
-          </div>
-        </div>
-
-      </section>
-      
-            <section className="dashboardGrid">
-
-        <div className="card executiveCard">
-          <div className="sectionHeader">
+      <section className="inicioPanelsGrid">
+        <div className="inicioPanelCard">
+          <div className="inicioPanelHeader">
             <div>
-              <p className="muted">Estado de flota</p>
-              <h2>Motos</h2>
-            </div>
-
-            <Bike size={26}/>
-          </div>
-
-          <div className="fleetStats">
-            <div>
-              <span>Activas</span>
-              <b>{motosActivas}</b>
-            </div>
-
-            <div>
-              <span>Disponibles</span>
-              <b>{motosDisponibles}</b>
-            </div>
-
-            <div>
-              <span>En mora</span>
-              <b>{motosMorosas.length}</b>
-            </div>
-          </div>
-
-          <div className="progressWrap">
-            <div className="progressInfo">
-              <span>Uso de flota</span>
-              <b>
-                {motosVisibles.length
-                  ? Math.round((motosActivas / motosVisibles.length) * 100)
-                  : 0}%
-              </b>
-            </div>
-
-            <div className="progressBar">
-              <div
-                className="progressFill"
-                style={{
-                  width:`${
-                    motosVisibles.length
-                      ? Math.round((motosActivas / motosVisibles.length) * 100)
-                      : 0
-                  }%`
-                }}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="card executiveCard">
-          <div className="sectionHeader">
-            <div>
-              <p className="muted">Cobranza reciente</p>
+              <span>Cobranza reciente</span>
               <h2>Últimos pagos</h2>
             </div>
 
-            <Wallet size={26}/>
+            <ReceiptText size={32} />
           </div>
 
-          {pagosVisibles.slice(0,5).map(p=>(
-            <div className="activityItem" key={p.docId || p.id}>
-              <div>
-                <b>{p.cliente}</b>
-                <p>{p.moto}</p>
-              </div>
+          <div className="inicioList">
+            {ultimosPagos.map((p) => (
+              <div key={p.docId || p.id} className="inicioListItem">
+                <div>
+                  <strong>{p.cliente || "Cliente"}</strong>
+                  <small>{p.moto || "Moto no definida"}</small>
+                </div>
 
-              <div className="activityAmount">
-                {money(p.monto)}
+                <b className="greenText">{money(p.monto)}</b>
               </div>
-            </div>
-          ))}
+            ))}
 
-          {pagosVisibles.length===0 && (
-            <p className="muted">No hay pagos registrados todavía.</p>
-          )}
+            {ultimosPagos.length === 0 && (
+              <p className="inicioEmpty">No hay pagos registrados todavía.</p>
+            )}
+          </div>
         </div>
 
-      </section>
-      
-            <section className="dashboardGrid">
-
-        <div className="card executiveCard">
-          <div className="sectionHeader">
+        <div className="inicioPanelCard">
+          <div className="inicioPanelHeader">
             <div>
-              <p className="muted">Riesgo operativo</p>
+              <span>Riesgo operativo</span>
               <h2>Morosidad crítica</h2>
             </div>
 
-            <AlertTriangle size={26}/>
+            <AlertTriangle size={32} />
           </div>
 
-          {motosMorosas.slice(0,6).map(m=>{
-            const clienteMora = clientes.find(c=>c.id===m.clienteId);
-            const deuda = deudaMoto(m);
-
-            return (
-              <div className="riskItem" key={m.id}>
+          <div className="inicioList">
+            {moraCritica.map(({ moto, cliente, deuda }) => (
+              <div key={moto.id} className="inicioListItem">
                 <div>
-                  <b>{m.placa}</b>
-                  <p>{clienteMora?.nombre || "Cliente no encontrado"}</p>
+                  <strong>{moto.placa}</strong>
+                  <small>{cliente?.nombre || "Sin cliente"}</small>
                 </div>
 
-                <div>
+                <div className="inicioDebt">
                   <span>{deuda.cuotasPendientes} cuotas</span>
-                  <strong>{money(deuda.montoPendiente)}</strong>
+                  <b>{money(deuda.montoPendiente)}</b>
                 </div>
               </div>
-            );
-          })}
+            ))}
 
-          {motosMorosas.length===0 && (
-            <p className="muted">No hay morosidad registrada.</p>
-          )}
-        </div>
-
-        <div className="card executiveCard">
-          <div className="sectionHeader">
-            <div>
-              <p className="muted">Resumen financiero</p>
-              <h2>Ingresos vs Gastos</h2>
-            </div>
-
-            <TrendingUp size={26}/>
-          </div>
-
-          <div className="financeBars">
-            <div>
-              <div className="financeLabel">
-                <span>Ingresos</span>
-                <b>{money(totalIngresos)}</b>
-              </div>
-
-              <div className="financeTrack">
-                <div
-                  className="financeFill incomeFill"
-                  style={{
-                    width:"100%"
-                  }}
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="financeLabel">
-                <span>Gastos</span>
-                <b>{money(totalGastos)}</b>
-              </div>
-
-              <div className="financeTrack">
-                <div
-                  className="financeFill expenseFill"
-                  style={{
-                    width:`${
-                      totalIngresos
-                        ? Math.min(100,Math.round((totalGastos/totalIngresos)*100))
-                        : 0
-                    }%`
-                  }}
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="financeLabel">
-                <span>Neto</span>
-                <b>{money(neto)}</b>
-              </div>
-
-              <div className="financeTrack">
-                <div
-                  className="financeFill netFill"
-                  style={{
-                    width:`${
-                      totalIngresos
-                        ? Math.min(100,Math.round((Math.max(neto,0)/totalIngresos)*100))
-                        : 0
-                    }%`
-                  }}
-                />
-              </div>
-            </div>
+            {moraCritica.length === 0 && (
+              <p className="inicioEmpty">No hay motos en mora actualmente.</p>
+            )}
           </div>
         </div>
-
       </section>
-      
-            <section className="dashboardGrid">
 
-        <div className="card executiveCard">
-          <div className="sectionHeader">
-            <div>
-              <p className="muted">Finanzas</p>
-              <h2>Ingresos vs gastos</h2>
-            </div>
-
-            <TrendingUp size={26}/>
-          </div>
-
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={resumenMensual}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="mes" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="ingresos" radius={[12,12,0,0]} fill="#ff6600" />
-              <Bar dataKey="gastos" radius={[12,12,0,0]} fill="#dc2626" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="card executiveCard">
-          <div className="sectionHeader">
-            <div>
-              <p className="muted">Cobranza</p>
-              <h2>Tendencia de pagos</h2>
-            </div>
-
-            <Activity size={26}/>
-          </div>
-
-          <ResponsiveContainer width="100%" height={260}>
-            <LineChart data={tendenciaPagos}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="dia" />
-              <YAxis />
-              <Tooltip />
-              <Line
-                type="monotone"
-                dataKey="pagos"
-                stroke="#ff6600"
-                strokeWidth={4}
-                dot={{ r:5 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-      </section>
-      
-            <section className="card executiveCard">
-
-        <div className="sectionHeader">
+      <section className="inicioFleetCard">
+        <div className="inicioPanelHeader">
           <div>
-            <p className="muted">Visión ejecutiva</p>
-            <h2>Indicadores operativos</h2>
+            <span>Estado de flota</span>
+            <h2>Motos</h2>
           </div>
 
-          <Activity size={26}/>
+          <Bike size={34} />
         </div>
 
-        <div className="executiveSummaryGrid">
-
-          <div className="summaryTile">
-            <span>Clientes registrados</span>
-            <b>{clientesVisibles.length}</b>
+        <div className="inicioFleetGrid">
+          <div>
+            <small>Activas</small>
+            <strong>{motosVisibles.filter((m) => m.clienteId).length}</strong>
           </div>
 
-          <div className="summaryTile">
-            <span>Motos registradas</span>
-            <b>{motosVisibles.length}</b>
+          <div>
+            <small>Disponibles</small>
+            <strong>{motosVisibles.filter((m) => !m.clienteId).length}</strong>
           </div>
 
-          <div className="summaryTile">
-            <span>Motos disponibles</span>
-            <b>{motosDisponibles}</b>
+          <div>
+            <small>En mora</small>
+            <strong>{motosMorosas.length}</strong>
           </div>
 
-          <div className="summaryTile">
-            <span>Motos activas</span>
-            <b>{motosActivas}</b>
+          <div>
+            <small>Gastos</small>
+            <strong>{esAdmin ? money(totalGastos) : "N/A"}</strong>
           </div>
-
-          <div className="summaryTile dangerTile">
-            <span>Casos en mora</span>
-            <b>{motosMorosas.length}</b>
-          </div>
-
-          <div className="summaryTile successTile">
-            <span>Pagos registrados</span>
-            <b>{pagosVisibles.length}</b>
-          </div>
-
         </div>
-
       </section>
-
-      {!esAdmin && (
-        <section className="card executiveCard">
-          <p className="muted">
-            Vista limitada a clientes, pagos y morosidad.
-          </p>
-        </section>
-      )}
-
-      <AnalyticsCharts
-        pagos={pagosVisibles}
-        gastos={[]}
-        motos={motosVisibles}
-        clientes={clientesVisibles}
-      />
-
     </div>
   );
 }
